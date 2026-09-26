@@ -1,0 +1,7 @@
+{
+  "extends": "@shelter/config/tsconfig/react.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src", "orval.config.ts"]
+}

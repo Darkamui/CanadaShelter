@@ -13,7 +13,8 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "pnpm --filter @shelter/admin e2e"
+    "test:e2e": "pnpm --filter @shelter/admin e2e",
+    "api:generate": "pnpm --filter @shelter/api-client generate"
   },
   "devDependencies": {
     "@shelter/config": "workspace:*",

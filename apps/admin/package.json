@@ -12,6 +12,7 @@
     "e2e": "vite build && playwright test"
   },
   "dependencies": {
+    "@shelter/api-client": "workspace:*",
     "@shelter/ui": "workspace:*",
     "@tanstack/react-query": "5.104.0",
     "i18next": "26.4.2",

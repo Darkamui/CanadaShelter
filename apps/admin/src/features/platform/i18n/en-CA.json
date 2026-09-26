@@ -1,0 +1,7 @@
+{
+  "ping": {
+    "checking": "Checking server…",
+    "up": "Server connected",
+    "down": "Server unreachable"
+  }
+}

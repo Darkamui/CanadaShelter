@@ -10,6 +10,7 @@ const cases = [
     home: 'Accueil',
     animals: 'Animaux',
     switchTo: 'English',
+    pingUp: 'Serveur connecté',
   },
   {
     locale: 'en-CA',
@@ -18,6 +19,7 @@ const cases = [
     home: 'Home',
     animals: 'Animals',
     switchTo: 'Français',
+    pingUp: 'Server connected',
   },
 ] as const;
 
@@ -44,6 +46,7 @@ for (const c of cases) {
       await expect(page.getByRole('heading', { level: 1, name: c.home })).toBeVisible();
       const nav = page.getByRole('navigation', { name: c.nav });
       await expect(nav.getByRole('link')).toHaveCount(9);
+      await expect(page.getByRole('status')).toHaveText(c.pingUp);
 
       await nav.getByRole('link', { name: c.animals }).click();
       await expect(page).toHaveURL(/\/animals$/);

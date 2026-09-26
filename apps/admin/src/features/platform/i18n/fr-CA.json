@@ -1,0 +1,7 @@
+{
+  "ping": {
+    "checking": "Vérification du serveur…",
+    "up": "Serveur connecté",
+    "down": "Serveur injoignable"
+  }
+}

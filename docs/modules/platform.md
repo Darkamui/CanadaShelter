@@ -33,6 +33,7 @@
 
 - `PlatformModule.cs`: the module's `IModule` registration entry point (route prefix `platform`).
 - `Features/Ping/PingEndpoint.cs`: `GET /api/platform/ping` → `{ "status": "ok" }`, operationId `GetPlatformPing`.
+- Frontend: `apps/admin/src/features/platform/components/PingStatus.tsx` (header indicator) calls it through the generated `useGetPlatformPing` hook; strings in the `platform` i18n namespace.
 
 ## Open questions / TODO
 

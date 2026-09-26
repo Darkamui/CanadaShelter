@@ -42,5 +42,8 @@
     <Project Path="Modules/Reporting/Shelter.Modules.Reporting.Contracts/Shelter.Modules.Reporting.Contracts.csproj" />
     <Project Path="Modules/Reporting/Shelter.Modules.Reporting/Shelter.Modules.Reporting.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Shelter.IntegrationTests/Shelter.IntegrationTests.csproj" />
+  </Folder>
   <Project Path="Shelter.Host/Shelter.Host.csproj" />
 </Solution>

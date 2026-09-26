@@ -1,6 +1,7 @@
 pnpm-lock.yaml
 backend/
 **/generated/**
+packages/api-client/openapi.json
 **/dist/**
 coverage/
 playwright-report/

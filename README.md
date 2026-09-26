@@ -39,6 +39,7 @@ PostgreSQL has two application roles: `shelter_migrator` owns the schema and run
 | ---------------------------------------------- | ------------------------------------------------- |
 | `dotnet build backend` / `dotnet test backend` | Build / test the backend (tests need Docker)      |
 | `pnpm lint` / `pnpm test` / `pnpm build`       | Lint / test / build all JavaScript packages       |
+| `pnpm test:e2e`                                | Playwright E2E for the admin app (fr-CA + en-CA)  |
 | `pnpm format:check`                            | Check Prettier formatting                         |
 | `./scripts/db-migrate-local.sh`                | Apply migrations — refuses any non-local database |
 

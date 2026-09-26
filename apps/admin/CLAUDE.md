@@ -23,6 +23,8 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
 - **After a backend contract change:** run `pnpm api:generate`; never edit generated files.
 - **Forms:** React Hook Form + Zod. Reuse Orval-generated Zod schemas when available.
 - **i18n:** no hard-coded user-facing strings (lint enforced). Keys namespaced per module. Write `fr-CA` first, then `en-CA`. Default locale `fr-CA`.
+- **i18n catalogs:** shell strings in `src/app/i18n/<locale>.json` (namespace `shell`, the default); module strings in `src/features/<module>/i18n/<locale>.json` are picked up automatically by `src/lib/i18n`. Uncertain French terms: list their keys in a top-level `"_frReview": [...]` array in `fr-CA.json`. `catalogs.test.ts` fails if fr-CA and en-CA keys differ.
+- **PWA:** the service worker precaches the app shell only. Never add `runtimeCaching` for `/api` (tenant data, permissions).
 - **Reference data:** the API returns both `fr`/`en` labels; pick by UI locale via the shared helper.
 - **Dates/numbers/currency:** `Intl` helpers in `lib/format`, organization timezone, CAD.
 - **Auth:** cookie-based (same-site). Never store tokens in `localStorage`/`sessionStorage`.
@@ -33,4 +35,4 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
 ## Tests
 
 - Vitest for logic/components.
-- Playwright E2E for critical workflows, run in **both** `fr-CA` and `en-CA`.
+- Playwright E2E for critical workflows, run in **both** `fr-CA` and `en-CA`. Specs live in `tests/e2e/`, run against `vite preview`, and mock `/api/**` with `page.route` (service workers are blocked so mocks apply).

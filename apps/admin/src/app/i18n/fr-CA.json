@@ -1,0 +1,39 @@
+{
+  "_frReview": [
+    "appName",
+    "nav.movements",
+    "nav.operations",
+    "nav.engagement",
+    "nav.municipal",
+    "nav.platform"
+  ],
+  "appName": "Gestion de refuge",
+  "skipToContent": "Aller au contenu",
+  "language": {
+    "fr-CA": "Français",
+    "en-CA": "English"
+  },
+  "nav": {
+    "label": "Navigation principale",
+    "animals": "Animaux",
+    "people": "Personnes",
+    "movements": "Mouvements",
+    "medical": "Médical",
+    "operations": "Opérations",
+    "engagement": "Mobilisation",
+    "municipal": "Municipal",
+    "reporting": "Rapports",
+    "platform": "Plateforme"
+  },
+  "home": {
+    "title": "Accueil",
+    "intro": "Choisissez un module dans le menu."
+  },
+  "module": {
+    "comingSoon": "Ce module arrive bientôt."
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "backHome": "Retour à l'accueil"
+  }
+}

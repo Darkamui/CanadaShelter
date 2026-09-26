@@ -20,8 +20,16 @@ Inside Shelter.Modules.<Module>/:
   Authorization/         Permission constants + policies
 Tests/Shelter.IntegrationTests/  Host pipeline tests (Testcontainers PostgreSQL, one container per run)
 Tests: sibling test project per module (see ADR 0015, written in M0-8)
-ArchitectureTests/       Enforces module boundaries
+ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real solution graph)
 ```
+
+**Boundary rules** (enforced by `Shelter.ArchitectureTests`, over declared `ProjectReference`s and compiled assembly references):
+
+- A module references another module only through its `.Contracts` project; never the host.
+- `.Contracts` projects reference only `BuildingBlocks` and other `.Contracts`.
+- `BuildingBlocks` references no module, contracts, or host project.
+- `Shelter.Host` declares types only in `Shelter.Host`, `.Composition`, `.Middleware` (plus `Program`).
+- A new project must follow the naming convention (`Shelter.Modules.<Module>[.Contracts]`, `Shelter.BuildingBlocks[.*]`) or the rules won't see it.
 
 ## Conventions
 

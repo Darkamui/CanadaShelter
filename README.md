@@ -43,6 +43,8 @@ PostgreSQL has two application roles: `shelter_migrator` owns the schema and run
 | `pnpm format:check`                            | Check Prettier formatting                         |
 | `./scripts/db-migrate-local.sh`                | Apply migrations — refuses any non-local database |
 
+Branching, CI jobs, and branch protection: [docs/contributing.md](docs/contributing.md).
+
 ## Repository layout
 
 ```text

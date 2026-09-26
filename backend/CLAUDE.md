@@ -19,7 +19,7 @@ Inside Shelter.Modules.<Module>/:
   Persistence/           EF configurations, module schema
   Authorization/         Permission constants + policies
 Tests/Shelter.IntegrationTests/  Host pipeline tests (Testcontainers PostgreSQL, one container per run)
-Tests: sibling test project per module (see ADR 0015, written in M0-8)
+Modules/<Module>/Shelter.Modules.<Module>.Tests/  Module tests, created with the first one (ADR 0015)
 ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real solution graph)
 ```
 
@@ -37,7 +37,7 @@ ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real s
 - **Endpoints:** Minimal APIs, grouped per module, one file per feature. Every endpoint declares a permission. No anonymous endpoints outside the public route group.
 - **Handlers:** plain classes injected directly. No MediatR.
 - **Validation:** validator per request, errors returned as RFC 7807 ProblemDetails.
-- **Persistence:** follow the DbContext ADR (M0). Each module owns its own PostgreSQL schema. Cross-module foreign keys are by ID only, no navigation properties across modules.
+- **Persistence:** follow ADR 0005 (DbContext strategy; must be Accepted before M1). Each module owns its own PostgreSQL schema. Cross-module foreign keys are by ID only, no navigation properties across modules.
 - **Naming:** snake_case in the database (naming-convention package), PascalCase in C#.
 - **IDs:** GUID v7 (`Guid.CreateVersion7()`).
 - **Time:** store UTC (`DateTimeOffset`); render in the organization's timezone at the edge.

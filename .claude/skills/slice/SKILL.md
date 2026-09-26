@@ -19,6 +19,7 @@ Do not explore other modules. If you need another module's data, use its `Contra
 ## 2. Plan (wait for approval)
 
 List:
+
 - Files to create/change (backend + frontend)
 - Permission(s) used or added
 - Migration needed? New tables → `/tenancy-check` applies

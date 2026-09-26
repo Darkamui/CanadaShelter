@@ -11,14 +11,17 @@ Québec-first, bilingual shelter & rescue management SaaS. Multi-tenant. ASP.NET
 - `packages/api-client/` — **generated** by Orval. Never edit by hand.
 - `packages/ui/` — shared shadcn/ui components.
 - `packages/adoption-widget/` — embeddable public widget.
+- `packages/config/` — shared ESLint (flat), Prettier, and tsconfig presets.
 - `infrastructure/` — Docker Compose, OpenTofu.
+- `global.json` (repo root) — pins the .NET 10 SDK and opts `dotnet test` into Microsoft.Testing.Platform.
 - `docs/` — specs, ADRs, module docs, issues.
 
 ## Commands
 
 - `docker compose -f infrastructure/docker/compose.yml up -d` — Postgres, MinIO, Mailpit
 - `dotnet build backend` / `dotnet test backend`
-- `pnpm install` / `pnpm dev` / `pnpm test` / `pnpm lint`
+- `pnpm install` / `pnpm dev` / `pnpm test` / `pnpm lint` / `pnpm format:check`
+- pnpm comes from corepack (`packageManager` in root `package.json`). If `corepack enable` fails with EPERM on Windows, use `corepack enable --install-directory "$APPDATA/npm" pnpm`.
 - `pnpm api:generate` — regenerate Orval client after any API contract change
 - `./scripts/db-migrate-local.sh` — apply migrations to the **local** database only
 
@@ -28,21 +31,21 @@ Québec-first, bilingual shelter & rescue management SaaS. Multi-tenant. ASP.NET
 
 Specs are long. Grep for the heading and read only the named section.
 
-| Topic | Location |
-|---|---|
-| Module ownership | architecture §6 |
-| Three histories (ledger/timeline/audit) | architecture §7.1 |
-| Tenancy, RLS, `SET LOCAL` | architecture §8 |
-| Auth, staff vs external users | architecture §9 |
-| Rule packs / Québec rules | architecture §10 |
-| Bilingual data | architecture §11 |
-| Search | architecture §12 |
-| Privacy / Law 25 | architecture §16 |
-| Audit + crypto-shredding | architecture §17 |
-| Uploads, public surface | architecture §18, §18A |
-| Pilot scope | product-spec §41 |
-| A specific module | `docs/modules/<module>.md` — **read this before exploring code** |
-| Past decisions | `docs/adr/` |
+| Topic                                   | Location                                                         |
+| --------------------------------------- | ---------------------------------------------------------------- |
+| Module ownership                        | architecture §6                                                  |
+| Three histories (ledger/timeline/audit) | architecture §7.1                                                |
+| Tenancy, RLS, `SET LOCAL`               | architecture §8                                                  |
+| Auth, staff vs external users           | architecture §9                                                  |
+| Rule packs / Québec rules               | architecture §10                                                 |
+| Bilingual data                          | architecture §11                                                 |
+| Search                                  | architecture §12                                                 |
+| Privacy / Law 25                        | architecture §16                                                 |
+| Audit + crypto-shredding                | architecture §17                                                 |
+| Uploads, public surface                 | architecture §18, §18A                                           |
+| Pilot scope                             | product-spec §41                                                 |
+| A specific module                       | `docs/modules/<module>.md` — **read this before exploring code** |
+| Past decisions                          | `docs/adr/`                                                      |
 
 ## Hard rules
 
@@ -68,7 +71,7 @@ Specs are long. Grep for the heading and read only the named section.
 6. **New entity or table →** `/tenancy-check`. Persistence or personal-data changes → ask for the `tenancy-privacy-reviewer` agent on the diff.
 7. **Finish with `/close-task`:** update module doc, check acceptance criteria, draft commit/PR text.
 8. **Decisions →** `/adr`. If you made a choice a future session would need to know, it goes in an ADR or module doc, not only in chat.
-9. **French:** write Québec French (e.g. *courriel*, *famille d'accueil*, *médaille*, *stérilisation*). Mark any term you are unsure of with `TODO(fr-review)`.
+9. **French:** write Québec French (e.g. _courriel_, _famille d'accueil_, _médaille_, _stérilisation_). Mark any term you are unsure of with `TODO(fr-review)`.
 
 ## Git
 

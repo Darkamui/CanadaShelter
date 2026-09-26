@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Shelter.Modules.Operations.Contracts\Shelter.Modules.Operations.Contracts.csproj" />
+  </ItemGroup>
+</Project>

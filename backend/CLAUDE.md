@@ -6,14 +6,19 @@
 
 ```text
 Shelter.Host/            Program.cs, middleware, composition only. No business logic.
-BuildingBlocks/          Tenancy, Persistence, Authorization, Auditing, Jobs, Documents, Communications, Integrations
+BuildingBlocks/Shelter.BuildingBlocks/
+                         One project; a folder per concern (Tenancy, Persistence, Authorization,
+                         Auditing, Jobs, Documents, Communications, Integrations) as each arrives
 Modules/<Module>/
+  Shelter.Modules.<Module>/            Implementation (internal by default)
+  Shelter.Modules.<Module>.Contracts/  The ONLY assembly other modules may reference
+
+Inside Shelter.Modules.<Module>/:
   Domain/                Entities, value objects, domain rules
   Features/<Feature>/    Endpoint + request/response + handler + validator (colocated)
   Persistence/           EF configurations, module schema
   Authorization/         Permission constants + policies
-  Contracts/             The ONLY types other modules may reference
-  Tests/                 (or a sibling test project, per ADR)
+Tests: sibling test project per module (see ADR 0015, written in M0-8)
 ArchitectureTests/       Enforces module boundaries
 ```
 
@@ -41,6 +46,8 @@ ArchitectureTests/       Enforces module boundaries
 
 ## Tests
 
+- xUnit v3 on Microsoft.Testing.Platform (opted in via root `global.json`). Test projects reference only `xunit.v3` and add `<Using Include="Xunit" />`.
+- Build settings: `Directory.Build.props` (nullable, warnings as errors, analyzers) and central package versions in `Directory.Packages.props`. Never put a `Version` on a `PackageReference`.
 - Unit tests for domain rules.
 - Integration tests with Testcontainers PostgreSQL, running as the **runtime role** (not the migration role) so RLS is actually exercised.
 - Every feature touching tenant data has at least one cross-tenant denial test.

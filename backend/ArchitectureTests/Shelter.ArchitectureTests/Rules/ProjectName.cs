@@ -7,6 +7,10 @@ internal enum ProjectKind
     BuildingBlocks,
     Module,
     Contracts,
+    Migrations,
+
+    /// <summary>Test and test-support projects; not part of the production graph.</summary>
+    Tests,
 }
 
 /// <summary>Classifies a project (= assembly) name by the backend layout convention (ADR 0015).</summary>
@@ -20,6 +24,17 @@ internal readonly record struct ProjectName(string Name, ProjectKind Kind, strin
         if (name == "Shelter.Host")
         {
             return new(name, ProjectKind.Host, null);
+        }
+
+        if (name == "Shelter.Migrations")
+        {
+            return new(name, ProjectKind.Migrations, null);
+        }
+
+        // Checked before the module prefix: Shelter.Modules.Platform.Tests is a test project, not part of Platform.
+        if (name == "Shelter.Testing" || name.EndsWith(".Tests", StringComparison.Ordinal) || name.EndsWith(".IntegrationTests", StringComparison.Ordinal))
+        {
+            return new(name, ProjectKind.Tests, null);
         }
 
         if (name == "Shelter.BuildingBlocks" || name.StartsWith("Shelter.BuildingBlocks.", StringComparison.Ordinal))

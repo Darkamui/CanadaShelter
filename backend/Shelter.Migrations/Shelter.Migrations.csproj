@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The single EF Core migrations assembly (ADR 0005). Generated with Shelter.Host as the startup project;
+    only the Host (and test support) may reference it. Migrations on main are immutable (hard rule 10).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

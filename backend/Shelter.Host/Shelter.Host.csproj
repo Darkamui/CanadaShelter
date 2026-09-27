@@ -5,6 +5,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
@@ -19,6 +23,7 @@
     <ProjectReference Include="..\Modules\People\Shelter.Modules.People\Shelter.Modules.People.csproj" />
     <ProjectReference Include="..\Modules\Platform\Shelter.Modules.Platform\Shelter.Modules.Platform.csproj" />
     <ProjectReference Include="..\Modules\Reporting\Shelter.Modules.Reporting\Shelter.Modules.Reporting.csproj" />
+    <ProjectReference Include="..\Shelter.Migrations\Shelter.Migrations.csproj" />
   </ItemGroup>
 
   <!--

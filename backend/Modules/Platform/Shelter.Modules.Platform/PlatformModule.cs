@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Modules;
+using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Platform.Features.Ping;
+using Shelter.Modules.Platform.Persistence;
 
 namespace Shelter.Modules.Platform;
 
@@ -15,6 +17,7 @@ public sealed class PlatformModule : IModule
     /// <inheritdoc />
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSingleton<IModelContributor, PlatformModelContributor>();
     }
 
     /// <inheritdoc />

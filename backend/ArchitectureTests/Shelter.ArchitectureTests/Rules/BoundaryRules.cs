@@ -15,6 +15,8 @@ internal static class BoundaryRules
     public const string ContractsTooWide = "Contracts may reference only BuildingBlocks and other .Contracts projects";
     public const string BuildingBlocksToModules = "BuildingBlocks must not reference modules or the host";
     public const string ModuleToHost = "Modules must not reference the host";
+    public const string MigrationsReferencedOutsideHost = "Only the host may reference the migrations assembly";
+    public const string MigrationsTooWide = "The migrations assembly may reference only BuildingBlocks";
 
     public static IReadOnlyList<BoundaryViolation> FindViolations(DependencyGraph graph)
     {
@@ -32,6 +34,8 @@ internal static class BoundaryRules
                     (ProjectKind.Contracts, ProjectKind.Module or ProjectKind.Host) => ContractsTooWide,
                     (ProjectKind.Module, ProjectKind.Module) when from.Module != to.Module => ModuleToModuleInternals,
                     (ProjectKind.Module, ProjectKind.Host) => ModuleToHost,
+                    (not ProjectKind.Host, ProjectKind.Migrations) => MigrationsReferencedOutsideHost,
+                    (ProjectKind.Migrations, not ProjectKind.BuildingBlocks) => MigrationsTooWide,
                     _ => null,
                 };
 

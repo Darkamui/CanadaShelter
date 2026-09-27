@@ -1,4 +1,6 @@
 using Shelter.BuildingBlocks.Logging;
+using Shelter.BuildingBlocks.Persistence;
+using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Host.Composition;
 using Shelter.Host.Middleware;
 
@@ -15,6 +17,8 @@ builder.Logging.AddShelterRedaction();
 
 builder.Services.AddShelterProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddShelterTenancy(builder.Environment);
+builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
 builder.Services.AddModules(builder.Configuration);
 
@@ -23,6 +27,7 @@ var app = builder.Build();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseMiddleware<TenantResolutionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

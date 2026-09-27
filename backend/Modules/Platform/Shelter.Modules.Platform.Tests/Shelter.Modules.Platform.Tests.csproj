@@ -5,12 +5,11 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="xunit.v3" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shelter.Host\Shelter.Host.csproj" />
-    <ProjectReference Include="..\Shelter.Testing\Shelter.Testing.csproj" />
+    <ProjectReference Include="..\Shelter.Modules.Platform\Shelter.Modules.Platform.csproj" />
+    <ProjectReference Include="..\..\..\Tests\Shelter.Testing\Shelter.Testing.csproj" />
   </ItemGroup>
 </Project>

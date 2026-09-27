@@ -36,6 +36,7 @@
   </Folder>
   <Folder Name="/Modules/Platform/">
     <Project Path="Modules/Platform/Shelter.Modules.Platform.Contracts/Shelter.Modules.Platform.Contracts.csproj" />
+    <Project Path="Modules/Platform/Shelter.Modules.Platform.Tests/Shelter.Modules.Platform.Tests.csproj" />
     <Project Path="Modules/Platform/Shelter.Modules.Platform/Shelter.Modules.Platform.csproj" />
   </Folder>
   <Folder Name="/Modules/Reporting/">
@@ -44,6 +45,8 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/Shelter.IntegrationTests/Shelter.IntegrationTests.csproj" />
+    <Project Path="Tests/Shelter.Testing/Shelter.Testing.csproj" />
   </Folder>
   <Project Path="Shelter.Host/Shelter.Host.csproj" />
+  <Project Path="Shelter.Migrations/Shelter.Migrations.csproj" />
 </Solution>

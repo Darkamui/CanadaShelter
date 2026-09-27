@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Shared test support (ADR 0015): the migrated PostgreSQL container and tenant-scoped context helpers.
+    A library, not a test project; each test project wraps PostgresDatabase in its own xUnit fixture.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.PostgreSql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Shelter.Migrations\Shelter.Migrations.csproj" />
+  </ItemGroup>
+</Project>

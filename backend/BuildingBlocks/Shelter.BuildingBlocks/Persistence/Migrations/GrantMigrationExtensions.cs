@@ -39,6 +39,17 @@ public static class GrantMigrationExtensions
     public static MigrationBuilder RevokeRuntimeSchemaUsage(this MigrationBuilder migrationBuilder, string schema) =>
         migrationBuilder.RevokeSchemaUsage(DatabaseRoles.App, schema);
 
+    /// <summary>
+    /// <c>GRANT USAGE, CREATE ON SCHEMA</c> to the runtime role, for a library that installs and upgrades its own
+    /// non-tenant tables in a dedicated schema (Hangfire). Never for a module schema.
+    /// </summary>
+    public static MigrationBuilder GrantRuntimeSchemaCreate(this MigrationBuilder migrationBuilder, string schema)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        migrationBuilder.Sql($"GRANT USAGE, CREATE ON SCHEMA {SqlIdentifier.Quote(schema)} TO {SqlIdentifier.Quote(DatabaseRoles.App)};");
+        return migrationBuilder;
+    }
+
     /// <summary>Grants exactly <paramref name="privileges"/> on one table to the runtime role.</summary>
     public static MigrationBuilder GrantRuntime(this MigrationBuilder migrationBuilder, string schema, string table, TablePrivileges privileges)
     {

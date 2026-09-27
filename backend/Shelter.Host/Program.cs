@@ -20,6 +20,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddShelterTenancy(builder.Environment);
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
+builder.Services.AddShelterJobHosting(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 var app = builder.Build();
@@ -35,6 +36,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapShelterHealthChecks();
+app.MapShelterJobDashboard();
 app.MapModules();
 
 app.Run();

@@ -20,6 +20,12 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
     /// <summary>Host environment name; <c>Test</c> unless a test needs Development-only behaviour.</summary>
     public string EnvironmentName { get; init; } = "Test";
 
+    /// <summary>Runs the Hangfire server. Off by default: only job tests process jobs.</summary>
+    public bool JobServerEnabled { get; init; }
+
+    /// <summary>Extra service registrations (e.g. test-only jobs), applied after the Host's.</summary>
+    public Action<IServiceCollection>? ConfigureServices { get; init; }
+
     /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -28,12 +34,16 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
 
         // Never fall through to the local-dev PlatformAdmin string in appsettings.Development.json.
         builder.UseSetting("ConnectionStrings:PlatformAdmin", UnreachableDatabase);
+        builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
+        builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
         builder.ConfigureTestServices(services =>
         {
             foreach (var module in extraModules)
             {
                 services.AddSingleton(module);
             }
+
+            ConfigureServices?.Invoke(services);
         });
     }
 }

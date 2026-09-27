@@ -31,3 +31,14 @@ V1 needs work that is scheduled, recurring and retryable: reminders, scheduled c
   - Job arguments are serialized type names, so refactoring job classes needs care.
   - Workers share the web process's resources until we split them out.
 - Follow-ups: when jobs arrive, add the tenant job filter and a test that a job without a valid `TenantId` refuses to run.
+
+## Addendum (2026-09-27, M1-4)
+
+- **Schema and privileges:** the `hangfire` schema is created by a migration (`AddHangfireSchema`), which grants the runtime role `shelter_app` `USAGE, CREATE` on that schema only. Hangfire then installs and upgrades its own tables as `shelter_app` (`PrepareSchemaIfNecessary`), so a Hangfire upgrade needs no hand-ported migration.
+  - **Accepted risk:** this is the one exception to "runtime roles have no DDL" (architecture §8.3). A compromised runtime connection could create objects in `hangfire`. It gains no access to tenant data: `shelter_app` has no new privileges on other schemas, and anything it creates runs with its own rights.
+  - **Revisit before production:** install the schema as the migrator, set `PrepareSchemaIfNecessary = false`, and revoke `CREATE`.
+- **Tenant restore:** implemented as `TenantJobRunner<TJob, TArgs>`, not a Hangfire filter.
+  - `ITenantJobScheduler.Enqueue` takes the tenant from the scheduling scope's `TenantContext`, never from a parameter.
+  - The runner opens a new DI scope, sets the tenant, and runs the job inside a `UnitOfWork`.
+  - A payload without a tenant throws before any data access.
+- **Dashboard:** until staff authentication and a platform-admin policy exist (M2), `/hangfire` is mapped only in Development and only for local requests. It does not exist in other environments.

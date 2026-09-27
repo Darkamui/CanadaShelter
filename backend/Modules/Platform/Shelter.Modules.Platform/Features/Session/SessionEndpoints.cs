@@ -44,6 +44,7 @@ internal static class SessionEndpoints
             .RequireSession();
 
         MfaEndpoints.Map(session);
+        PasswordEndpoints.Map(session);
     }
 
     /// <summary>Sets the readable <c>XSRF-TOKEN</c> cookie the SPA echoes in <c>X-XSRF-TOKEN</c>.</summary>

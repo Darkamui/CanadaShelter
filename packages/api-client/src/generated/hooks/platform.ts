@@ -21,8 +21,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcceptInvitationRequest,
   ChangeStaffRolesRequest,
+  CreateInvitationRequest,
+  ForgotPasswordRequest,
   HttpValidationProblemDetails,
+  InvitationLookupResponse,
+  InvitationResponse,
+  InvitationTokenRequest,
   LoginMfaRequest,
   LoginRequest,
   LoginResponse,
@@ -30,6 +36,7 @@ import type {
   MfaRecoveryCodesResponse,
   MfaSetupResponse,
   PingResponse,
+  ResetPasswordRequest,
   SessionResponse,
   StaffMemberResponse,
 } from '../model';
@@ -1013,6 +1020,209 @@ export const useDisablePlatformSessionMfa = <TError = ErrorType<unknown>, TConte
 > => {
   return useMutation(getDisablePlatformSessionMfaMutationOptions(options), queryClient);
 };
+export const getForgotPlatformSessionPasswordUrl = () => {
+  return `/api/platform/session/password/forgot`;
+};
+
+export const forgotPlatformSessionPassword = async (
+  forgotPasswordRequest: ForgotPasswordRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<void>(getForgotPlatformSessionPasswordUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(forgotPasswordRequest),
+  });
+};
+
+export const getForgotPlatformSessionPasswordMutationKey = () =>
+  ['forgotPlatformSessionPassword'] as const;
+
+export const getForgotPlatformSessionPasswordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof forgotPlatformSessionPassword>>,
+    TError,
+    ForgotPlatformSessionPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof forgotPlatformSessionPassword>>,
+  TError,
+  ForgotPlatformSessionPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getForgotPlatformSessionPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof forgotPlatformSessionPassword>>,
+    ForgotPlatformSessionPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return forgotPlatformSessionPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ForgotPlatformSessionPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof forgotPlatformSessionPassword>>
+>;
+export type ForgotPlatformSessionPasswordMutationBody = ForgotPasswordRequest;
+export type ForgotPlatformSessionPasswordMutationError = ErrorType<unknown>;
+export type ForgotPlatformSessionPasswordMutationVariables = { data: ForgotPasswordRequest };
+
+export const useForgotPlatformSessionPassword = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof forgotPlatformSessionPassword>>,
+      TError,
+      ForgotPlatformSessionPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof forgotPlatformSessionPassword>>,
+  TError,
+  ForgotPlatformSessionPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getForgotPlatformSessionPasswordMutationOptions(options), queryClient);
+};
+export const getResetPlatformSessionPasswordUrl = () => {
+  return `/api/platform/session/password/reset`;
+};
+
+export const resetPlatformSessionPassword = async (
+  resetPasswordRequest: ResetPasswordRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<void>(getResetPlatformSessionPasswordUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resetPasswordRequest),
+  });
+};
+
+export const getResetPlatformSessionPasswordMutationKey = () =>
+  ['resetPlatformSessionPassword'] as const;
+
+export const getResetPlatformSessionPasswordMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetPlatformSessionPassword>>,
+    TError,
+    ResetPlatformSessionPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetPlatformSessionPassword>>,
+  TError,
+  ResetPlatformSessionPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResetPlatformSessionPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetPlatformSessionPassword>>,
+    ResetPlatformSessionPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return resetPlatformSessionPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetPlatformSessionPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetPlatformSessionPassword>>
+>;
+export type ResetPlatformSessionPasswordMutationBody = ResetPasswordRequest;
+export type ResetPlatformSessionPasswordMutationError = ErrorType<HttpValidationProblemDetails>;
+export type ResetPlatformSessionPasswordMutationVariables = { data: ResetPasswordRequest };
+
+export const useResetPlatformSessionPassword = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetPlatformSessionPassword>>,
+      TError,
+      ResetPlatformSessionPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resetPlatformSessionPassword>>,
+  TError,
+  ResetPlatformSessionPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getResetPlatformSessionPasswordMutationOptions(options), queryClient);
+};
 export const getListPlatformStaffUrl = () => {
   return `/api/platform/staff`;
 };
@@ -1389,4 +1599,583 @@ export const useReactivatePlatformStaff = <
   TContext
 > => {
   return useMutation(getReactivatePlatformStaffMutationOptions(options), queryClient);
+};
+export const getListPlatformInvitationsUrl = () => {
+  return `/api/platform/invitations`;
+};
+
+export const listPlatformInvitations = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<InvitationResponse[]> => {
+  return shelterFetch<InvitationResponse[]>(getListPlatformInvitationsUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getListPlatformInvitationsQueryKey = () => {
+  return [`/api/platform/invitations`] as const;
+};
+
+export const getListPlatformInvitationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPlatformInvitations>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listPlatformInvitations>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPlatformInvitationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPlatformInvitations>>> = ({
+    signal,
+  }) => listPlatformInvitations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPlatformInvitations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListPlatformInvitationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPlatformInvitations>>
+>;
+export type ListPlatformInvitationsQueryError = ErrorType<unknown>;
+
+export function useListPlatformInvitations<
+  TData = Awaited<ReturnType<typeof listPlatformInvitations>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPlatformInvitations>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPlatformInvitations>>,
+          TError,
+          Awaited<ReturnType<typeof listPlatformInvitations>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPlatformInvitations<
+  TData = Awaited<ReturnType<typeof listPlatformInvitations>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPlatformInvitations>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPlatformInvitations>>,
+          TError,
+          Awaited<ReturnType<typeof listPlatformInvitations>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPlatformInvitations<
+  TData = Awaited<ReturnType<typeof listPlatformInvitations>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPlatformInvitations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useListPlatformInvitations<
+  TData = Awaited<ReturnType<typeof listPlatformInvitations>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPlatformInvitations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPlatformInvitationsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCreatePlatformInvitationUrl = () => {
+  return `/api/platform/invitations`;
+};
+
+export const createPlatformInvitation = async (
+  createInvitationRequest: CreateInvitationRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<InvitationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<InvitationResponse>(getCreatePlatformInvitationUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createInvitationRequest),
+  });
+};
+
+export const getCreatePlatformInvitationMutationKey = () => ['createPlatformInvitation'] as const;
+
+export const getCreatePlatformInvitationMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPlatformInvitation>>,
+    TError,
+    CreatePlatformInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPlatformInvitation>>,
+  TError,
+  CreatePlatformInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreatePlatformInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPlatformInvitation>>,
+    CreatePlatformInvitationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPlatformInvitation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePlatformInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPlatformInvitation>>
+>;
+export type CreatePlatformInvitationMutationBody = CreateInvitationRequest;
+export type CreatePlatformInvitationMutationError = ErrorType<HttpValidationProblemDetails>;
+export type CreatePlatformInvitationMutationVariables = { data: CreateInvitationRequest };
+
+export const useCreatePlatformInvitation = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createPlatformInvitation>>,
+      TError,
+      CreatePlatformInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createPlatformInvitation>>,
+  TError,
+  CreatePlatformInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreatePlatformInvitationMutationOptions(options), queryClient);
+};
+export const getResendPlatformInvitationUrl = (invitationId: string) => {
+  return `/api/platform/invitations/${invitationId}/resend`;
+};
+
+export const resendPlatformInvitation = async (
+  invitationId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<InvitationResponse> => {
+  return shelterFetch<InvitationResponse>(getResendPlatformInvitationUrl(invitationId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getResendPlatformInvitationMutationKey = () => ['resendPlatformInvitation'] as const;
+
+export const getResendPlatformInvitationMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendPlatformInvitation>>,
+    TError,
+    ResendPlatformInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resendPlatformInvitation>>,
+  TError,
+  ResendPlatformInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResendPlatformInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resendPlatformInvitation>>,
+    ResendPlatformInvitationMutationVariables
+  > = (props) => {
+    const { invitationId } = props ?? {};
+
+    return resendPlatformInvitation(invitationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResendPlatformInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resendPlatformInvitation>>
+>;
+
+export type ResendPlatformInvitationMutationError = ErrorType<void>;
+export type ResendPlatformInvitationMutationVariables = { invitationId: string };
+
+export const useResendPlatformInvitation = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resendPlatformInvitation>>,
+      TError,
+      ResendPlatformInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resendPlatformInvitation>>,
+  TError,
+  ResendPlatformInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getResendPlatformInvitationMutationOptions(options), queryClient);
+};
+export const getRevokePlatformInvitationUrl = (invitationId: string) => {
+  return `/api/platform/invitations/${invitationId}/revoke`;
+};
+
+export const revokePlatformInvitation = async (
+  invitationId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getRevokePlatformInvitationUrl(invitationId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getRevokePlatformInvitationMutationKey = () => ['revokePlatformInvitation'] as const;
+
+export const getRevokePlatformInvitationMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokePlatformInvitation>>,
+    TError,
+    RevokePlatformInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokePlatformInvitation>>,
+  TError,
+  RevokePlatformInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokePlatformInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokePlatformInvitation>>,
+    RevokePlatformInvitationMutationVariables
+  > = (props) => {
+    const { invitationId } = props ?? {};
+
+    return revokePlatformInvitation(invitationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokePlatformInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokePlatformInvitation>>
+>;
+
+export type RevokePlatformInvitationMutationError = ErrorType<void>;
+export type RevokePlatformInvitationMutationVariables = { invitationId: string };
+
+export const useRevokePlatformInvitation = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokePlatformInvitation>>,
+      TError,
+      RevokePlatformInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokePlatformInvitation>>,
+  TError,
+  RevokePlatformInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokePlatformInvitationMutationOptions(options), queryClient);
+};
+export const getLookupPlatformInvitationUrl = () => {
+  return `/api/platform/invitations/lookup`;
+};
+
+export const lookupPlatformInvitation = async (
+  invitationTokenRequest: InvitationTokenRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<InvitationLookupResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<InvitationLookupResponse>(getLookupPlatformInvitationUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(invitationTokenRequest),
+  });
+};
+
+export const getLookupPlatformInvitationMutationKey = () => ['lookupPlatformInvitation'] as const;
+
+export const getLookupPlatformInvitationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof lookupPlatformInvitation>>,
+    TError,
+    LookupPlatformInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof lookupPlatformInvitation>>,
+  TError,
+  LookupPlatformInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLookupPlatformInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof lookupPlatformInvitation>>,
+    LookupPlatformInvitationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return lookupPlatformInvitation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LookupPlatformInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof lookupPlatformInvitation>>
+>;
+export type LookupPlatformInvitationMutationBody = InvitationTokenRequest;
+export type LookupPlatformInvitationMutationError = ErrorType<unknown>;
+export type LookupPlatformInvitationMutationVariables = { data: InvitationTokenRequest };
+
+export const useLookupPlatformInvitation = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof lookupPlatformInvitation>>,
+      TError,
+      LookupPlatformInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof lookupPlatformInvitation>>,
+  TError,
+  LookupPlatformInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getLookupPlatformInvitationMutationOptions(options), queryClient);
+};
+export const getAcceptPlatformInvitationUrl = () => {
+  return `/api/platform/invitations/accept`;
+};
+
+export const acceptPlatformInvitation = async (
+  acceptInvitationRequest: AcceptInvitationRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<void>(getAcceptPlatformInvitationUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acceptInvitationRequest),
+  });
+};
+
+export const getAcceptPlatformInvitationMutationKey = () => ['acceptPlatformInvitation'] as const;
+
+export const getAcceptPlatformInvitationMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptPlatformInvitation>>,
+    TError,
+    AcceptPlatformInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptPlatformInvitation>>,
+  TError,
+  AcceptPlatformInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAcceptPlatformInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptPlatformInvitation>>,
+    AcceptPlatformInvitationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return acceptPlatformInvitation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptPlatformInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptPlatformInvitation>>
+>;
+export type AcceptPlatformInvitationMutationBody = AcceptInvitationRequest;
+export type AcceptPlatformInvitationMutationError = ErrorType<HttpValidationProblemDetails>;
+export type AcceptPlatformInvitationMutationVariables = { data: AcceptInvitationRequest };
+
+export const useAcceptPlatformInvitation = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof acceptPlatformInvitation>>,
+      TError,
+      AcceptPlatformInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof acceptPlatformInvitation>>,
+  TError,
+  AcceptPlatformInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getAcceptPlatformInvitationMutationOptions(options), queryClient);
 };

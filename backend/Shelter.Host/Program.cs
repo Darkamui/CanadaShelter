@@ -1,5 +1,6 @@
 using System.Reflection;
 using Shelter.BuildingBlocks.Auditing;
+using Shelter.BuildingBlocks.Communications;
 using Shelter.BuildingBlocks.Logging;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
@@ -24,6 +25,7 @@ builder.Services.AddShelterAuthentication(builder.Configuration, builder.Environ
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
 builder.Services.AddShelterJobHosting(builder.Configuration);
+builder.Services.AddShelterEmail(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 var app = builder.Build();

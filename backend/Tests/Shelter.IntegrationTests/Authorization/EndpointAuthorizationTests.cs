@@ -26,6 +26,10 @@ public sealed partial class EndpointAuthorizationTests(PostgresFixture postgres)
         "GET /api/platform/session/antiforgery",
         "POST /api/platform/session/login",
         "POST /api/platform/session/login/mfa",
+        "POST /api/platform/session/password/forgot",
+        "POST /api/platform/session/password/reset",
+        "POST /api/platform/invitations/lookup",
+        "POST /api/platform/invitations/accept",
         "* /health/live",
         "* /health/ready",
     };

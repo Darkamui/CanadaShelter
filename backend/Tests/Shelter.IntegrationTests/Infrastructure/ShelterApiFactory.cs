@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shelter.BuildingBlocks.Communications;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.Testing;
 
@@ -27,6 +29,12 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
     /// <summary>Extra configuration values, applied after the defaults above.</summary>
     public IReadOnlyDictionary<string, string?> Settings { get; init; } = new Dictionary<string, string?>();
 
+    /// <summary>Base URL of links in emails.</summary>
+    public const string PublicBaseUrl = "https://app.test";
+
+    /// <summary>Emails the app sent (none leave the process).</summary>
+    public CapturingEmailSender Emails { get; } = new();
+
     /// <summary>Extra service registrations (e.g. test-only jobs), applied after the Host's.</summary>
     public Action<IServiceCollection>? ConfigureServices { get; init; }
 
@@ -41,6 +49,7 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
         builder.UseSetting("Audit:MasterKey", TestKeys.MasterKeyBase64);
         builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
         builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
+        builder.UseSetting("App:PublicBaseUrl", PublicBaseUrl);
         foreach (var (key, value) in Settings)
         {
             builder.UseSetting(key, value);
@@ -53,6 +62,8 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
                 services.AddSingleton(module);
             }
 
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
             services.AddTestAuthentication();
             ConfigureServices?.Invoke(services);
         });

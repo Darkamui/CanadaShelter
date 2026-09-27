@@ -62,6 +62,10 @@ internal static class IdentityServiceCollectionExtensions
             };
         });
 
+        // Password reset links (the only data-protection tokens in use) are short-lived.
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(Communications.PlatformEmails.PasswordResetLifetimeHours));
+
         services.AddScoped<SecurityEventWriter>();
         services.AddScoped<StaffMembershipDirectory>();
 

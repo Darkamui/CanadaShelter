@@ -76,6 +76,20 @@ export const DisablePlatformSessionMfaBody = zod.object({
 
 export const DisablePlatformSessionMfaResponse = zod.void();
 
+export const ForgotPlatformSessionPasswordBody = zod.object({
+  email: zod.string().nullable(),
+});
+
+export const ForgotPlatformSessionPasswordResponse = zod.void();
+
+export const ResetPlatformSessionPasswordBody = zod.object({
+  userId: zod.uuid().nullable(),
+  token: zod.string().nullable(),
+  newPassword: zod.string().nullable(),
+});
+
+export const ResetPlatformSessionPasswordResponse = zod.void();
+
 export const ListPlatformStaffResponseItem = zod.object({
   membershipId: zod.uuid(),
   userId: zod.uuid(),
@@ -107,3 +121,68 @@ export const ReactivatePlatformStaffParams = zod.object({
 });
 
 export const ReactivatePlatformStaffResponse = zod.void();
+
+export const ListPlatformInvitationsResponseItem = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  roles: zod.array(zod.string()),
+  language: zod.string(),
+  status: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+});
+export const ListPlatformInvitationsResponse = zod.array(ListPlatformInvitationsResponseItem);
+
+export const CreatePlatformInvitationBody = zod.object({
+  email: zod.string().nullable(),
+  roles: zod.array(zod.string()).nullable(),
+  language: zod.string().nullable(),
+});
+
+export const CreatePlatformInvitationResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  roles: zod.array(zod.string()),
+  language: zod.string(),
+  status: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+});
+
+export const ResendPlatformInvitationParams = zod.object({
+  invitationId: zod.uuid(),
+});
+
+export const ResendPlatformInvitationResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  roles: zod.array(zod.string()),
+  language: zod.string(),
+  status: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+});
+
+export const RevokePlatformInvitationParams = zod.object({
+  invitationId: zod.uuid(),
+});
+
+export const RevokePlatformInvitationResponse = zod.void();
+
+export const LookupPlatformInvitationBody = zod.object({
+  token: zod.string().nullable(),
+});
+
+export const LookupPlatformInvitationResponse = zod.object({
+  organizationName: zod.string(),
+  email: zod.string(),
+  accountExists: zod.boolean(),
+});
+
+export const AcceptPlatformInvitationBody = zod.object({
+  token: zod.string().nullable(),
+  displayName: zod.string().nullable(),
+  password: zod.string().nullable(),
+});
+
+export const AcceptPlatformInvitationResponse = zod.void();

@@ -22,6 +22,8 @@ internal sealed class PlatformModelContributor : IModelContributor
         modelBuilder.ApplyConfiguration(new UserTokenConfiguration());
         modelBuilder.ApplyConfiguration(new SecurityEventConfiguration());
         modelBuilder.ApplyConfiguration(new StaffMembershipConfiguration());
+        modelBuilder.ApplyConfiguration(new StaffInvitationConfiguration());
+        modelBuilder.ApplyConfiguration(new InvitationTokenConfiguration());
     }
 }
 
@@ -185,5 +187,51 @@ internal sealed class StaffMembershipConfiguration : IEntityTypeConfiguration<St
         builder.Property(m => m.RoleKeys).IsRequired().HasDefaultValueSql("'{}'").IsNonPersonalData();
         builder.Property(m => m.CreatedAt).IsRequired().IsNonPersonalData();
         builder.HasIndex(m => new { m.TenantId, m.UserId }).IsUnique();
+    }
+}
+
+/// <summary>
+/// Staff invitations: tenant-owned, RLS (M2-5). The email is personal, with the invitation as its audit subject (the
+/// person may have no account yet). At most one open invitation per email and organization.
+/// </summary>
+internal sealed class StaffInvitationConfiguration : IEntityTypeConfiguration<StaffInvitation>
+{
+    public void Configure(EntityTypeBuilder<StaffInvitation> builder)
+    {
+        builder.ToTable("staff_invitation", PlatformModelContributor.Schema);
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.Id).ValueGeneratedNever();
+        builder.HasAuditSubject(i => i.Id);
+        builder.Property(i => i.Email).HasMaxLength(256).IsRequired().IsPersonalData();
+        builder.Property(i => i.NormalizedEmail).HasMaxLength(256).IsRequired().IsPersonalData();
+        builder.Property(i => i.RoleKeys).IsRequired().IsNonPersonalData();
+        builder.Property(i => i.Language).HasMaxLength(2).IsRequired().IsNonPersonalData();
+        builder.Property(i => i.InvitedBy).IsNonPersonalData();
+        builder.Property(i => i.CreatedAt).IsRequired().IsNonPersonalData();
+        builder.Property(i => i.ExpiresAt).IsRequired().IsNonPersonalData();
+        builder.Property(i => i.AcceptedAt).IsNonPersonalData();
+        builder.Property(i => i.RevokedAt).IsNonPersonalData();
+        builder.HasIndex(i => new { i.TenantId, i.NormalizedEmail })
+            .IsUnique()
+            .HasFilter("accepted_at IS NULL AND revoked_at IS NULL");
+        builder.HasIndex(i => new { i.TenantId, i.CreatedAt });
+    }
+}
+
+/// <summary>
+/// Global table, no RLS (ADR 0018): invitation secret hash → organization and invitation, read by the anonymous
+/// accept before any tenant is known. No personal data: a hash, two IDs and a date.
+/// </summary>
+internal sealed class InvitationTokenConfiguration : IEntityTypeConfiguration<InvitationToken>
+{
+    public void Configure(EntityTypeBuilder<InvitationToken> builder)
+    {
+        builder.ToTable("invitation_token", PlatformModelContributor.Schema);
+        builder.HasKey(t => t.TokenHash);
+        builder.Property(t => t.TokenHash).HasMaxLength(32).IsNonPersonalData();
+        builder.Property(t => t.OrganizationId).IsNonPersonalData();
+        builder.Property(t => t.InvitationId).IsNonPersonalData();
+        builder.Property(t => t.ExpiresAt).IsRequired().IsNonPersonalData();
+        builder.HasIndex(t => t.InvitationId).IsUnique();
     }
 }

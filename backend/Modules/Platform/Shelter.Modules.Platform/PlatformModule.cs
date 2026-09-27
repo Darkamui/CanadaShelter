@@ -6,7 +6,9 @@ using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Platform.Authorization;
+using Shelter.Modules.Platform.Communications;
 using Shelter.Modules.Platform.Features.DevSeed;
+using Shelter.Modules.Platform.Features.Invitations;
 using Shelter.Modules.Platform.Features.Ping;
 using Shelter.Modules.Platform.Features.Provisioning;
 using Shelter.Modules.Platform.Features.Session;
@@ -31,6 +33,8 @@ public sealed class PlatformModule : IModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<OrganizationProvisioner>();
         services.AddShelterIdentity(configuration);
+        services.AddSingleton<PublicLinks>();
+        services.AddScoped<InvitationRedemption>();
         services.AddHostedService<DevelopmentSeed>();
     }
 
@@ -40,5 +44,6 @@ public sealed class PlatformModule : IModule
         PingEndpoint.Map(endpoints);
         SessionEndpoints.Map(endpoints);
         StaffEndpoints.Map(endpoints);
+        InvitationEndpoints.Map(endpoints);
     }
 }

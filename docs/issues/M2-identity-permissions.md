@@ -102,19 +102,19 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] Minimal `IEmailSender` over SMTP (Mailpit locally). It is replaced by the Communications building block later.
-- [ ] Tenant-owned `StaffInvitation`:
+- [x] Minimal `IEmailSender` over SMTP (Mailpit locally). It is replaced by the Communications building block later.
+- [x] Tenant-owned `StaffInvitation`:
   - Stores the email (**personal**, classified), roles and language.
   - Expires after 7 days; can be revoked.
   - The token is 32 random bytes, stored only as a hash, single use.
-- [ ] An anonymous accept finds the organization from the token alone. A global token lookup table holds no personal data.
-- [ ] Accepting:
+- [x] An anonymous accept finds the organization from the token alone. A global token lookup table holds no personal data.
+- [x] Accepting:
   - A new account sets a name and password.
   - An existing account must be signed in as that account.
   - An email match alone grants nothing.
-- [ ] Forgot/reset password: always the same response (no account enumeration).
-- [ ] Invitation and reset emails in fr-CA or en-CA, following the recipient's language. No personal data in logs.
-- [ ] Tests: accepting creates the membership with its roles; expired, revoked or reused token rejected; a token cannot reach another tenant; reset flow; emails captured by a fake sender.
+- [x] Forgot/reset password: always the same response (no account enumeration).
+- [x] Invitation and reset emails in fr-CA or en-CA, following the recipient's language. No personal data in logs.
+- [x] Tests: accepting creates the membership with its roles; expired, revoked or reused token rejected; a token cannot reach another tenant; reset flow; emails captured by a fake sender.
 
 ---
 

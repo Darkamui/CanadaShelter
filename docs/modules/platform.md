@@ -80,6 +80,8 @@
 - Permissions (M2-3): every endpoint declares a permission, the session policy or the operator policy, or is allowlisted anonymous. Every permission endpoint returns 403 to a member without it. An undeclared endpoint needs a member: `EndpointAuthorizationTests`. The role → permission mapping: `PermissionCatalogTests`.
 - Staff (M2-3): the organization keeps at least one active administrator (409, serialized by `FOR UPDATE` on its administrators). Role changes are audited and apply on the next request. Other organizations' memberships return 404: `StaffManagementTests`.
 - MFA (M2-4): an administrator or operator without MFA reaches only the session endpoints, and full access follows enrollment in the same session. Two-step login, a recovery code works once and is stored hashed, disabling needs a code, other staff are unaffected, the bypass flag is ignored outside Development: `MfaTests`, `MfaEnforcementTests`.
+- Invitations (M2-5): accepting creates the membership with the invited roles, once. Expired, revoked, replaced and used links are rejected. A link only reaches its own organization. An existing account must be signed in as itself: `InvitationTests`.
+- Password reset (M2-5): a link works once, and forgot/reset answer the same whether or not the account exists: `PasswordResetTests`.
 - Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
@@ -93,7 +95,7 @@
   - `.RequireSession()` = signed in, no organization needed.
   - The fallback policy (every endpoint that declares nothing, including unknown routes) = authenticated active member.
   - Both the permission policies and the fallback also require MFA when the session must use it (see MFA below). `.RequireSession()` does not, so enrollment stays reachable.
-  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, `session/login/mfa`, health.
+  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, `session/login/mfa`, `session/password/forgot`, `session/password/reset`, `invitations/lookup`, `invitations/accept`, health.
   - The Hangfire dashboard (`/hangfire`, all environments) needs the `PlatformOperator` policy: `shelter:operator=true` and `amr=mfa`.
 - Platform permissions:
   - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
@@ -117,6 +119,33 @@
 - `security_event` records `MfaEnabled`, `MfaDisabled` and `RecoveryCodeUsed`, plus `LoginSucceeded`/`LoginFailed`/`LockedOut` for the second step. The password step of an MFA login records nothing.
 - Development bypass: `Auth:Mfa:DevelopmentBypass=true` (set in `appsettings.Development.json`) turns enforcement off **only** when the environment is Development, with a startup warning. It is ignored everywhere else (`MfaEnforcement.From`).
 
+## Invitations
+
+- M2-5, ADR 0018. Staff are onboarded by an email invitation; there is no self-sign-up.
+- `platform.staff_invitation` (tenant-owned, forced RLS): email (personal), role keys, language (`fr`/`en`), inviter, created, expires (7 days), accepted/revoked. At most one open invitation per email per organization (filtered unique index). Accepted and revoked rows stay for history.
+- The secret is 32 random bytes, sent base64url in the link's fragment (`{App:PublicBaseUrl}/accept-invitation#token=…`), stored only as its SHA-256.
+- `platform.invitation_token` is **intentionally global**: `token_hash` → `organization_id`, `invitation_id`, `expires_at`, no personal data. It lets an anonymous request find the organization before any tenant is set. Its rows are deleted on accept, revoke and resend.
+- Endpoints, under `/api/platform/invitations`:
+  - `GET` (`ListPlatformInvitations`, `platform.staff.read`): open invitations, `pending` or `expired`.
+  - `POST` (`CreatePlatformInvitation`, `platform.staff.manage`): 409 when the email already has a membership or a pending invitation. An expired one is revoked and replaced. The email is sent in the same transaction: a failed send creates nothing.
+  - `POST /{id}/resend` and `POST /{id}/revoke` (`platform.staff.manage`): resend renews the 7 days and issues a new secret (the old link dies).
+  - `POST /lookup` (anonymous): organization name, email, `accountExists`, for the accept page.
+  - `POST /accept` (anonymous): a new email sets a name and password (the account is created with the email confirmed). An email that already has an account needs that account signed in (403 otherwise); an email match alone grants nothing. 409 if already a member.
+  - An unknown, expired, revoked or used secret is always 404.
+- `InvitationRedemption` reads the global token, then works in a **new DI scope** whose tenant is the token's organization, in one unit of work, with the invitation locked `FOR UPDATE`. The request's own scope may belong to another organization.
+
+## Password reset
+
+- M2-5. Identity's reset tokens (data protection, bound to the security stamp, 2 hours).
+- `POST /api/platform/session/password/forgot` (anonymous): always `202` with no body. A link (`{App:PublicBaseUrl}/reset-password#user={id}&token={token}`) is emailed only when the account exists. A failed send is logged by exception type only.
+- `POST /api/platform/session/password/reset` (anonymous): unknown account, wrong, expired or used token → the same 400. Password policy errors → validation problem. Success rotates the security stamp (other sessions end, the link is spent) and records `PasswordChanged`.
+
+## Email
+
+- `IEmailSender` (`BuildingBlocks/Communications/EmailSender.cs`): minimal SMTP (`System.Net.Mail`), to be replaced by the Communications building block. Configuration section `Email` (`From`, `FromName`, `Host`, `Port`, `EnableSsl`, `UserName`, `Password`). Development points at Mailpit (`127.0.0.1:1025`, UI on `http://localhost:8025`).
+- `PlatformEmails` builds the invitation and reset emails in `fr` or `en`: the account's preferred language, otherwise the invitation's. `PublicLinks` builds links from `App:PublicBaseUrl`.
+- Tests swap in `CapturingEmailSender` (`ShelterApiFactory.Emails`).
+
 ## Key files
 
 - `Domain/Organization.cs`, `Domain/TenantSetting.cs`, `Persistence/PlatformModelContributor.cs`, `Provisioning/OrganizationProvisioner.cs`.
@@ -126,6 +155,8 @@
   - `GET` (`ListPlatformStaff`)
   - `PUT /{membershipId}/roles` (`ChangePlatformStaffRoles`)
   - `POST /{membershipId}/suspend` (`SuspendPlatformStaff`) and `POST /{membershipId}/reactivate` (`ReactivatePlatformStaff`)
+- `Features/Invitations/InvitationEndpoints.cs`, `InvitationRedemption.cs`, `Domain/StaffInvitation.cs`, `Communications/PlatformEmails.cs`.
+- `Features/Session/PasswordEndpoints.cs`.
 - `Features/Session/MfaEndpoints.cs`, `Identity/ShelterUserStore.cs`; the shared enforcement is in `BuildingBlocks/Authorization/Mfa.cs`.
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
@@ -135,6 +166,12 @@
 - MFA follow-ups:
   - The authenticator key could be encrypted at rest.
   - A used TOTP code can be replayed within its validity window (Identity does not track used steps).
+- Invitation and reset follow-ups:
+  - Expired `invitation_token` rows are not purged (only accept, revoke and resend delete them).
+  - No rate limiting on the anonymous endpoints (forgot-password can be used to spam an address).
+  - Forgot-password takes longer when the account exists (a timing side channel).
+  - `lookup` tells the token holder whether the email has an account.
+  - A reset does not clear a lockout.
 - Memberships created before M2-3 have no roles, and so no permissions. The development seed gives the demo account `administrator` again.
 - Known gaps (from the reviewer):
   - `AuditRecord.Metadata` is not classified, so callers must keep personal data out of it.

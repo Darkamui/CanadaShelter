@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/ArchitectureTests/">
+    <Project Path="ArchitectureTests/Shelter.ArchitectureTests/Shelter.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/BuildingBlocks/">
+    <Project Path="BuildingBlocks/Shelter.BuildingBlocks/Shelter.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Animals/">
+    <Project Path="Modules/Animals/Shelter.Modules.Animals.Contracts/Shelter.Modules.Animals.Contracts.csproj" />
+    <Project Path="Modules/Animals/Shelter.Modules.Animals/Shelter.Modules.Animals.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Engagement/">
+    <Project Path="Modules/Engagement/Shelter.Modules.Engagement.Contracts/Shelter.Modules.Engagement.Contracts.csproj" />
+    <Project Path="Modules/Engagement/Shelter.Modules.Engagement/Shelter.Modules.Engagement.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Medical/">
+    <Project Path="Modules/Medical/Shelter.Modules.Medical.Contracts/Shelter.Modules.Medical.Contracts.csproj" />
+    <Project Path="Modules/Medical/Shelter.Modules.Medical/Shelter.Modules.Medical.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Movements/">
+    <Project Path="Modules/Movements/Shelter.Modules.Movements.Contracts/Shelter.Modules.Movements.Contracts.csproj" />
+    <Project Path="Modules/Movements/Shelter.Modules.Movements/Shelter.Modules.Movements.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Municipal/">
+    <Project Path="Modules/Municipal/Shelter.Modules.Municipal.Contracts/Shelter.Modules.Municipal.Contracts.csproj" />
+    <Project Path="Modules/Municipal/Shelter.Modules.Municipal/Shelter.Modules.Municipal.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Operations/">
+    <Project Path="Modules/Operations/Shelter.Modules.Operations.Contracts/Shelter.Modules.Operations.Contracts.csproj" />
+    <Project Path="Modules/Operations/Shelter.Modules.Operations/Shelter.Modules.Operations.csproj" />
+  </Folder>
+  <Folder Name="/Modules/People/">
+    <Project Path="Modules/People/Shelter.Modules.People.Contracts/Shelter.Modules.People.Contracts.csproj" />
+    <Project Path="Modules/People/Shelter.Modules.People/Shelter.Modules.People.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/">
+    <Project Path="Modules/Platform/Shelter.Modules.Platform.Contracts/Shelter.Modules.Platform.Contracts.csproj" />
+    <Project Path="Modules/Platform/Shelter.Modules.Platform/Shelter.Modules.Platform.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Reporting/">
+    <Project Path="Modules/Reporting/Shelter.Modules.Reporting.Contracts/Shelter.Modules.Reporting.Contracts.csproj" />
+    <Project Path="Modules/Reporting/Shelter.Modules.Reporting/Shelter.Modules.Reporting.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Shelter.IntegrationTests/Shelter.IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="Shelter.Host/Shelter.Host.csproj" />
+</Solution>

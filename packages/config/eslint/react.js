@@ -1,0 +1,34 @@
+import i18next from 'eslint-plugin-i18next';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import tseslint from 'typescript-eslint';
+import base from './base.js';
+
+/**
+ * React apps: hooks rules, fast-refresh safety, and no hard-coded user-facing
+ * strings in JSX (CLAUDE.md hard rule 5). Tests are exempt from the i18n rule.
+ */
+export default tseslint.config(
+  ...base,
+  reactHooks.configs.flat['recommended-latest'],
+  reactRefresh.configs.vite,
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: { i18next },
+    rules: {
+      'i18next/no-literal-string': [
+        'error',
+        {
+          mode: 'jsx-only',
+          'jsx-attributes': {
+            include: ['^(aria-label|aria-description|title|placeholder|alt|label)$'],
+          },
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}', '**/tests/**', '**/e2e/**'],
+    rules: { 'i18next/no-literal-string': 'off' },
+  },
+);

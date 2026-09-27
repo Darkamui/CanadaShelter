@@ -1,0 +1,32 @@
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Node
+node_modules/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
+# Environment (only the documented example is committed)
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json

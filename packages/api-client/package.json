@@ -1,0 +1,35 @@
+{
+  "name": "@shelter/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./hooks/*": "./src/generated/hooks/*.ts",
+    "./model": "./src/generated/model/index.ts",
+    "./zod/*": "./src/generated/zod/*.ts",
+    "./http": "./src/http/fetcher.ts"
+  },
+  "scripts": {
+    "generate": "dotnet build ../../backend/Shelter.Host -c Release -p:ExportOpenApi=true && orval",
+    "lint": "eslint . && tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.104.0",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@shelter/config": "workspace:*",
+    "@tanstack/react-query": "5.104.0",
+    "@types/react": "19.3.0",
+    "eslint": "10.11.0",
+    "orval": "8.38.0",
+    "prettier": "3.9.9",
+    "react": "19.3.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
+  }
+}

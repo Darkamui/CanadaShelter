@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Formats the single file Claude just edited. Silent on success; never blocks.
+# Uses node (a repo prerequisite) to parse the hook payload, so jq is not required.
 set -uo pipefail
 
-file=$(jq -r '.tool_input.file_path // empty' 2>/dev/null)
-[ -z "$file" ] || [ ! -f "$file" ] && exit 0
+file=$(node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).tool_input?.file_path??"")}catch{}})' 2>/dev/null)
+{ [ -z "$file" ] || [ ! -f "$file" ]; } && exit 0
 
 case "$file" in
   *.cs)

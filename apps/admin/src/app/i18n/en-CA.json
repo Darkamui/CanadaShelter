@@ -1,0 +1,31 @@
+{
+  "appName": "Shelter management",
+  "skipToContent": "Skip to content",
+  "language": {
+    "fr-CA": "Français",
+    "en-CA": "English"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "animals": "Animals",
+    "people": "People",
+    "movements": "Movements",
+    "medical": "Medical",
+    "operations": "Operations",
+    "engagement": "Engagement",
+    "municipal": "Municipal",
+    "reporting": "Reporting",
+    "platform": "Platform"
+  },
+  "home": {
+    "title": "Home",
+    "intro": "Choose a module from the menu."
+  },
+  "module": {
+    "comingSoon": "This module is coming soon."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "backHome": "Back to home"
+  }
+}

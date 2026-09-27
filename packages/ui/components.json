@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@shelter/ui/components",
+    "ui": "@shelter/ui/components",
+    "utils": "@shelter/ui/lib/utils",
+    "lib": "@shelter/ui/lib",
+    "hooks": "@shelter/ui/hooks"
+  }
+}

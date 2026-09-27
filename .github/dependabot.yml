@@ -1,0 +1,57 @@
+# Version updates only for what we already depend on. A NEW dependency still needs approval (CLAUDE.md hard rule 9).
+# Actions and Docker images are pinned by SHA/digest; Dependabot keeps the pins and their version comments current.
+# cooldown: wait 7 days after a release before proposing it (supply-chain hygiene; flagged by zizmor).
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/*']
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+    open-pull-requests-limit: 5
+    groups:
+      microsoft:
+        patterns: ['Microsoft.*', 'System.*', 'dotnet-*']
+      testing:
+        patterns: ['xunit*', 'Testcontainers*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: /infrastructure/docker
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build

@@ -13,16 +13,14 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgresDatabase _database = new();
 
+    /// <summary>Tenant-scoped runtime-role access over the Platform model, with the standard isolation checks.</summary>
+    public TenantHarness Tenants => new(_database.AppConnectionString, new PlatformModelContributor());
+
     /// <summary>A runtime-role (<c>shelter_app</c>) context for <paramref name="tenantId"/>, or with no tenant.</summary>
-    public ShelterDbContext CreateContext(Guid? tenantId) =>
-        TestDbContexts.Create(_database.AppConnectionString, tenantId, new PlatformModelContributor());
+    public ShelterDbContext CreateContext(Guid? tenantId) => Tenants.CreateContext(tenantId);
 
     /// <summary>Runs <paramref name="work"/> for <paramref name="tenantId"/> inside one committed unit of work.</summary>
-    public async Task<T> InTenantAsync<T>(Guid? tenantId, Func<ShelterDbContext, Task<T>> work)
-    {
-        await using var db = CreateContext(tenantId);
-        return await db.InUnitOfWorkAsync(() => work(db));
-    }
+    public Task<T> InTenantAsync<T>(Guid? tenantId, Func<ShelterDbContext, Task<T>> work) => Tenants.InTenantAsync(tenantId, work);
 
     /// <summary>A platform-admin (<c>shelter_platform_admin</c>) context factory over the Platform model.</summary>
     public PlatformAdminDbContextFactory CreatePlatformAdminFactory() =>

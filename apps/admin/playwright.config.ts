@@ -17,7 +17,9 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm exec vite preview --port ${port} --strictPort`,
+    // Run vite directly (on PATH via the pnpm script). Behind `pnpm exec`, vite escapes Playwright's
+    // process-group kill on Linux and teardown hangs until the CI timeout.
+    command: `vite preview --port ${port} --strictPort`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !ci,
   },

@@ -24,10 +24,74 @@
           }
         }
       }
+    },
+    "/api/animals/species": {
+      "get": {
+        "tags": [
+          "animals"
+        ],
+        "operationId": "ListAnimalsSpecies",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements/intake-reasons": {
+      "get": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "ListMovementsIntakeReasons",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "LocalizedText": {
+        "required": [
+          "fr",
+          "en"
+        ],
+        "type": "object",
+        "properties": {
+          "fr": {
+            "type": "string",
+            "description": "fr-CA text."
+          },
+          "en": {
+            "type": "string",
+            "description": "en-CA text."
+          }
+        },
+        "description": "A value stored in both supported languages (ADR 0013), mapped to two columns with\r\nEntityTypeBuilder&lt;TEntity&gt; LocalizedTextMappingExtensions.MapLocalizedText&lt;TEntity&gt;(EntityTypeBuilder&lt;TEntity&gt; builder, Expression&lt;Func&lt;TEntity, LocalizedText?&gt;&gt; property, string column, int maxLength). Both are required: reference data is\r\nalways bilingual. Serialized as `{ \"fr\": …, \"en\": … }`; clients pick by UI locale."
+      },
       "PingResponse": {
         "required": [
           "status"
@@ -38,12 +102,36 @@
             "type": "string"
           }
         }
+      },
+      "ReferenceItem": {
+        "required": [
+          "code",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable identifier stored by referencing rows; never shown to users."
+          },
+          "label": {
+            "description": "Label in both languages.",
+            "$ref": "#/components/schemas/LocalizedText"
+          }
+        },
+        "description": "One value of a reference list as the API returns it: a stable code and both labels."
       }
     }
   },
   "tags": [
     {
       "name": "platform"
+    },
+    {
+      "name": "animals"
+    },
+    {
+      "name": "movements"
     }
   ]
 }

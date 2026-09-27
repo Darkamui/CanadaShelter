@@ -2,6 +2,11 @@ import { expect, test } from '@playwright/test';
 
 const LOCALE_STORAGE_KEY = 'shelter.locale';
 
+const species = [
+  { code: 'dog', label: { fr: 'Chien', en: 'Dog' } },
+  { code: 'cat', label: { fr: 'Chat', en: 'Cat' } },
+];
+
 const cases = [
   {
     locale: 'fr-CA',
@@ -11,6 +16,7 @@ const cases = [
     animals: 'Animaux',
     switchTo: 'English',
     pingUp: 'Serveur connecté',
+    dog: 'Chien',
   },
   {
     locale: 'en-CA',
@@ -20,6 +26,7 @@ const cases = [
     animals: 'Animals',
     switchTo: 'Français',
     pingUp: 'Server connected',
+    dog: 'Dog',
   },
 ] as const;
 
@@ -28,6 +35,7 @@ for (const c of cases) {
     test.beforeEach(async ({ page }) => {
       // No backend in E2E: every API call is mocked.
       await page.route('**/api/**', (route) => route.fulfill({ json: { status: 'ok' } }));
+      await page.route('**/api/animals/species', (route) => route.fulfill({ json: species }));
       await page.addInitScript(
         ([key, locale]) => {
           if (!sessionStorage.getItem('e2e-seeded')) {
@@ -51,6 +59,7 @@ for (const c of cases) {
       await nav.getByRole('link', { name: c.animals }).click();
       await expect(page).toHaveURL(/\/animals$/);
       await expect(page.getByRole('heading', { level: 1, name: c.animals })).toBeVisible();
+      await expect(page.getByRole('listitem').filter({ hasText: c.dog })).toBeVisible();
     });
 
     test('language switch changes and persists the locale', async ({ page }) => {

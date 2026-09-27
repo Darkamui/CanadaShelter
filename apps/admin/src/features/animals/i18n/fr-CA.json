@@ -1,0 +1,7 @@
+{
+  "species": {
+    "title": "Espèces",
+    "loading": "Chargement des espèces…",
+    "error": "Impossible de charger les espèces."
+  }
+}

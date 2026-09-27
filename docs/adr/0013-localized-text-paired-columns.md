@@ -28,4 +28,4 @@ The product is Québec-first and bilingual, with fr-CA as the default (§11.1). 
 - Negative / accepted trade-offs:
   - Adding a third language means a migration on every bilingual table.
   - Wide tables when an entity has several bilingual fields.
-- Follow-ups: M1 defines `LocalizedText` and the global + tenant-override reference-data pattern.
+- Follow-ups: M1 defines `LocalizedText` and the global + tenant-override reference-data pattern (done: ADR 0017).

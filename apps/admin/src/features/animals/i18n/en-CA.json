@@ -1,0 +1,7 @@
+{
+  "species": {
+    "title": "Species",
+    "loading": "Loading species…",
+    "error": "Could not load species."
+  }
+}

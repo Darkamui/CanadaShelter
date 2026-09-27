@@ -5,4 +5,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './localizedText.ts';
 export * from './pingResponse.ts';
+export * from './referenceItem.ts';

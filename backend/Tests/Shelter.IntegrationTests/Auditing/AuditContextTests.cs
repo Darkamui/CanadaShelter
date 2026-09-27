@@ -37,7 +37,7 @@ public sealed class AuditContextTests(PostgresFixture postgres) : IAsyncDisposab
     [Fact]
     public async Task Request_stamps_source_api_anonymous_actor_and_its_correlation_id()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAntiforgeryClientAsync();
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"/api/test-audit/{_entityId:D}", UriKind.Relative));
         request.Headers.Add(TenantHeader, _tenant.ToString("D"));
         request.Headers.Add(CorrelationHeader, "corr-api-1");

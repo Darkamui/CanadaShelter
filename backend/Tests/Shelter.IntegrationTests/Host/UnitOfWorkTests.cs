@@ -62,7 +62,7 @@ public sealed class UnitOfWorkTests(PostgresFixture postgres) : IAsyncDisposable
 
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path)
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAntiforgeryClientAsync();
         using var request = new HttpRequestMessage(method, new Uri(path, UriKind.Relative));
         request.Headers.Add(TenantHeader, _tenant.ToString("D"));
         return await client.SendAsync(request, TestContext.Current.CancellationToken);

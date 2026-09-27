@@ -4,20 +4,23 @@
  * Shelter.Host | v1
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { PingResponse } from '../model';
+import type { LoginRequest, LoginResponse, PingResponse, SessionResponse } from '../model';
 
 import { shelterFetch } from '../../http/fetcher.ts';
 import type { ErrorType } from '../../http/fetcher.ts';
@@ -138,6 +141,405 @@ export function useGetPlatformPing<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetPlatformPingQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetPlatformSessionAntiforgeryUrl = () => {
+  return `/api/platform/session/antiforgery`;
+};
+
+export const getPlatformSessionAntiforgery = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getGetPlatformSessionAntiforgeryUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetPlatformSessionAntiforgeryQueryKey = () => {
+  return [`/api/platform/session/antiforgery`] as const;
+};
+
+export const getGetPlatformSessionAntiforgeryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPlatformSessionAntiforgeryQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>> = ({
+    signal,
+  }) => getPlatformSessionAntiforgery({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPlatformSessionAntiforgeryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>
+>;
+export type GetPlatformSessionAntiforgeryQueryError = ErrorType<unknown>;
+
+export function useGetPlatformSessionAntiforgery<
+  TData = Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformSessionAntiforgery<
+  TData = Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformSessionAntiforgery<
+  TData = Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetPlatformSessionAntiforgery<
+  TData = Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPlatformSessionAntiforgery>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPlatformSessionAntiforgeryQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getLoginPlatformSessionUrl = () => {
+  return `/api/platform/session/login`;
+};
+
+export const loginPlatformSession = async (
+  loginRequest: LoginRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<LoginResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<LoginResponse>(getLoginPlatformSessionUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(loginRequest),
+  });
+};
+
+export const getLoginPlatformSessionMutationKey = () => ['loginPlatformSession'] as const;
+
+export const getLoginPlatformSessionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof loginPlatformSession>>,
+    TError,
+    LoginPlatformSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof loginPlatformSession>>,
+  TError,
+  LoginPlatformSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLoginPlatformSessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof loginPlatformSession>>,
+    LoginPlatformSessionMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return loginPlatformSession(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LoginPlatformSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof loginPlatformSession>>
+>;
+export type LoginPlatformSessionMutationBody = LoginRequest;
+export type LoginPlatformSessionMutationError = ErrorType<unknown>;
+export type LoginPlatformSessionMutationVariables = { data: LoginRequest };
+
+export const useLoginPlatformSession = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof loginPlatformSession>>,
+      TError,
+      LoginPlatformSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof loginPlatformSession>>,
+  TError,
+  LoginPlatformSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getLoginPlatformSessionMutationOptions(options), queryClient);
+};
+export const getLogoutPlatformSessionUrl = () => {
+  return `/api/platform/session/logout`;
+};
+
+export const logoutPlatformSession = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getLogoutPlatformSessionUrl(), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getLogoutPlatformSessionMutationKey = () => ['logoutPlatformSession'] as const;
+
+export const getLogoutPlatformSessionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof logoutPlatformSession>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof logoutPlatformSession>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getLogoutPlatformSessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof logoutPlatformSession>>,
+    void
+  > = () => {
+    return logoutPlatformSession(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LogoutPlatformSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof logoutPlatformSession>>
+>;
+
+export type LogoutPlatformSessionMutationError = ErrorType<unknown>;
+
+export const useLogoutPlatformSession = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof logoutPlatformSession>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof logoutPlatformSession>>, TError, void, TContext> => {
+  return useMutation(getLogoutPlatformSessionMutationOptions(options), queryClient);
+};
+export const getGetPlatformSessionUrl = () => {
+  return `/api/platform/session`;
+};
+
+export const getPlatformSession = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<SessionResponse> => {
+  return shelterFetch<SessionResponse>(getGetPlatformSessionUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetPlatformSessionQueryKey = () => {
+  return [`/api/platform/session`] as const;
+};
+
+export const getGetPlatformSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlatformSession>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformSession>>, TError, TData>>;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPlatformSessionQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPlatformSession>>> = ({ signal }) =>
+    getPlatformSession({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformSession>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPlatformSessionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlatformSession>>
+>;
+export type GetPlatformSessionQueryError = ErrorType<unknown>;
+
+export function useGetPlatformSession<
+  TData = Awaited<ReturnType<typeof getPlatformSession>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformSession>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformSession>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformSession>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformSession<
+  TData = Awaited<ReturnType<typeof getPlatformSession>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPlatformSession>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformSession>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformSession>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformSession<
+  TData = Awaited<ReturnType<typeof getPlatformSession>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformSession>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetPlatformSession<
+  TData = Awaited<ReturnType<typeof getPlatformSession>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformSession>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPlatformSessionQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

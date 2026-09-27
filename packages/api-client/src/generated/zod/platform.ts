@@ -9,3 +9,26 @@ import * as zod from 'zod';
 export const GetPlatformPingResponse = zod.object({
   status: zod.string(),
 });
+
+export const GetPlatformSessionAntiforgeryResponse = zod.void();
+
+export const LoginPlatformSessionBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const LoginPlatformSessionResponse = zod.object({
+  status: zod.string(),
+});
+
+export const LogoutPlatformSessionResponse = zod.void();
+
+export const GetPlatformSessionResponse = zod.object({
+  user: zod.object({
+    id: zod.uuid(),
+    displayName: zod.string(),
+    preferredLanguage: zod.string(),
+    isPlatformOperator: zod.boolean(),
+    mfaEnabled: zod.boolean(),
+  }),
+});

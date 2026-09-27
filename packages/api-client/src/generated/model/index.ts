@@ -6,5 +6,9 @@
  */
 
 export * from './localizedText.ts';
+export * from './loginRequest.ts';
+export * from './loginResponse.ts';
 export * from './pingResponse.ts';
 export * from './referenceItem.ts';
+export * from './sessionResponse.ts';
+export * from './sessionUser.ts';

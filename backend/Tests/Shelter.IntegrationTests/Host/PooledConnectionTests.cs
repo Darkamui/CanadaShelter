@@ -29,7 +29,7 @@ public sealed class PooledConnectionTests(PostgresFixture postgres)
             ApplicationName = "pooled-connection-test", // own pool, not shared with other tests
         }.ConnectionString;
         await using var factory = new ShelterApiFactory(singleConnection, new PoolProbeModule()) { EnvironmentName = "Development" };
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateAntiforgeryClientAsync();
         var tenantA = Guid.CreateVersion7();
         var tenantB = Guid.CreateVersion7();
 

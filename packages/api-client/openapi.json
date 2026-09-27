@@ -25,6 +25,82 @@
         }
       }
     },
+    "/api/platform/session/antiforgery": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "GetPlatformSessionAntiforgery",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/platform/session/login": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "LoginPlatformSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/session/logout": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "LogoutPlatformSession",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/platform/session": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "GetPlatformSession",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/animals/species": {
       "get": {
         "tags": [
@@ -92,6 +168,32 @@
         },
         "description": "A value stored in both supported languages (ADR 0013). Both are required: reference data is always bilingual.\nClients pick the label by UI locale."
       },
+      "LoginRequest": {
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
       "PingResponse": {
         "required": [
           "status"
@@ -120,6 +222,45 @@
           }
         },
         "description": "One value of a reference list as the API returns it: a stable code and both labels."
+      },
+      "SessionResponse": {
+        "required": [
+          "user"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SessionUser"
+          }
+        }
+      },
+      "SessionUser": {
+        "required": [
+          "id",
+          "displayName",
+          "preferredLanguage",
+          "isPlatformOperator",
+          "mfaEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "preferredLanguage": {
+            "type": "string"
+          },
+          "isPlatformOperator": {
+            "type": "boolean"
+          },
+          "mfaEnabled": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },

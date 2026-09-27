@@ -20,6 +20,7 @@ builder.Logging.AddShelterRedaction();
 builder.Services.AddShelterProblemDetails();
 builder.Services.AddShelterOpenApi();
 builder.Services.AddShelterTenancy(builder.Environment);
+builder.Services.AddShelterAuthentication(builder.Environment);
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
 builder.Services.AddShelterJobHosting(builder.Configuration);
@@ -37,7 +38,9 @@ if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

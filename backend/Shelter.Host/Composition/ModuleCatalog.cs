@@ -1,3 +1,4 @@
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Animals;
@@ -44,9 +45,11 @@ internal static class ModuleCatalog
         // Resolved from DI (registered above) so integration tests can add a test-only module.
         foreach (var module in endpoints.ServiceProvider.GetServices<IModule>())
         {
-            // Every module endpoint runs in one unit of work when the request has a tenant (ADR 0004).
+            // CSRF check first (ADR 0018), so a rejected request never opens a transaction; then every module
+            // endpoint runs in one unit of work when the request has a tenant (ADR 0004).
             var group = endpoints.MapGroup($"/api/{module.RoutePrefix}")
                 .WithTags(module.RoutePrefix)
+                .AddEndpointFilter<AntiforgeryEndpointFilter>()
                 .AddEndpointFilter<UnitOfWorkEndpointFilter>();
             module.MapEndpoints(group);
         }

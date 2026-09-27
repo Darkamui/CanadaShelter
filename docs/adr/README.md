@@ -10,7 +10,7 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0002](0002-postgresql-only-datastore.md) | PostgreSQL as the only datastore (no Redis in V1) | Accepted |
 | [0003](0003-shared-database-tenantid-rls.md) | Shared database + `TenantId` + EF filters + RLS | Accepted |
 | [0004](0004-tenant-propagation-set-local.md) | Tenant propagation via `SET LOCAL app.tenant_id` per transaction, fail closed | Accepted |
-| [0005](0005-dbcontext-strategy.md) | DbContext strategy: single composed DbContext, schema per module | **Proposed** (Daniel decides; blocks M1) |
+| [0005](0005-dbcontext-strategy.md) | DbContext strategy: single composed DbContext, schema per module | Accepted |
 | [0006](0006-plain-handlers-minimal-apis.md) | Handlers as plain classes, Minimal APIs, no MediatR | Accepted |
 | [0007](0007-identity-cookie-auth.md) | ASP.NET Identity + same-site cookie auth; no OpenIddict in V1 | Accepted |
 | [0008](0008-orval-typescript-client.md) | Orval for the TypeScript client | Accepted |

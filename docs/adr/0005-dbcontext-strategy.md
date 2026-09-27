@@ -1,6 +1,6 @@
 # 0005. DbContext strategy: single composed DbContext, schema per module
 
-- **Status:** Proposed (owner: Daniel; must be Accepted before M1 starts)
+- **Status:** Accepted
 - **Date:** 2026-09-26
 
 ## Context
@@ -13,7 +13,7 @@ Each module owns its PostgreSQL schema and persistence configuration (ADR 0001, 
 
 This matters in M1: the tenant interceptor, the audit interceptor and the first migrations are all built on whichever layout we pick.
 
-## Decision (recommended)
+## Decision
 
 - **One composed context.** A single `ShelterDbContext` in BuildingBlocks/Persistence, built from **module-owned configurations**:
   - Each module keeps its `IEntityTypeConfiguration<T>` classes `internal` in `Modules/<X>/Persistence/`.

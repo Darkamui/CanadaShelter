@@ -12,27 +12,31 @@ namespace Shelter.BuildingBlocks.Auditing;
 /// Records an <see cref="AuditEvent"/> for every insert, update and delete of a tenant-owned entity, in the same
 /// <c>SaveChanges</c>, and so the same transaction, as the change (architecture §17.1). Registered after
 /// <see cref="TenantStampingInterceptor"/>, so every audited row already has a checked tenant.
-/// Updates record changed fields only. Audit events themselves can only be added, never modified or deleted.
+/// Updates record changed fields only. Personal values are encrypted with the data key of the entity's audit
+/// subject (see <see cref="FieldClassificationExtensions.SubjectAnnotation"/>), created on first use in the same
+/// transaction. Audit events themselves can only be added, never modified or deleted.
 /// Global (non-tenant) tables are not audited here.
 /// </summary>
 internal sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     public static AuditSaveChangesInterceptor Instance { get; } = new();
 
+    // Data keys come from the database and the key provider, which are async; a synchronous save completes here
+    // without awaiting, or fails if it would need a key.
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        Record(eventData.Context);
+        RecordAsync(eventData.Context, canFetchKeys: false, CancellationToken.None).GetAwaiter().GetResult();
         return result;
     }
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
     {
-        Record(eventData.Context);
-        return ValueTask.FromResult(result);
+        await RecordAsync(eventData.Context, canFetchKeys: true, cancellationToken);
+        return result;
     }
 
-    private static void Record(DbContext? context)
+    private static async Task RecordAsync(DbContext? context, bool canFetchKeys, CancellationToken cancellationToken)
     {
         if (context is not ShelterDbContext shelter)
         {
@@ -40,8 +44,9 @@ internal sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
         }
 
         var timestamp = DateTimeOffset.UtcNow;
+        var keys = new AuditKeyCache(shelter, canFetchKeys);
         var events = new List<AuditEvent>();
-        foreach (var entry in shelter.ChangeTracker.Entries<ITenantOwned>())
+        foreach (var entry in shelter.ChangeTracker.Entries<ITenantOwned>().ToList())
         {
             if (entry.Entity is AuditEvent)
             {
@@ -53,45 +58,75 @@ internal sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
                 continue;
             }
 
-            var auditEvent = entry.State switch
+            if (entry.Entity is PersonDataKey)
             {
-                EntityState.Added => Created(shelter, entry, timestamp),
-                EntityState.Modified => Updated(shelter, entry, timestamp),
-                EntityState.Deleted => Deleted(shelter, entry, timestamp),
-                _ => null,
-            };
-
-            if (auditEvent is not null)
-            {
-                events.Add(auditEvent);
+                throw new InvalidOperationException("Data keys are managed by the audit key store and are never tracked.");
             }
+
+            var (action, before, after) = Payloads(entry);
+            if (action is null)
+            {
+                continue;
+            }
+
+            var entityType = EntityTypeName(entry.Metadata);
+            var entityId = EntityId(entry);
+            var subjectId = SubjectId(entry);
+            if (before?.HasPersonalValues == true || after?.HasPersonalValues == true)
+            {
+                var protector = await keys.ProtectorAsync(entry.Entity.TenantId, subjectId, entityType, entityId, cancellationToken);
+                before?.Protect(protector);
+                after?.Protect(protector);
+            }
+
+            events.Add(new AuditEvent(
+                entry.Entity.TenantId,
+                shelter.AuditContext,
+                entityType,
+                entityId,
+                subjectId,
+                action,
+                before?.ToJson(),
+                after?.ToJson(),
+                metadata: null,
+                timestamp));
         }
 
         shelter.Set<AuditEvent>().AddRange(events);
     }
 
-    private static AuditEvent Created(ShelterDbContext db, EntityEntry<ITenantOwned> entry, DateTimeOffset timestamp)
+    // Created: every field after. Updated: changed fields only, before and after. Deleted: every field before.
+    private static (string? Action, AuditPayload? Before, AuditPayload? After) Payloads(EntityEntry<ITenantOwned> entry)
     {
-        var after = new AuditPayload();
-        AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Current, after, before: null);
-        return Create(db, entry, AuditActions.Created, before: null, after, timestamp);
-    }
+        switch (entry.State)
+        {
+            case EntityState.Added:
+                {
+                    var after = new AuditPayload();
+                    AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Current, after, before: null);
+                    return (AuditActions.Created, null, after);
+                }
 
-    private static AuditEvent? Updated(ShelterDbContext db, EntityEntry<ITenantOwned> entry, DateTimeOffset timestamp)
-    {
-        var before = new AuditPayload();
-        var after = new AuditPayload();
-        AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Changed, after, before);
+            case EntityState.Modified:
+                {
+                    var before = new AuditPayload();
+                    var after = new AuditPayload();
+                    AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Changed, after, before);
 
-        // Only navigations changed: nothing to record.
-        return after.IsEmpty ? null : Create(db, entry, AuditActions.Updated, before, after, timestamp);
-    }
+                    // Only navigations changed: nothing to record.
+                    return after.IsEmpty ? (null, null, null) : (AuditActions.Updated, before, after);
+                }
 
-    private static AuditEvent Deleted(ShelterDbContext db, EntityEntry<ITenantOwned> entry, DateTimeOffset timestamp)
-    {
-        var before = new AuditPayload();
-        AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Original, before, before: null);
-        return Create(db, entry, AuditActions.Deleted, before, after: null, timestamp);
+            case EntityState.Deleted:
+                {
+                    var before = new AuditPayload();
+                    AddFields(entry.Properties, entry.ComplexProperties, FieldValues.Original, before, before: null);
+                    return (AuditActions.Deleted, before, null);
+                }
+
+            default:
+                return (null, null, null);
+        }
     }
 
     // Changed: modified fields only, current values into target and original values into before.
@@ -129,18 +164,18 @@ internal sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
             ? converter.ConvertToProvider(value)
             : value;
 
-    private static AuditEvent Create(
-        ShelterDbContext db, EntityEntry<ITenantOwned> entry, string action, AuditPayload? before, AuditPayload? after, DateTimeOffset timestamp) =>
-        new(
-            entry.Entity.TenantId,
-            db.AuditContext,
-            EntityTypeName(entry.Metadata),
-            EntityId(entry),
-            action,
-            before?.ToJson(),
-            after?.ToJson(),
-            metadata: null,
-            timestamp);
+    // The subject as it was for a delete, as it is otherwise.
+    private static Guid? SubjectId(EntityEntry entry)
+    {
+        if (entry.Metadata.FindAuditSubjectProperty() is not { } subject)
+        {
+            return null;
+        }
+
+        var property = entry.Property(subject.Name);
+        var value = entry.State == EntityState.Deleted ? property.OriginalValue : property.CurrentValue;
+        return value is Guid id && id != Guid.Empty ? id : null;
+    }
 
     private static string EntityTypeName(IEntityType entityType) =>
         entityType.GetSchema() is { } schema
@@ -177,5 +212,39 @@ internal sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
         Current,
         Original,
         Changed,
+    }
+}
+
+/// <summary>
+/// Chooses how personal values of one save are stored, fetching each subject's data key at most once. Without a
+/// subject or a key provider they are redacted; once the subject is shredded, too.
+/// </summary>
+internal sealed class AuditKeyCache(ShelterDbContext db, bool canFetchKeys)
+{
+    private readonly Dictionary<DataKeyContext, byte[]?> _keys = [];
+
+    public async Task<PersonalValueProtector> ProtectorAsync(
+        Guid tenantId, Guid? subjectId, string entityType, string entityId, CancellationToken cancellationToken)
+    {
+        if (subjectId is not { } subject || db.KeyProvider is not { } provider)
+        {
+            return PersonalValueProtector.NoSubject;
+        }
+
+        var context = new DataKeyContext(tenantId, subject);
+        if (!_keys.TryGetValue(context, out var dataKey))
+        {
+            if (!canFetchKeys)
+            {
+                throw new InvalidOperationException("Saving personal data needs the subject's data key: use SaveChangesAsync.");
+            }
+
+            dataKey = await PersonDataKeyStore.GetOrCreateAsync(db, provider, context, cancellationToken);
+            _keys[context] = dataKey;
+        }
+
+        return dataKey is null
+            ? PersonalValueProtector.Shredded
+            : PersonalValueProtector.Encrypting(dataKey, new AuditValueLocation(tenantId, subject, entityType, entityId));
     }
 }

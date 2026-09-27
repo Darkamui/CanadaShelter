@@ -15,7 +15,7 @@ public static class TestDbContexts
 
     /// <summary>
     /// A context for <paramref name="tenantId"/> (or none) that stamps <paramref name="auditContext"/> on its audit
-    /// events.
+    /// events and encrypts personal audit values with <see cref="TestKeys.Provider"/>.
     /// </summary>
     public static ShelterDbContext Create(
         string connectionString, Guid? tenantId, AuditContext auditContext, params IModelContributor[] contributors)
@@ -30,7 +30,7 @@ public static class TestDbContexts
             .Configure(new DbContextOptionsBuilder<ShelterDbContext>(), connectionString)
             .Options;
 
-        return new ShelterDbContext((DbContextOptions<ShelterDbContext>)options, tenantContext, contributors, auditContext);
+        return new ShelterDbContext((DbContextOptions<ShelterDbContext>)options, tenantContext, contributors, auditContext, TestKeys.Provider);
     }
 
     /// <summary>A platform-admin factory on <paramref name="connectionString"/>, as the Platform module registers it.</summary>

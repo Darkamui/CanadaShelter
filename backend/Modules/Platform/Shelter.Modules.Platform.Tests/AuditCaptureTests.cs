@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Shelter.BuildingBlocks.Auditing;
@@ -84,13 +85,15 @@ public sealed class AuditCaptureTests(PostgresFixture fixture)
         var rows = await ReadAuditAsync(_tenantA, person.Entity.Id);
         Assert.Equal(2, rows.Count);
 
+        // Personal: encrypted (M1-6). Unclassified: never written.
         var updated = rows[1];
-        Assert.Equal(
-            """{"Code":"B-12","Email":{"$redacted":"personal"},"Nickname":{"$redacted":"unclassified"}}""",
-            Normalize(updated.BeforeJson));
-        Assert.Equal(
-            """{"Code":"B-13","Email":{"$redacted":"personal"},"Nickname":{"$redacted":"unclassified"}}""",
-            Normalize(updated.AfterJson));
+        foreach (var (json, code) in new[] { (updated.BeforeJson, "B-12"), (updated.AfterJson, "B-13") })
+        {
+            var payload = JsonNode.Parse(json!)!.AsObject();
+            Assert.Equal(code, payload["Code"]!.GetValue<string>());
+            Assert.StartsWith("v1:", payload["Email"]!["$enc"]!.GetValue<string>(), StringComparison.Ordinal);
+            Assert.Equal("""{"$redacted":"unclassified"}""", payload["Nickname"]!.ToJsonString());
+        }
 
         foreach (var json in rows.SelectMany(r => new[] { r.BeforeJson, r.AfterJson }))
         {

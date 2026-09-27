@@ -20,16 +20,21 @@ public sealed class ShelterDbContext : DbContext
 
     private readonly IReadOnlyList<IModelContributor> _contributors;
 
-    /// <summary>Creates the context. Without an <paramref name="auditContext"/>, changes are audited as the system actor.</summary>
+    /// <summary>
+    /// Creates the context. Without an <paramref name="auditContext"/>, changes are audited as the system actor;
+    /// without a <paramref name="keyProvider"/>, personal values in audit payloads are redacted, not encrypted.
+    /// </summary>
     public ShelterDbContext(
         DbContextOptions<ShelterDbContext> options,
         ITenantContext tenantContext,
         IEnumerable<IModelContributor> contributors,
-        AuditContext? auditContext = null)
+        AuditContext? auditContext = null,
+        IKeyProvider? keyProvider = null)
         : base(options)
     {
         TenantContext = tenantContext;
         AuditContext = auditContext ?? new AuditContext();
+        KeyProvider = keyProvider;
         _contributors = [.. contributors.OrderBy(c => c.GetType().FullName, StringComparer.Ordinal)];
         ModelKey = string.Join('|', _contributors.Select(c => c.GetType().FullName));
 
@@ -42,6 +47,9 @@ public sealed class ShelterDbContext : DbContext
 
     /// <summary>Actor, source and correlation stamped on the audit events this context records.</summary>
     public AuditContext AuditContext { get; }
+
+    /// <summary>Wraps the per-person data keys that encrypt personal audit values.</summary>
+    internal IKeyProvider? KeyProvider { get; }
 
     /// <summary>
     /// True for contexts from <see cref="PlatformAdminDbContextFactory"/> only: no <c>SET LOCAL</c>, no transaction
@@ -59,6 +67,7 @@ public sealed class ShelterDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         AuditEvent.Configure(modelBuilder);
+        PersonDataKey.Configure(modelBuilder);
 
         foreach (var contributor in _contributors)
         {

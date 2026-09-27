@@ -58,6 +58,24 @@ public static class GrantMigrationExtensions
         return migrationBuilder;
     }
 
+    /// <summary>
+    /// Grants <c>UPDATE</c> on only <paramref name="columns"/> of one table to the runtime role, for tables whose other
+    /// columns must never change (e.g. a key tombstone).
+    /// </summary>
+    public static MigrationBuilder GrantRuntimeColumnUpdate(this MigrationBuilder migrationBuilder, string schema, string table, params string[] columns)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        ArgumentNullException.ThrowIfNull(columns);
+        if (columns.Length == 0)
+        {
+            throw new ArgumentException("At least one column is required.", nameof(columns));
+        }
+
+        migrationBuilder.Sql(
+            $"GRANT UPDATE ({string.Join(", ", columns.Select(SqlIdentifier.Quote))}) ON {SqlIdentifier.Qualified(schema, table)} TO {SqlIdentifier.Quote(DatabaseRoles.App)};");
+        return migrationBuilder;
+    }
+
     /// <summary><c>GRANT USAGE ON SCHEMA</c> to the platform-admin role.</summary>
     public static MigrationBuilder GrantPlatformAdminSchemaUsage(this MigrationBuilder migrationBuilder, string schema) =>
         migrationBuilder.GrantSchemaUsage(DatabaseRoles.PlatformAdmin, schema);

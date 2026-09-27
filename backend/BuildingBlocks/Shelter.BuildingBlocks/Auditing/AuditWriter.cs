@@ -24,7 +24,10 @@ public sealed record AuditField(string Name, object? Value, FieldClassification 
     /// <summary>A field whose value is not personal information and is stored in plain form.</summary>
     public static AuditField NonPersonal(string name, object? value) => new(name, value, FieldClassification.NonPersonal);
 
-    /// <summary>A field whose value is personal information and is never stored in plain form.</summary>
+    /// <summary>
+    /// A field whose value is personal information: encrypted with the record's subject key, or redacted when the
+    /// record has no <see cref="AuditRecord.SubjectId"/>.
+    /// </summary>
     public static AuditField Personal(string name, object? value) => new(name, value, FieldClassification.Personal);
 }
 
@@ -40,6 +43,9 @@ public sealed record AuditRecord(string EntityType, string EntityId, string Acti
     /// <summary>Field values after the action.</summary>
     public IReadOnlyList<AuditField> After { get; init; } = [];
 
+    /// <summary>The person the record is about, whose data key encrypts its personal fields.</summary>
+    public Guid? SubjectId { get; init; }
+
     /// <summary>Extra context: codes and IDs only, never personal data (stored in plain form).</summary>
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
 }
@@ -54,21 +60,33 @@ internal sealed class AuditWriter(ShelterDbContext db) : IAuditWriter
         ArgumentException.ThrowIfNullOrWhiteSpace(record.EntityId);
         ArgumentException.ThrowIfNullOrWhiteSpace(record.Action);
 
+        var tenantId = db.TenantContext.RequireTenantId();
+        var before = Payload(record.Before);
+        var after = Payload(record.After);
+        if (before.HasPersonalValues || after.HasPersonalValues)
+        {
+            var protector = await new AuditKeyCache(db, canFetchKeys: true)
+                .ProtectorAsync(tenantId, record.SubjectId, record.EntityType, record.EntityId, cancellationToken);
+            before.Protect(protector);
+            after.Protect(protector);
+        }
+
         db.Set<AuditEvent>().Add(new AuditEvent(
-            db.TenantContext.RequireTenantId(),
+            tenantId,
             db.AuditContext,
             record.EntityType,
             record.EntityId,
+            record.SubjectId,
             record.Action,
-            ToJson(record.Before),
-            ToJson(record.After),
+            before.ToJson(),
+            after.ToJson(),
             record.Metadata is { Count: > 0 } metadata ? JsonSerializer.Serialize(metadata) : null,
             DateTimeOffset.UtcNow));
 
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static string? ToJson(IReadOnlyList<AuditField> fields)
+    private static AuditPayload Payload(IReadOnlyList<AuditField> fields)
     {
         var payload = new AuditPayload();
         foreach (var field in fields)
@@ -76,6 +94,6 @@ internal sealed class AuditWriter(ShelterDbContext db) : IAuditWriter
             payload.Add(field.Name, field.Value, field.Classification);
         }
 
-        return payload.ToJson();
+        return payload;
     }
 }

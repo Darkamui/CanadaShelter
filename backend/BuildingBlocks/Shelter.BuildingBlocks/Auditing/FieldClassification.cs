@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +26,30 @@ public static class FieldClassificationExtensions
 {
     /// <summary>Model annotation holding the <see cref="FieldClassification"/>.</summary>
     public const string Annotation = "Shelter:FieldClassification";
+
+    /// <summary>Entity annotation naming the property that holds the audit subject (the person).</summary>
+    public const string SubjectAnnotation = "Shelter:AuditSubject";
+
+    /// <summary>
+    /// Names the person whose data key encrypts this entity's personal values in audit payloads (ADR 0011), e.g.
+    /// <c>builder.HasAuditSubject(p => p.Id)</c> on a person, <c>builder.HasAuditSubject(c => c.PersonId)</c> on a
+    /// record about one. Without a subject, personal values are redacted instead of encrypted.
+    /// </summary>
+    public static EntityTypeBuilder<TEntity> HasAuditSubject<TEntity>(
+        this EntityTypeBuilder<TEntity> builder, Expression<Func<TEntity, Guid>> subject)
+        where TEntity : class => builder.HasAuditSubjectCore(subject);
+
+    /// <inheritdoc cref="HasAuditSubject{TEntity}(EntityTypeBuilder{TEntity}, Expression{Func{TEntity, Guid}})"/>
+    public static EntityTypeBuilder<TEntity> HasAuditSubject<TEntity>(
+        this EntityTypeBuilder<TEntity> builder, Expression<Func<TEntity, Guid?>> subject)
+        where TEntity : class => builder.HasAuditSubjectCore(subject);
+
+    /// <summary>The property holding the entity's audit subject, if it has one.</summary>
+    public static IReadOnlyProperty? FindAuditSubjectProperty(this IReadOnlyEntityType entityType)
+    {
+        ArgumentNullException.ThrowIfNull(entityType);
+        return entityType.FindAnnotation(SubjectAnnotation)?.Value is string name ? entityType.FindProperty(name) : null;
+    }
 
     /// <summary>Marks the property as personal information.</summary>
     public static PropertyBuilder<TProperty> IsPersonalData<TProperty>(this PropertyBuilder<TProperty> builder)
@@ -72,5 +97,21 @@ public static class FieldClassificationExtensions
         return property.IsPrimaryKey() || property.Name == nameof(Tenancy.ITenantOwned.TenantId)
             ? FieldClassification.NonPersonal
             : FieldClassification.Unclassified;
+    }
+
+    private static EntityTypeBuilder<TEntity> HasAuditSubjectCore<TEntity, TKey>(
+        this EntityTypeBuilder<TEntity> builder, Expression<Func<TEntity, TKey>> subject)
+        where TEntity : class
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(subject);
+
+        if (subject.Body is not MemberExpression { Member.Name: var name })
+        {
+            throw new ArgumentException("The audit subject must be a property of the entity.", nameof(subject));
+        }
+
+        builder.HasAnnotation(SubjectAnnotation, name);
+        return builder;
     }
 }

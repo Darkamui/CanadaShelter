@@ -6,7 +6,8 @@ namespace Shelter.BuildingBlocks.Auditing;
 /// <summary>
 /// One row of the audit history (architecture §7.1, §17.1): who did what to which record, when, and the
 /// before/after values of the fields involved. Append-only: the runtime role may only insert and select.
-/// Values of personal fields are never stored in plain form; values of unclassified fields are never stored.
+/// Values of personal fields are stored only encrypted with the subject's data key; values of unclassified fields
+/// are never stored.
 /// </summary>
 internal sealed class AuditEvent : ITenantOwned
 {
@@ -18,6 +19,7 @@ internal sealed class AuditEvent : ITenantOwned
         AuditContext context,
         string entityType,
         string entityId,
+        Guid? subjectId,
         string action,
         string? beforeJson,
         string? afterJson,
@@ -32,6 +34,7 @@ internal sealed class AuditEvent : ITenantOwned
         CorrelationId = context.CorrelationId;
         EntityType = entityType;
         EntityId = entityId;
+        SubjectId = subjectId;
         Action = action;
         BeforeJson = beforeJson;
         AfterJson = afterJson;
@@ -59,6 +62,9 @@ internal sealed class AuditEvent : ITenantOwned
     public string EntityType { get; private set; }
 
     public string EntityId { get; private set; }
+
+    /// <summary>The person whose data key encrypts this event's personal values (ADR 0011); null if none.</summary>
+    public Guid? SubjectId { get; private set; }
 
     public string Action { get; private set; }
 
@@ -95,5 +101,6 @@ internal sealed class AuditEvent : ITenantOwned
         builder.Property(e => e.CorrelationId).HasMaxLength(AuditContext.MaxCorrelationIdLength);
         builder.Property(e => e.Source).HasMaxLength(AuditContext.MaxSourceLength).IsRequired();
         builder.HasIndex(e => new { e.TenantId, e.EntityType, e.EntityId, e.TimestampUtc });
+        builder.HasIndex(e => new { e.TenantId, e.SubjectId });
     }
 }

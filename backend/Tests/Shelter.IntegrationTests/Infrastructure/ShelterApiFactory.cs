@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Modules;
+using Shelter.Testing;
 
 namespace Shelter.IntegrationTests.Infrastructure;
 
@@ -34,6 +35,7 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
 
         // Never fall through to the local-dev PlatformAdmin string in appsettings.Development.json.
         builder.UseSetting("ConnectionStrings:PlatformAdmin", UnreachableDatabase);
+        builder.UseSetting("Audit:MasterKey", TestKeys.MasterKeyBase64);
         builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
         builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
         builder.ConfigureTestServices(services =>

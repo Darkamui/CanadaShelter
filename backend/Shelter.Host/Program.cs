@@ -1,3 +1,5 @@
+using System.Reflection;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Logging;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
@@ -24,6 +26,13 @@ builder.Services.AddShelterJobHosting(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 var app = builder.Build();
+
+// Fail at startup, not at the first personal-data write, when audit keys are not configured (ADR 0016).
+// Skipped by the build-time OpenAPI export, which runs this file without secrets and serves no request.
+if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
+{
+    _ = app.Services.GetRequiredService<IKeyProvider>();
+}
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();

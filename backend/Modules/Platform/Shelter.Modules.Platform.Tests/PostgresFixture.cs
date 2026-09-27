@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Persistence;
@@ -30,6 +31,13 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// </summary>
     public ShelterDbContext CreateAuditedContext(Guid tenantId, AuditContext auditContext) =>
         TestDbContexts.Create(_database.AppConnectionString, tenantId, auditContext, new PlatformModelContributor(), new SamplePersonModelContributor());
+
+    /// <summary>
+    /// Persistence and auditing services, as the Host registers them, over the Platform model plus
+    /// <see cref="SamplePerson"/>. Dispose after use.
+    /// </summary>
+    public ServiceProvider CreateAuditServices() =>
+        TestServices.Create(_database.AppConnectionString, new PlatformModelContributor(), new SamplePersonModelContributor());
 
     /// <summary>A platform-admin (<c>shelter_platform_admin</c>) context factory over the Platform model.</summary>
     public PlatformAdminDbContextFactory CreatePlatformAdminFactory() =>

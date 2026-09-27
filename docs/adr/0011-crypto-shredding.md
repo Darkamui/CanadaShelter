@@ -32,4 +32,4 @@ Audit events and timeline events are append-only (§7.1, §17.4). Law 25 require
   - Encrypted values can't be searched or indexed.
   - Reading audit history costs a decryption per person.
   - Every new personal field must be classified.
-- Follow-ups: M1-5 implements the key store, the classification and the audit interceptor. The production KMS provider is added with deployment.
+- Follow-ups: M1-5 implements the classification and the audit interceptor; M1-6 the key store and shredding (ADR 0016). The production KMS provider is added with deployment.

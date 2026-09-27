@@ -7,7 +7,8 @@ using Shelter.BuildingBlocks.Tenancy;
 namespace Shelter.Testing.Auditing;
 
 /// <summary>
-/// Test-only tenant-owned entity with one field of each classification, for audit and crypto-shredding tests.
+/// Test-only tenant-owned entity with one field of each classification, for audit and crypto-shredding tests. It is
+/// its own audit subject.
 /// Its table <c>testing.sample_person</c> is not in the migrations: create it with <see cref="CreateTableSql"/>
 /// as the schema owner, then compose <see cref="SamplePersonModelContributor"/>.
 /// </summary>
@@ -84,6 +85,7 @@ public sealed class SamplePersonModelContributor : IModelContributor
         builder.ToTable(SamplePerson.Table, SamplePerson.Schema);
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).ValueGeneratedNever();
+        builder.HasAuditSubject(p => p.Id);
         builder.Property(p => p.Email).IsRequired().IsPersonalData();
         builder.Property(p => p.Nickname).IsRequired();
         builder.Property(p => p.Code).IsRequired().IsNonPersonalData();

@@ -29,7 +29,7 @@
 
 ## Permissions
 
-- None yet. `GET /api/movements/intake-reasons` is `.AllowAnonymous()` until M2.
+- `movement.read` (read, non-sensitive): `GET /api/movements/intake-reasons`.
 
 ## Key files
 

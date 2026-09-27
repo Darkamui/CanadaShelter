@@ -20,7 +20,15 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { LoginRequest, LoginResponse, PingResponse, SessionResponse } from '../model';
+import type {
+  ChangeStaffRolesRequest,
+  HttpValidationProblemDetails,
+  LoginRequest,
+  LoginResponse,
+  PingResponse,
+  SessionResponse,
+  StaffMemberResponse,
+} from '../model';
 
 import { shelterFetch } from '../../http/fetcher.ts';
 import type { ErrorType } from '../../http/fetcher.ts';
@@ -629,4 +637,381 @@ export const useSelectPlatformSessionOrganization = <
   TContext
 > => {
   return useMutation(getSelectPlatformSessionOrganizationMutationOptions(options), queryClient);
+};
+export const getListPlatformStaffUrl = () => {
+  return `/api/platform/staff`;
+};
+
+export const listPlatformStaff = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<StaffMemberResponse[]> => {
+  return shelterFetch<StaffMemberResponse[]>(getListPlatformStaffUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getListPlatformStaffQueryKey = () => {
+  return [`/api/platform/staff`] as const;
+};
+
+export const getListPlatformStaffQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPlatformStaff>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPlatformStaff>>, TError, TData>>;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPlatformStaffQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPlatformStaff>>> = ({ signal }) =>
+    listPlatformStaff({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPlatformStaff>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListPlatformStaffQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPlatformStaff>>
+>;
+export type ListPlatformStaffQueryError = ErrorType<unknown>;
+
+export function useListPlatformStaff<
+  TData = Awaited<ReturnType<typeof listPlatformStaff>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPlatformStaff>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPlatformStaff>>,
+          TError,
+          Awaited<ReturnType<typeof listPlatformStaff>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPlatformStaff<
+  TData = Awaited<ReturnType<typeof listPlatformStaff>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPlatformStaff>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPlatformStaff>>,
+          TError,
+          Awaited<ReturnType<typeof listPlatformStaff>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPlatformStaff<
+  TData = Awaited<ReturnType<typeof listPlatformStaff>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPlatformStaff>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useListPlatformStaff<
+  TData = Awaited<ReturnType<typeof listPlatformStaff>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPlatformStaff>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPlatformStaffQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getChangePlatformStaffRolesUrl = (membershipId: string) => {
+  return `/api/platform/staff/${membershipId}/roles`;
+};
+
+export const changePlatformStaffRoles = async (
+  membershipId: string,
+  changeStaffRolesRequest: ChangeStaffRolesRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<void>(getChangePlatformStaffRolesUrl(membershipId), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(changeStaffRolesRequest),
+  });
+};
+
+export const getChangePlatformStaffRolesMutationKey = () => ['changePlatformStaffRoles'] as const;
+
+export const getChangePlatformStaffRolesMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePlatformStaffRoles>>,
+    TError,
+    ChangePlatformStaffRolesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changePlatformStaffRoles>>,
+  TError,
+  ChangePlatformStaffRolesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangePlatformStaffRolesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changePlatformStaffRoles>>,
+    ChangePlatformStaffRolesMutationVariables
+  > = (props) => {
+    const { membershipId, data } = props ?? {};
+
+    return changePlatformStaffRoles(membershipId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangePlatformStaffRolesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changePlatformStaffRoles>>
+>;
+export type ChangePlatformStaffRolesMutationBody = ChangeStaffRolesRequest;
+export type ChangePlatformStaffRolesMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type ChangePlatformStaffRolesMutationVariables = {
+  membershipId: string;
+  data: ChangeStaffRolesRequest;
+};
+
+export const useChangePlatformStaffRoles = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changePlatformStaffRoles>>,
+      TError,
+      ChangePlatformStaffRolesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changePlatformStaffRoles>>,
+  TError,
+  ChangePlatformStaffRolesMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangePlatformStaffRolesMutationOptions(options), queryClient);
+};
+export const getSuspendPlatformStaffUrl = (membershipId: string) => {
+  return `/api/platform/staff/${membershipId}/suspend`;
+};
+
+export const suspendPlatformStaff = async (
+  membershipId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getSuspendPlatformStaffUrl(membershipId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getSuspendPlatformStaffMutationKey = () => ['suspendPlatformStaff'] as const;
+
+export const getSuspendPlatformStaffMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suspendPlatformStaff>>,
+    TError,
+    SuspendPlatformStaffMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suspendPlatformStaff>>,
+  TError,
+  SuspendPlatformStaffMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSuspendPlatformStaffMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suspendPlatformStaff>>,
+    SuspendPlatformStaffMutationVariables
+  > = (props) => {
+    const { membershipId } = props ?? {};
+
+    return suspendPlatformStaff(membershipId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SuspendPlatformStaffMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suspendPlatformStaff>>
+>;
+
+export type SuspendPlatformStaffMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type SuspendPlatformStaffMutationVariables = { membershipId: string };
+
+export const useSuspendPlatformStaff = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suspendPlatformStaff>>,
+      TError,
+      SuspendPlatformStaffMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof suspendPlatformStaff>>,
+  TError,
+  SuspendPlatformStaffMutationVariables,
+  TContext
+> => {
+  return useMutation(getSuspendPlatformStaffMutationOptions(options), queryClient);
+};
+export const getReactivatePlatformStaffUrl = (membershipId: string) => {
+  return `/api/platform/staff/${membershipId}/reactivate`;
+};
+
+export const reactivatePlatformStaff = async (
+  membershipId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getReactivatePlatformStaffUrl(membershipId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getReactivatePlatformStaffMutationKey = () => ['reactivatePlatformStaff'] as const;
+
+export const getReactivatePlatformStaffMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactivatePlatformStaff>>,
+    TError,
+    ReactivatePlatformStaffMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactivatePlatformStaff>>,
+  TError,
+  ReactivatePlatformStaffMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReactivatePlatformStaffMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactivatePlatformStaff>>,
+    ReactivatePlatformStaffMutationVariables
+  > = (props) => {
+    const { membershipId } = props ?? {};
+
+    return reactivatePlatformStaff(membershipId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactivatePlatformStaffMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reactivatePlatformStaff>>
+>;
+
+export type ReactivatePlatformStaffMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type ReactivatePlatformStaffMutationVariables = { membershipId: string };
+
+export const useReactivatePlatformStaff = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reactivatePlatformStaff>>,
+      TError,
+      ReactivatePlatformStaffMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reactivatePlatformStaff>>,
+  TError,
+  ReactivatePlatformStaffMutationVariables,
+  TContext
+> => {
+  return useMutation(getReactivatePlatformStaffMutationOptions(options), queryClient);
 };

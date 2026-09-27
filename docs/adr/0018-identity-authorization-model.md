@@ -64,7 +64,7 @@ ADR 0007 chose ASP.NET Identity with a same-site cookie. M2 has to connect that 
   - Self-read lookups filter on `user_id` alone, while every index leads with `tenant_id` (hard rule 1), so they scan the table. Fine at pilot scale; revisit (for example a partial or per-tenant strategy that keeps the rule) if memberships grow large.
   - Authenticated requests now always open a transaction (`app.user_id`), even with no organization chosen.
   - Account changes appear in `security_event`, not in the tenant audit trail.
-  - The runtime role can read every account row. That is inherent to global accounts, and endpoints expose only the caller's own account.
+  - The runtime role can read every account row. That is inherent to global accounts, and endpoints expose only the caller's own account, except the staff list (`platform.staff.read`, sensitive, so administrators only), which shows the name and email of the organization's members.
 - Follow-ups:
   - **Shared DataProtection key ring** before any multi-instance deployment. Cookies and antiforgery tokens are per-instance until then. This needs storage or a dependency, so it gets its own ADR.
   - Custom roles; external portal memberships (architecture §34 step 16); SSO (§9.4).

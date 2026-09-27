@@ -182,6 +182,7 @@ internal sealed class StaffMembershipConfiguration : IEntityTypeConfiguration<St
         builder.Property(m => m.Id).ValueGeneratedNever();
         builder.Property(m => m.UserId).IsNonPersonalData();
         builder.Property(m => m.Status).HasConversion<string>().HasMaxLength(20).IsRequired().IsNonPersonalData();
+        builder.Property(m => m.RoleKeys).IsRequired().HasDefaultValueSql("'{}'").IsNonPersonalData();
         builder.Property(m => m.CreatedAt).IsRequired().IsNonPersonalData();
         builder.HasIndex(m => new { m.TenantId, m.UserId }).IsUnique();
     }

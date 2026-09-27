@@ -3,24 +3,24 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Localization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
+using Shelter.Modules.Animals.Authorization;
 using Shelter.Modules.Animals.Domain;
 
 namespace Shelter.Modules.Animals.Features.ReferenceData;
 
 /// <summary>
 /// <c>GET /api/animals/species</c>: the species list with both labels, the current tenant's overrides applied.
-/// Without a tenant, the system list only.
 /// </summary>
 internal static class ListSpeciesEndpoint
 {
     public static void Map(IEndpointRouteBuilder endpoints) =>
         endpoints.MapGet("/species", Handle)
             .WithName("ListAnimalsSpecies")
-            // Anonymous until identity exists (M2), like ping. TODO(M2): declare the reference-data read permission.
-            .AllowAnonymous();
+            .RequirePermission(AnimalPermissions.Read);
 
     internal static async Task<Ok<IReadOnlyList<ReferenceItem>>> Handle(
         ShelterDbContext db, ITenantContext tenant, CancellationToken cancellationToken)

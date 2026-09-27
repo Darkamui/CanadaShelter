@@ -38,6 +38,7 @@ export const GetPlatformSessionResponse = zod.object({
     }),
   ),
   activeOrganizationId: zod.uuid().nullable(),
+  permissions: zod.array(zod.string()),
 });
 
 export const SelectPlatformSessionOrganizationParams = zod.object({
@@ -45,3 +46,35 @@ export const SelectPlatformSessionOrganizationParams = zod.object({
 });
 
 export const SelectPlatformSessionOrganizationResponse = zod.void();
+
+export const ListPlatformStaffResponseItem = zod.object({
+  membershipId: zod.uuid(),
+  userId: zod.uuid(),
+  displayName: zod.string(),
+  email: zod.string(),
+  status: zod.string(),
+  roles: zod.array(zod.string()),
+});
+export const ListPlatformStaffResponse = zod.array(ListPlatformStaffResponseItem);
+
+export const ChangePlatformStaffRolesParams = zod.object({
+  membershipId: zod.uuid(),
+});
+
+export const ChangePlatformStaffRolesBody = zod.object({
+  roles: zod.array(zod.string()).nullable(),
+});
+
+export const ChangePlatformStaffRolesResponse = zod.void();
+
+export const SuspendPlatformStaffParams = zod.object({
+  membershipId: zod.uuid(),
+});
+
+export const SuspendPlatformStaffResponse = zod.void();
+
+export const ReactivatePlatformStaffParams = zod.object({
+  membershipId: zod.uuid(),
+});
+
+export const ReactivatePlatformStaffResponse = zod.void();

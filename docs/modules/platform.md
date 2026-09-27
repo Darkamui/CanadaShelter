@@ -77,23 +77,44 @@
 - Audit rows are append-only for the runtime role, with before/after values and actor: `AuditCaptureTests`, `RuntimeRoleTests`.
 - Personal values are unrecoverable after a shred: `CryptoShreddingTests`. Person-linked entities are fully classified: `ClassificationRuleTests`.
 - Reference overrides stay inside their tenant, and system values are read-only: `ReferenceDataEndpointTests`.
+- Permissions (M2-3): every endpoint declares a permission, the session policy or the operator policy, or is allowlisted anonymous. Every permission endpoint returns 403 to a member without it. An undeclared endpoint needs a member: `EndpointAuthorizationTests`. The role → permission mapping: `PermissionCatalogTests`.
+- Staff (M2-3): the organization keeps at least one active administrator (409, serialized by `FOR UPDATE` on its administrators). Role changes are audited and apply on the next request. Other organizations' memberships return 404: `StaffManagementTests`.
 - Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
 
-- None yet. `ping` and the reference-list endpoints are `.AllowAnonymous()` until identity arrives (M2).
+- Model (M2-3, ADR 0018):
+  - Each module declares `PermissionDefinition(name, Read/Write, Sensitive)` in its `Authorization/` folder and registers them with `services.AddPermissions(...)`. `PermissionCatalog` rejects duplicate names.
+  - System roles, stored in `staff_membership.role_keys`: `administrator` = all, `staff` = every non-sensitive permission, `read_only` = every non-sensitive read. Unknown keys grant nothing.
+  - `MembershipTenantResolver` resolves the tenant and the permissions from one membership row per request. They are exposed as `IPermissionContext` and returned sorted in `GET /api/platform/session` (`permissions`).
+- Endpoint rules:
+  - `.RequirePermission(name)` = active member of the active organization + that permission.
+  - `.RequireSession()` = signed in, no organization needed.
+  - The fallback policy (every endpoint that declares nothing, including unknown routes) = authenticated active member.
+  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, health.
+  - The Hangfire dashboard (`/hangfire`, all environments) needs the `PlatformOperator` policy: `shelter:operator=true` and `amr=mfa`.
+- Platform permissions:
+  - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
+  - `platform.staff.manage` (sensitive): change roles, suspend, reactivate. Sensitive so that no non-admin role can grant itself anything.
+  - `audit.read` (sensitive): checked by `AuditReader` itself (`AuditReadDeniedException`).
 
 ## Key files
 
 - `Domain/Organization.cs`, `Domain/TenantSetting.cs`, `Persistence/PlatformModelContributor.cs`, `Provisioning/OrganizationProvisioner.cs`.
 - `Features/Ping/PingEndpoint.cs`: `GET /api/platform/ping` (`GetPlatformPing`).
+- `Authorization/PlatformPermissions.cs`; the shared model is in `BuildingBlocks/Authorization/Permissions.cs` and `EndpointAuthorizationExtensions.cs`.
+- `Features/Staff/StaffEndpoints.cs`, under `/api/platform/staff`:
+  - `GET` (`ListPlatformStaff`)
+  - `PUT /{membershipId}/roles` (`ChangePlatformStaffRoles`)
+  - `POST /{membershipId}/suspend` (`SuspendPlatformStaff`) and `POST /{membershipId}/reactivate` (`ReactivatePlatformStaff`)
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
 
 ## Open questions / TODO
 
 - **M2:**
-  - Add an authorization `FallbackPolicy` and permissions for ping, the reference lists, `IAuditReader` and the Hangfire dashboard.
+  - M2-4: the tenant and fallback policies will also require MFA for administrators.
+- Memberships created before M2-3 have no roles, and so no permissions. The development seed gives the demo account `administrator` again.
 - Known gaps (from the reviewer):
   - `AuditRecord.Metadata` is not classified, so callers must keep personal data out of it.
   - `EntityId` is assumed to be non-personal.

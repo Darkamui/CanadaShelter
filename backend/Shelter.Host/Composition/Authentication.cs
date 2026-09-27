@@ -43,10 +43,18 @@ internal static class Authentication
             // the scheme to exist.
             .AddCookie(IdentityConstants.TwoFactorRememberMeScheme, options => ConfigureCookie(options, strict, "shelter-mfa-remember"));
 
+        // Default deny: an endpoint that declares nothing still needs a member of the active organization, and the
+        // endpoint coverage test fails on it.
         services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().Tenant().Build())
             .AddPolicy(AuthorizationPolicies.Session, policy => policy.RequireAuthenticatedUser())
-            .AddPolicy(AuthorizationPolicies.Tenant, policy => policy.RequireAuthenticatedUser().AddRequirements(TenantRequirement.Instance));
+            .AddPolicy(AuthorizationPolicies.PlatformOperator, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim(AuthorizationPolicies.PlatformOperatorClaim, "true")
+                .RequireClaim(AuthorizationPolicies.AuthenticationMethodClaim, "mfa"));
         services.AddScoped<IAuthorizationHandler, TenantAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddShelterPermissions();
 
         services.AddAntiforgery(options =>
         {

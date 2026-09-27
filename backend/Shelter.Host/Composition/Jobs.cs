@@ -2,6 +2,7 @@ using System.Reflection;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Jobs;
 using Shelter.BuildingBlocks.Persistence;
 
@@ -51,19 +52,20 @@ internal static class Jobs
     }
 
     /// <summary>
-    /// The dashboard shows every tenant's jobs, so it is platform-admin only. Until staff authentication exists
-    /// (TODO(M2): platform-admin policy) it is mapped only in Development and only for local requests; elsewhere
-    /// <c>/hangfire</c> does not exist.
+    /// The dashboard shows every tenant's jobs, so only platform operators signed in with MFA reach it (ADR 0018).
+    /// Operators are flagged by SQL or provisioning, never through the API. Hangfire's own filters are cleared: the
+    /// endpoint policy is the only gate.
     /// </summary>
     public static WebApplication MapShelterJobDashboard(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        // Mapping resolves job storage (a database); the dashboard is not part of the exported API contract.
+        if (IsBuildTimeDocumentGeneration())
         {
-            app.MapHangfireDashboard("/hangfire", new DashboardOptions
-            {
-                Authorization = [new LocalRequestsOnlyAuthorizationFilter()],
-            });
+            return app;
         }
+
+        app.MapHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [] })
+            .RequireAuthorization(AuthorizationPolicies.PlatformOperator);
 
         return app;
     }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Shelter.BuildingBlocks.Auditing;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Testing.Auditing;
@@ -43,6 +44,18 @@ public sealed class CryptoShreddingTests(PostgresFixture fixture) : IAsyncDispos
         Assert.Equal("marie.tremblay@example.ca", Text(history[1].After, "Email"));
         Assert.Equal("B-13", Text(history[1].After, "Code"));
         Assert.Equal("unclassified", Text(history[1].After!["Nickname"]!.AsObject(), "$redacted"));
+    }
+
+    [Fact]
+    public async Task Reader_without_audit_read_is_denied()
+    {
+        var person = await CreateAndRenameAsync();
+
+        await Assert.ThrowsAsync<AuditReadDeniedException>(() => InScopeAsync(
+            _tenantA,
+            services => services.GetRequiredService<IAuditReader>()
+                .GetEntityHistoryAsync(SamplePersonType, person.Id.ToString("D"), TestContext.Current.CancellationToken),
+            permissions: new HashSet<string>()));
     }
 
     [Fact]
@@ -174,10 +187,11 @@ public sealed class CryptoShreddingTests(PostgresFixture fixture) : IAsyncDispos
         InScopeAsync(tenantId, services => services.GetRequiredService<IAuditReader>()
             .GetEntityHistoryAsync(entityType, entityId.ToString("D"), TestContext.Current.CancellationToken));
 
-    private async Task<T> InScopeAsync<T>(Guid tenantId, Func<IServiceProvider, Task<T>> work)
+    private async Task<T> InScopeAsync<T>(Guid tenantId, Func<IServiceProvider, Task<T>> work, IReadOnlySet<string>? permissions = null)
     {
         await using var scope = _services.CreateAsyncScope();
         scope.ServiceProvider.GetRequiredService<TenantContext>().Set(tenantId);
+        scope.ServiceProvider.GetRequiredService<PermissionContext>().Set(permissions ?? new HashSet<string> { AuditPermissions.Read });
         scope.ServiceProvider.GetRequiredService<AuditContext>().Set(AuditActorType.Anonymous, actorId: null, AuditSources.Api, "corr-shred-1");
         return await scope.ServiceProvider.GetRequiredService<UnitOfWork>()
             .ExecuteAsync(_ => work(scope.ServiceProvider), static _ => true, TestContext.Current.CancellationToken);

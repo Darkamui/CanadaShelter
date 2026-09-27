@@ -4,6 +4,7 @@ using Hangfire;
 using Hangfire.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Jobs;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
@@ -20,6 +21,8 @@ namespace Shelter.IntegrationTests.Jobs;
 public sealed class TenantJobTests(PostgresFixture postgres)
 {
     private static readonly TimeSpan JobTimeout = TimeSpan.FromSeconds(60);
+
+    private const string Operator = AuthorizationPolicies.PlatformOperatorClaim;
 
     private readonly Guid _tenantA = Guid.CreateVersion7();
     private readonly Guid _tenantB = Guid.CreateVersion7();
@@ -106,26 +109,27 @@ public sealed class TenantJobTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Dashboard_is_not_mapped_outside_development()
+    public async Task Dashboard_requires_a_platform_operator_signed_in_with_mfa()
     {
-        await using var factory = new ShelterApiFactory(ShelterApiFactory.UnreachableDatabase);
-        using var client = factory.CreateClient();
+        await using var factory = new ShelterApiFactory(postgres.AppConnectionString);
+        var user = Guid.CreateVersion7();
 
-        using var response = await client.GetAsync(new Uri("/hangfire", UriKind.Relative), TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, await DashboardStatusAsync(factory, null));
+        Assert.Equal(HttpStatusCode.Forbidden, await DashboardStatusAsync(factory, user, ("amr", "mfa")));
+        Assert.Equal(HttpStatusCode.Forbidden, await DashboardStatusAsync(factory, user, (Operator, "true"), ("amr", "pwd")));
+        Assert.Equal(HttpStatusCode.OK, await DashboardStatusAsync(factory, user, (Operator, "true"), ("amr", "pwd"), ("amr", "mfa")));
     }
 
-    [Fact]
-    public async Task Dashboard_rejects_non_local_requests_in_development()
+    private static async Task<HttpStatusCode> DashboardStatusAsync(ShelterApiFactory factory, Guid? user, params (string Type, string Value)[] claims)
     {
-        // The test server has no remote IP, so the request is not local.
-        await using var factory = new ShelterApiFactory(postgres.AppConnectionString) { EnvironmentName = "Development" };
-        using var client = factory.CreateClient();
+        using var client = factory.CreateHttpsClient();
+        if (user is { } id)
+        {
+            client.SignInAs(id, organizationId: null, claims);
+        }
 
         using var response = await client.GetAsync(new Uri("/hangfire", UriKind.Relative), TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        return response.StatusCode;
     }
 
     private ShelterApiFactory CreateFactory(bool jobServer) =>

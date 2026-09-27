@@ -1,12 +1,15 @@
+using System.Net;
 using System.Net.Http.Json;
 using Npgsql;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.IntegrationTests.Infrastructure;
 
 namespace Shelter.IntegrationTests.ReferenceData;
 
 /// <summary>
 /// M1-7: reference lists return both labels; a tenant's overrides relabel, hide or add values for that tenant only;
-/// without a tenant, the system list. Overrides are written with raw SQL as the runtime role, as RLS sees them.
+/// an organization without overrides gets the system list. M2-3: the lists require <c>animal.read</c> /
+/// <c>movement.read</c>. Overrides are written with raw SQL as the runtime role, as RLS sees them.
 /// </summary>
 public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyncDisposable
 {
@@ -17,9 +20,9 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
     private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString);
 
     [Fact]
-    public async Task Species_without_a_tenant_are_the_seeded_system_list_in_both_languages()
+    public async Task Species_are_the_seeded_system_list_in_both_languages()
     {
-        var species = await GetAsync("/api/animals/species", tenantId: null);
+        var species = await GetAsync("/api/animals/species", Guid.CreateVersion7());
 
         Assert.Equal(SystemSpecies, species.Select(s => s.Code));
         var dog = species[0];
@@ -30,7 +33,7 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
     [Fact]
     public async Task Intake_reasons_are_the_seeded_system_list_in_both_languages()
     {
-        var reasons = await GetAsync("/api/movements/intake-reasons", tenantId: null);
+        var reasons = await GetAsync("/api/movements/intake-reasons", Guid.CreateVersion7());
 
         Assert.Equal("stray", reasons[0].Code);
         Assert.Equal(new LabelDto("Animal errant", "Stray"), reasons[0].Label);
@@ -48,14 +51,12 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
 
         var a = await GetAsync("/api/animals/species", tenantA);
         var b = await GetAsync("/api/animals/species", tenantB);
-        var none = await GetAsync("/api/animals/species", tenantId: null);
 
         Assert.Equal(["dog", "cat", "rabbit", "small_mammal", "bird", "goat", "reptile", "other"], a.Select(s => s.Code));
         Assert.Equal(new LabelDto("Chien (adulte)", "Dog (adult)"), a[0].Label);
         Assert.Equal(new LabelDto("Chèvre", "Goat"), a.Single(s => s.Code == "goat").Label);
         Assert.Equal(SystemSpecies, b.Select(s => s.Code));
         Assert.Equal(new LabelDto("Chien", "Dog"), b[0].Label);
-        Assert.Equal(SystemSpecies, none.Select(s => s.Code));
     }
 
     [Fact]
@@ -70,6 +71,24 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
 
         Assert.DoesNotContain(a, r => r.Code == "seizure");
         Assert.Contains(b, r => r.Code == "seizure");
+    }
+
+    [Theory]
+    [InlineData("/api/animals/species")]
+    [InlineData("/api/movements/intake-reasons")]
+    public async Task Lists_are_denied_without_the_read_permission(string path)
+    {
+        var organization = Guid.CreateVersion7();
+        var noRoles = Guid.CreateVersion7();
+        await TestMemberships.AddAsync(postgres.AppConnectionString, organization, noRoles, roles: []);
+        using var anonymous = _factory.CreateHttpsClient();
+        using var member = _factory.CreateHttpsClient(noRoles, organization);
+
+        using var anonymousResponse = await anonymous.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
+        using var memberResponse = await member.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, memberResponse.StatusCode);
     }
 
     [Theory]
@@ -89,9 +108,10 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
     /// <inheritdoc />
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
 
-    private async Task<List<ItemDto>> GetAsync(string path, Guid? tenantId)
+    private async Task<List<ItemDto>> GetAsync(string path, Guid tenantId)
     {
-        Guid? user = tenantId is { } tenant ? await TestMemberships.NewMemberAsync(postgres.AppConnectionString, tenant) : null;
+        // read_only: the least role that still grants the reference reads.
+        var user = await TestMemberships.NewMemberAsync(postgres.AppConnectionString, tenantId, SystemRoles.ReadOnly);
         using var client = _factory.CreateHttpsClient(user, tenantId);
         using var response = await client.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();

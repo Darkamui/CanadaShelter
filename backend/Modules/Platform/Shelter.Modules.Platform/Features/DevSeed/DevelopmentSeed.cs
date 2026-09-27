@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Modules.Platform.Domain;
@@ -12,7 +13,7 @@ using Shelter.Modules.Platform.Features.Provisioning;
 namespace Shelter.Modules.Platform.Features.DevSeed;
 
 /// <summary>
-/// Development-only seed: a demo organization and an administrator account that is a member of it, so a fresh
+/// Development-only seed: a demo organization and an account that is its administrator, so a fresh
 /// local database can be signed into. Does nothing outside Development or without <c>DevSeed:Enabled</c>. Idempotent.
 /// </summary>
 internal sealed partial class DevelopmentSeed(
@@ -94,11 +95,18 @@ internal sealed partial class DevelopmentSeed(
             await services.GetRequiredService<UnitOfWork>().ExecuteAsync(
                 async ct =>
                 {
-                    if (!await db.Set<StaffMembership>().AnyAsync(m => m.UserId == userId, ct))
+                    var membership = await db.Set<StaffMembership>().SingleOrDefaultAsync(m => m.UserId == userId, ct);
+                    if (membership is null)
                     {
-                        db.Set<StaffMembership>().Add(new StaffMembership(userId, services.GetRequiredService<TimeProvider>().GetUtcNow()));
+                        db.Set<StaffMembership>().Add(new StaffMembership(userId, [SystemRoles.Administrator], services.GetRequiredService<TimeProvider>().GetUtcNow()));
                         await db.SaveChangesAsync(ct);
                         LogCreated(logger, "membership");
+                    }
+                    else if (!membership.RoleKeys.Contains(SystemRoles.Administrator))
+                    {
+                        // Memberships created before roles existed (M2-3) have none.
+                        membership.ChangeRoles([.. membership.RoleKeys, SystemRoles.Administrator]);
+                        await db.SaveChangesAsync(ct);
                     }
                 },
                 cancellationToken);

@@ -12,4 +12,5 @@ export interface SessionResponse {
   memberships: SessionMembership[];
   /** @nullable */
   activeOrganizationId: string | null;
+  permissions: string[];
 }

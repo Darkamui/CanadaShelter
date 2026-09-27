@@ -20,6 +20,9 @@ internal static class TestAuthentication
     public const string UserHeader = "X-Test-User";
     public const string OrganizationHeader = "X-Test-Organization";
 
+    /// <summary>Extra claims, one <c>type=value</c> per header value (platform operator, <c>amr</c>).</summary>
+    public const string ClaimHeader = "X-Test-Claim";
+
     private const string TestScheme = "Test";
     private const string SelectorScheme = "TestOrCookie";
 
@@ -43,15 +46,22 @@ internal static class TestAuthentication
     }
 
     /// <summary>Headers that sign a request in as <paramref name="userId"/>, optionally with an active organization.</summary>
-    public static void SignInAs(this HttpClient client, Guid userId, Guid? organizationId = null)
+    public static void SignInAs(this HttpClient client, Guid userId, Guid? organizationId = null, params (string Type, string Value)[] claims)
     {
         ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(claims);
         client.DefaultRequestHeaders.Remove(UserHeader);
         client.DefaultRequestHeaders.Remove(OrganizationHeader);
+        client.DefaultRequestHeaders.Remove(ClaimHeader);
         client.DefaultRequestHeaders.Add(UserHeader, userId.ToString("D"));
         if (organizationId is { } organization)
         {
             client.DefaultRequestHeaders.Add(OrganizationHeader, organization.ToString("D"));
+        }
+
+        foreach (var (type, value) in claims)
+        {
+            client.DefaultRequestHeaders.Add(ClaimHeader, $"{type}={value}");
         }
     }
 
@@ -74,6 +84,12 @@ internal static class TestAuthentication
                 claims.Add(new Claim(ActiveOrganizationClaim, organizationId.ToString("D")));
             }
 
+            foreach (var claim in Request.Headers[ClaimHeader].OfType<string>())
+            {
+                var separator = claim.IndexOf('=', StringComparison.Ordinal);
+                claims.Add(new Claim(claim[..separator], claim[(separator + 1)..]));
+            }
+
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, TestScheme));
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, TestScheme)));
         }
@@ -83,36 +99,42 @@ internal static class TestAuthentication
 /// <summary>Creates staff memberships directly, as the runtime role inside the organization (RLS applies).</summary>
 internal static class TestMemberships
 {
+    private static readonly string[] DefaultRoles = ["staff"];
+
     /// <summary>
     /// A membership of <paramref name="userId"/> in <paramref name="organizationId"/>. Memberships reference the
-    /// account by ID only, so a test user needs no account row unless it signs in with a password.
+    /// account by ID only, so a test user needs no account row unless it signs in with a password. Roles default to
+    /// <c>staff</c>; pass an empty list for a member without any.
     /// </summary>
-    public static async Task AddAsync(string connectionString, Guid organizationId, Guid userId, string status = "Active")
+    public static async Task<Guid> AddAsync(string connectionString, Guid organizationId, Guid userId, string status = "Active", IReadOnlyList<string>? roles = null)
     {
+        var membershipId = Guid.CreateVersion7();
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(TestContext.Current.CancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(TestContext.Current.CancellationToken);
         await using var command = new NpgsqlCommand(
             """
             SELECT set_config('app.tenant_id', @tenant, true);
-            INSERT INTO platform.staff_membership (id, tenant_id, user_id, status, created_at)
-            VALUES (@id, @tenant::uuid, @user, @status, now());
+            INSERT INTO platform.staff_membership (id, tenant_id, user_id, status, role_keys, created_at)
+            VALUES (@id, @tenant::uuid, @user, @status, @roles, now());
             """,
             connection,
             transaction);
         command.Parameters.AddWithValue("tenant", organizationId.ToString("D"));
-        command.Parameters.AddWithValue("id", Guid.CreateVersion7());
+        command.Parameters.AddWithValue("id", membershipId);
         command.Parameters.AddWithValue("user", userId);
         command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("roles", roles?.ToArray() ?? DefaultRoles);
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         await transaction.CommitAsync(TestContext.Current.CancellationToken);
+        return membershipId;
     }
 
-    /// <summary>A new account ID with an active membership in <paramref name="organizationId"/>.</summary>
-    public static async Task<Guid> NewMemberAsync(string connectionString, Guid organizationId)
+    /// <summary>A new account ID with an active membership in <paramref name="organizationId"/> (roles default to <c>staff</c>).</summary>
+    public static async Task<Guid> NewMemberAsync(string connectionString, Guid organizationId, params string[] roles)
     {
         var userId = Guid.CreateVersion7();
-        await AddAsync(connectionString, organizationId, userId);
+        await AddAsync(connectionString, organizationId, userId, "Active", roles.Length == 0 ? null : roles);
         return userId;
     }
 }

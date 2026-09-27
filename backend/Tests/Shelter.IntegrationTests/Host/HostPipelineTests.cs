@@ -64,10 +64,25 @@ public sealed class HostPipelineTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Unknown_route_is_denied_to_anonymous_callers()
+    {
+        // Default deny covers unmatched routes too: the fallback policy runs before "not found".
+        await using var factory = new ShelterApiFactory(postgres.AppConnectionString);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri("/api/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Unknown_route_returns_problem_details()
     {
         await using var factory = new ShelterApiFactory(postgres.AppConnectionString);
-        using var client = factory.CreateClient();
+        var organization = Guid.CreateVersion7();
+        var member = await TestMemberships.NewMemberAsync(postgres.AppConnectionString, organization);
+        using var client = factory.CreateHttpsClient(member, organization);
 
         var response = await client.GetAsync(new Uri("/api/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -147,6 +162,6 @@ public sealed class HostPipelineTests(PostgresFixture postgres)
         }
 
         public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-            endpoints.MapGet("/boom", () => { throw new InvalidOperationException(SecretMessage); });
+            endpoints.MapGet("/boom", () => { throw new InvalidOperationException(SecretMessage); }).AllowAnonymous();
     }
 }

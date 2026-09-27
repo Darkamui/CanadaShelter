@@ -26,6 +26,26 @@ internal sealed class StaffMembershipDirectory(ShelterDbContext db, UnitOfWork u
             cancellationToken);
     }
 
+    /// <summary>
+    /// The role keys of the current account's active membership in <paramref name="organizationId"/>, or
+    /// <c>null</c> without one. May be empty: a member without roles has no permissions.
+    /// </summary>
+    public async Task<string[]?> FindActiveRoleKeysAsync(Guid organizationId, CancellationToken cancellationToken)
+    {
+        if (userContext.UserId is not { } userId)
+        {
+            return null;
+        }
+
+        return await unitOfWork.ExecuteAsync(
+            ct => ActiveMemberships(userId)
+                .Where(m => m.TenantId == organizationId)
+                .Select(m => m.RoleKeys)
+                .SingleOrDefaultAsync(ct),
+            static _ => true,
+            cancellationToken);
+    }
+
     /// <summary>The current account's active memberships, by organization name. Empty when anonymous.</summary>
     public async Task<IReadOnlyList<MembershipSummary>> ListActiveAsync(CancellationToken cancellationToken)
     {

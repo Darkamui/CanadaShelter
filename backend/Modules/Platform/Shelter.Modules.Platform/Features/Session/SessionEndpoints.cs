@@ -109,6 +109,7 @@ internal static class SessionEndpoints
         UserManager<UserAccount> userManager,
         StaffMembershipDirectory memberships,
         ITenantContext tenantContext,
+        IPermissionContext permissions,
         CancellationToken cancellationToken)
     {
         var user = await userManager.GetUserAsync(principal);
@@ -121,7 +122,8 @@ internal static class SessionEndpoints
         return TypedResults.Ok(new SessionResponse(
             new SessionUser(user.Id, user.DisplayName, user.PreferredLanguage, user.IsPlatformOperator, user.TwoFactorEnabled),
             [.. organizations.Select(o => new SessionMembership(o.OrganizationId, o.OrganizationName))],
-            tenantContext.TenantId));
+            tenantContext.TenantId,
+            [.. permissions.Permissions.Order(StringComparer.Ordinal)]));
     }
 
     /// <summary>
@@ -199,7 +201,8 @@ internal sealed record LoginResponse(string Status);
 /// <param name="User">The signed-in account.</param>
 /// <param name="Memberships">Organizations the account may select (active memberships only).</param>
 /// <param name="ActiveOrganizationId">The organization this request acts in, or <c>null</c> when none is selected or its membership is no longer active.</param>
-internal sealed record SessionResponse(SessionUser User, IReadOnlyList<SessionMembership> Memberships, Guid? ActiveOrganizationId);
+/// <param name="Permissions">What the active membership's roles grant; empty without one. For showing or hiding UI only: the server checks every call.</param>
+internal sealed record SessionResponse(SessionUser User, IReadOnlyList<SessionMembership> Memberships, Guid? ActiveOrganizationId, IReadOnlyList<string> Permissions);
 
 /// <summary>An organization the account may select.</summary>
 /// <param name="OrganizationId">Organization ID.</param>

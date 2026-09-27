@@ -65,20 +65,20 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] Permission catalog: each module declares its permissions (read/write, sensitive) in its `Authorization/` folder.
+- [x] Permission catalog: each module declares its permissions (read/write, sensitive) in its `Authorization/` folder.
   - Initial set: `platform.staff.read`, `platform.staff.manage`, `audit.read`, `animal.read`, `movement.read`.
-- [ ] Roles are collections of permissions. The system roles `administrator` (all), `staff` (non-sensitive) and `read_only` (non-sensitive reads) are assigned per membership. Custom roles are a follow-up.
-- [ ] Endpoints declare `.RequirePermission(...)`. An authorization **fallback policy** denies everything else: authenticated user and active tenant required.
-- [ ] Anonymous access is an explicit allowlist (ping, login, antiforgery, password reset, invitation accept). A test enumerates every endpoint and fails on any endpoint that neither declares a permission nor is allowlisted.
-- [ ] M1 follow-ups:
+- [x] Roles are collections of permissions. The system roles `administrator` (all), `staff` (non-sensitive) and `read_only` (non-sensitive reads) are assigned per membership. Custom roles are a follow-up.
+- [x] Endpoints declare `.RequirePermission(...)`. An authorization **fallback policy** denies everything else: authenticated user and active tenant required.
+- [x] Anonymous access is an explicit allowlist (ping, login, antiforgery, password reset, invitation accept). _Password reset and invitation accept join the allowlist with their endpoints in M2-5._ A test enumerates every endpoint and fails on any endpoint that neither declares a permission nor is allowlisted.
+- [x] M1 follow-ups:
   - The species and intake-reason lists require `animal.read` / `movement.read`.
   - `IAuditReader` requires `audit.read`.
   - The Hangfire dashboard is limited to platform operators with MFA (never granted through the API).
-- [ ] Staff management: list members, change roles, suspend/reactivate.
+- [x] Staff management: list members, change roles, suspend/reactivate.
   - Requires `platform.staff.manage`.
   - Changes are audited (permission changes).
   - The last active administrator cannot be removed or demoted.
-- [ ] Tests: permission denied (403) for every endpoint; default deny for an endpoint with no permission; role change audited; last-administrator guard; cross-tenant member management denied.
+- [x] Tests: permission denied (403) for every endpoint; default deny for an endpoint with no permission; role change audited; last-administrator guard; cross-tenant member management denied.
 
 ---
 

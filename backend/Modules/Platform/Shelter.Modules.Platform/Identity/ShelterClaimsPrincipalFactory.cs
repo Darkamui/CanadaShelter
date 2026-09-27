@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.Modules.Platform.Domain;
 
 namespace Shelter.Modules.Platform.Identity;
@@ -12,10 +13,10 @@ internal static class PlatformClaims
     public const string ActiveOrganization = "shelter:org";
 
     /// <summary>Present (<c>true</c>) for platform operators.</summary>
-    public const string PlatformOperator = "shelter:operator";
+    public const string PlatformOperator = AuthorizationPolicies.PlatformOperatorClaim;
 
     /// <summary>Authentication methods of this session (<c>pwd</c>, <c>mfa</c>), set by the sign-in manager.</summary>
-    public const string AuthenticationMethod = "amr";
+    public const string AuthenticationMethod = AuthorizationPolicies.AuthenticationMethodClaim;
 
     /// <summary>Claims that belong to the session, not the account; kept when the security stamp check rebuilds the principal.</summary>
     public static readonly IReadOnlySet<string> SessionClaims = new HashSet<string>(StringComparer.Ordinal)

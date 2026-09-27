@@ -25,12 +25,12 @@
 
 ## Invariants
 
-- The runtime role can only SELECT system species. Each tenant's overrides affect that tenant only, and a request without a tenant gets the system list. Tested by `ReferenceDataEndpointTests`.
+- The runtime role can only SELECT system species. Each tenant's overrides affect that tenant only. Tested by `ReferenceDataEndpointTests`.
 - Both labels (`label_fr`, `label_en`) are always present.
 
 ## Permissions
 
-- None yet. `GET /api/animals/species` is `.AllowAnonymous()` until M2.
+- `animal.read` (read, non-sensitive): `GET /api/animals/species`.
 
 ## Key files
 

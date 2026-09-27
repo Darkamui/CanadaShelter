@@ -84,7 +84,9 @@ public sealed class PooledConnectionTests(PostgresFixture postgres)
                 return Results.Json(await ProbeAsync(db, ct));
             });
 
-            endpoints.MapGet("/settings", async (ShelterDbContext db, CancellationToken ct) => Results.Json(await ProbeAsync(db, ct)));
+            // Anonymous on purpose: the third request must run without a tenant or user.
+            endpoints.MapGet("/settings", async (ShelterDbContext db, CancellationToken ct) => Results.Json(await ProbeAsync(db, ct)))
+                .AllowAnonymous();
         }
 
         private static Task<Probe> ProbeAsync(ShelterDbContext db, CancellationToken ct) =>

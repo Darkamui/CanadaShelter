@@ -1,13 +1,15 @@
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 
 namespace Shelter.BuildingBlocks.Auditing;
 
 /// <summary>
-/// Reads the audit history of the current tenant with personal values decrypted. Callers must check the reader's
-/// permission first (TODO(M2): audit-read permission); personal values must never be logged.
+/// Reads the audit history of the current tenant with personal values decrypted. Requires
+/// <see cref="AuditPermissions.Read"/>, checked by the reader itself so no caller can forget it; personal values must
+/// never be logged.
 /// </summary>
 public interface IAuditReader
 {
@@ -15,7 +17,34 @@ public interface IAuditReader
     /// Every event of one entity, oldest first. Encrypted values whose subject was shredded read as
     /// <c>{"$unrecoverable":"shredded"}</c>. Run it inside a unit of work.
     /// </summary>
+    /// <exception cref="AuditReadDeniedException">The request lacks <see cref="AuditPermissions.Read"/>.</exception>
     Task<IReadOnlyList<AuditEntry>> GetEntityHistoryAsync(string entityType, string entityId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Audit permissions. Declared in the catalog by the Platform module.</summary>
+public static class AuditPermissions
+{
+    /// <summary>Read the audit trail, personal values decrypted. Sensitive.</summary>
+    public const string Read = "audit.read";
+}
+
+/// <summary>Thrown when the audit trail is read without <see cref="AuditPermissions.Read"/>.</summary>
+public sealed class AuditReadDeniedException : InvalidOperationException
+{
+    public AuditReadDeniedException()
+        : base($"Reading the audit trail requires the '{AuditPermissions.Read}' permission.")
+    {
+    }
+
+    public AuditReadDeniedException(string message)
+        : base(message)
+    {
+    }
+
+    public AuditReadDeniedException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 }
 
 /// <summary>One audit event as read back: payloads hold plain values where the reader could decrypt them.</summary>
@@ -35,7 +64,7 @@ public sealed record AuditEntry(
     JsonObject? Metadata);
 
 /// <summary><see cref="IAuditReader"/> on the scoped <see cref="ShelterDbContext"/>. Scoped.</summary>
-internal sealed class AuditReader(ShelterDbContext db) : IAuditReader
+internal sealed class AuditReader(ShelterDbContext db, IPermissionContext permissions) : IAuditReader
 {
     /// <summary>Marker replacing a value that can no longer be decrypted.</summary>
     public const string UnrecoverableMarker = "$unrecoverable";
@@ -45,6 +74,10 @@ internal sealed class AuditReader(ShelterDbContext db) : IAuditReader
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(entityType);
         ArgumentException.ThrowIfNullOrWhiteSpace(entityId);
+        if (!permissions.Has(AuditPermissions.Read))
+        {
+            throw new AuditReadDeniedException();
+        }
 
         var tenantId = db.TenantContext.RequireTenantId();
         var events = await db.Set<AuditEvent>()

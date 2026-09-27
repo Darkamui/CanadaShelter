@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 
@@ -33,6 +34,7 @@ public static class TestServices
             services.AddSingleton(contributor);
         }
 
+        services.AddShelterPermissions();
         services.AddShelterPersistence();
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }

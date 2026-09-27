@@ -106,7 +106,7 @@ public sealed class MembershipTests(PostgresFixture postgres) : IAsyncDisposable
         var rows = await response.Content.ReadFromJsonAsync<List<MembershipRow>>(TestContext.Current.CancellationToken);
         Assert.NotNull(rows);
         Assert.All(rows, r => Assert.Equal(caller, r.UserId));
-        Assert.Equal([organizationA, organizationB], rows.Select(r => r.TenantId).Order());
+        Assert.Equal(new[] { organizationA, organizationB }.Order(), rows.Select(r => r.TenantId).Order());
     }
 
     [Fact]
@@ -274,7 +274,10 @@ public sealed class MembershipTests(PostgresFixture postgres) : IAsyncDisposable
 
     private sealed record MembershipRow(Guid TenantId, Guid UserId);
 
-    /// <summary>Test-only module: a tenant endpoint, and raw membership reads scoped only by the database.</summary>
+    /// <summary>
+    /// Test-only module: an endpoint that declares nothing (so only the fallback policy guards it: default deny,
+    /// member of the active organization required), and raw membership reads scoped only by the database.
+    /// </summary>
     private sealed class MembershipProbeModule : IModule
     {
         public string RoutePrefix => "test-membership";
@@ -285,7 +288,7 @@ public sealed class MembershipTests(PostgresFixture postgres) : IAsyncDisposable
 
         public void MapEndpoints(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGet("/tenant", (ITenantContext tenant) => Results.Json(tenant.TenantId)).RequireTenant();
+            endpoints.MapGet("/tenant", (ITenantContext tenant) => Results.Json(tenant.TenantId));
 
             endpoints.MapGet("/memberships", async (ShelterDbContext db, CancellationToken ct) =>
                 Results.Json(await db.Database

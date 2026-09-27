@@ -6,14 +6,16 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Modules.Platform.Domain;
+using Shelter.Modules.Platform.Features.Memberships;
 using Shelter.Modules.Platform.Identity;
 
 namespace Shelter.Modules.Platform.Features.Session;
 
 /// <summary>
-/// <c>/api/platform/session</c>: cookie login, logout and the current session (ADR 0018). Every unsafe call,
-/// login included, carries the antiforgery header (the group's filter).
+/// <c>/api/platform/session</c>: cookie login, logout, the current session and the active organization (ADR 0018).
+/// Every unsafe call, login included, carries the antiforgery header (the group's filter).
 /// </summary>
 internal static class SessionEndpoints
 {
@@ -35,6 +37,10 @@ internal static class SessionEndpoints
 
         session.MapGet("", GetSession)
             .WithName("GetPlatformSession")
+            .RequireSession();
+
+        session.MapPost("/organization/{organizationId:guid}", SelectOrganization)
+            .WithName("SelectPlatformSessionOrganization")
             .RequireSession();
     }
 
@@ -100,7 +106,10 @@ internal static class SessionEndpoints
 
     internal static async Task<Results<Ok<SessionResponse>, UnauthorizedHttpResult>> GetSession(
         ClaimsPrincipal principal,
-        UserManager<UserAccount> userManager)
+        UserManager<UserAccount> userManager,
+        StaffMembershipDirectory memberships,
+        ITenantContext tenantContext,
+        CancellationToken cancellationToken)
     {
         var user = await userManager.GetUserAsync(principal);
         if (user is null)
@@ -108,8 +117,42 @@ internal static class SessionEndpoints
             return TypedResults.Unauthorized();
         }
 
+        var organizations = await memberships.ListActiveAsync(cancellationToken);
         return TypedResults.Ok(new SessionResponse(
-            new SessionUser(user.Id, user.DisplayName, user.PreferredLanguage, user.IsPlatformOperator, user.TwoFactorEnabled)));
+            new SessionUser(user.Id, user.DisplayName, user.PreferredLanguage, user.IsPlatformOperator, user.TwoFactorEnabled),
+            [.. organizations.Select(o => new SessionMembership(o.OrganizationId, o.OrganizationName))],
+            tenantContext.TenantId));
+    }
+
+    /// <summary>
+    /// Makes one of the caller's own active memberships the session's organization. Anything else (another
+    /// organization, a suspended membership, an unknown ID) gets the same 403: the ID is never trusted.
+    /// </summary>
+    internal static async Task<Results<NoContent, ProblemHttpResult, UnauthorizedHttpResult>> SelectOrganization(
+        Guid organizationId,
+        ClaimsPrincipal principal,
+        UserManager<UserAccount> userManager,
+        SignInManager<UserAccount> signInManager,
+        StaffMembershipDirectory memberships,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.GetUserAsync(principal);
+        if (user is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        if (!await memberships.IsActiveMemberAsync(organizationId, cancellationToken))
+        {
+            return TypedResults.Problem(statusCode: StatusCodes.Status403Forbidden, title: "Not a member of this organization.");
+        }
+
+        // A new cookie for the same session: how it signed in is kept, the organization replaced.
+        var claims = principal.FindAll(PlatformClaims.AuthenticationMethod)
+            .Select(c => new Claim(c.Type, c.Value))
+            .Append(new Claim(PlatformClaims.ActiveOrganization, organizationId.ToString("D")));
+        await signInManager.SignInWithClaimsAsync(user, isPersistent: false, claims);
+        return TypedResults.NoContent();
     }
 
     private static ProblemHttpResult InvalidCredentials() =>
@@ -154,7 +197,14 @@ internal sealed record LoginResponse(string Status);
 
 /// <summary>The current session.</summary>
 /// <param name="User">The signed-in account.</param>
-internal sealed record SessionResponse(SessionUser User);
+/// <param name="Memberships">Organizations the account may select (active memberships only).</param>
+/// <param name="ActiveOrganizationId">The organization this request acts in, or <c>null</c> when none is selected or its membership is no longer active.</param>
+internal sealed record SessionResponse(SessionUser User, IReadOnlyList<SessionMembership> Memberships, Guid? ActiveOrganizationId);
+
+/// <summary>An organization the account may select.</summary>
+/// <param name="OrganizationId">Organization ID.</param>
+/// <param name="OrganizationName">Organization name.</param>
+internal sealed record SessionMembership(Guid OrganizationId, string OrganizationName);
 
 /// <summary>The signed-in account.</summary>
 /// <param name="Id">Account ID.</param>

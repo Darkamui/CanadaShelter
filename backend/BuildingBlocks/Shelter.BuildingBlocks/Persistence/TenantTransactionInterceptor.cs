@@ -7,9 +7,10 @@ using Shelter.BuildingBlocks.Persistence.Migrations;
 namespace Shelter.BuildingBlocks.Persistence;
 
 /// <summary>
-/// Issues <c>SET LOCAL app.tenant_id</c> as the first statement of every transaction a tenant-scoped
-/// <see cref="ShelterDbContext"/> starts or joins (ADR 0004). Transaction-scoped: it ends with the transaction, so a
-/// pooled connection never carries a tenant into the next unit of work. There is no session-level <c>SET</c>.
+/// Issues <c>SET LOCAL app.tenant_id</c> (and <c>app.user_id</c> for a signed-in account, ADR 0018) as the first
+/// statement of every transaction a <see cref="ShelterDbContext"/> starts or joins (ADR 0004). Transaction-scoped: it
+/// ends with the transaction, so a pooled connection never carries a tenant or user into the next unit of work.
+/// There is no session-level <c>SET</c>.
 /// </summary>
 internal sealed class TenantTransactionInterceptor : DbTransactionInterceptor
 {
@@ -59,16 +60,31 @@ internal sealed class TenantTransactionInterceptor : DbTransactionInterceptor
     // A raw ADO.NET command: it does not pass through the EF command interceptors.
     private static DbCommand? SetTenantCommand(DbContext? context, DbTransaction transaction)
     {
-        if (context is not ShelterDbContext { IsPlatformAdmin: false } shelter || shelter.TenantContext.TenantId is not { } tenantId)
+        if (context is not ShelterDbContext { IsPlatformAdmin: false } shelter)
+        {
+            return null;
+        }
+
+        // SET takes no bind parameters. A Guid in "D" format is hex digits and hyphens only, so it cannot inject.
+        var statements = new List<string>(2);
+        if (shelter.TenantContext.TenantId is { } tenantId)
+        {
+            statements.Add(string.Create(CultureInfo.InvariantCulture, $"SET LOCAL {RlsMigrationExtensions.TenantSetting} = '{tenantId:D}'"));
+        }
+
+        if (shelter.UserContext.UserId is { } userId)
+        {
+            statements.Add(string.Create(CultureInfo.InvariantCulture, $"SET LOCAL {RlsMigrationExtensions.UserSetting} = '{userId:D}'"));
+        }
+
+        if (statements.Count == 0)
         {
             return null;
         }
 
         var command = transaction.Connection!.CreateCommand();
         command.Transaction = transaction;
-
-        // SET takes no bind parameters. A Guid in "D" format is hex digits and hyphens only, so it cannot inject.
-        command.CommandText = string.Create(CultureInfo.InvariantCulture, $"SET LOCAL {RlsMigrationExtensions.TenantSetting} = '{tenantId:D}'");
+        command.CommandText = string.Join("; ", statements);
         return command;
     }
 }

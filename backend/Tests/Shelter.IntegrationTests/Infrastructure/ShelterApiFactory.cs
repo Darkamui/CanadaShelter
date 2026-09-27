@@ -45,6 +45,7 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
                 services.AddSingleton(module);
             }
 
+            services.AddTestAuthentication();
             ConfigureServices?.Invoke(services);
         });
     }

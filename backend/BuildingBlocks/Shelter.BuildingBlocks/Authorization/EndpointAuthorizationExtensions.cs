@@ -7,6 +7,9 @@ public static class AuthorizationPolicies
 {
     /// <summary>A signed-in user; no organization or permission needed (session, logout, organization switch, MFA enrollment).</summary>
     public const string Session = "Session";
+
+    /// <summary>A signed-in user with an active membership in the session's active organization (<see cref="TenantRequirement"/>).</summary>
+    public const string Tenant = "Tenant";
 }
 
 /// <summary>Marks an endpoint as reachable by any signed-in user, without an organization or permission.</summary>
@@ -30,5 +33,16 @@ public static class EndpointAuthorizationExtensions
         return builder
             .WithMetadata(SessionEndpointMetadata.Instance)
             .RequireAuthorization(AuthorizationPolicies.Session);
+    }
+
+    /// <summary>
+    /// A signed-in user acting in an organization where they hold an active membership. The floor for organization
+    /// data until M2-3 adds permissions on top.
+    /// </summary>
+    public static TBuilder RequireTenant<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.RequireAuthorization(AuthorizationPolicies.Tenant);
     }
 }

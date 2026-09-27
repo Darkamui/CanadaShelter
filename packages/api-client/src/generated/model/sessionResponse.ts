@@ -4,8 +4,12 @@
  * Shelter.Host | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { SessionMembership } from './sessionMembership.ts';
 import type { SessionUser } from './sessionUser.ts';
 
 export interface SessionResponse {
   user: SessionUser;
+  memberships: SessionMembership[];
+  /** @nullable */
+  activeOrganizationId: string | null;
 }

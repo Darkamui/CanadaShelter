@@ -10,12 +10,11 @@ namespace Shelter.IntegrationTests.ReferenceData;
 /// </summary>
 public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyncDisposable
 {
-    private const string TenantHeader = "X-Tenant-Id";
     private const string InsufficientPrivilege = "42501";
 
     private static readonly string[] SystemSpecies = ["dog", "cat", "rabbit", "ferret", "small_mammal", "bird", "reptile", "other"];
 
-    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString) { EnvironmentName = "Development" };
+    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString);
 
     [Fact]
     public async Task Species_without_a_tenant_are_the_seeded_system_list_in_both_languages()
@@ -92,14 +91,9 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
 
     private async Task<List<ItemDto>> GetAsync(string path, Guid? tenantId)
     {
-        using var client = _factory.CreateClient();
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(path, UriKind.Relative));
-        if (tenantId is { } tenant)
-        {
-            request.Headers.Add(TenantHeader, tenant.ToString("D"));
-        }
-
-        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        Guid? user = tenantId is { } tenant ? await TestMemberships.NewMemberAsync(postgres.AppConnectionString, tenant) : null;
+        using var client = _factory.CreateHttpsClient(user, tenantId);
+        using var response = await client.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<List<ItemDto>>(TestContext.Current.CancellationToken))!;
     }

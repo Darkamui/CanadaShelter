@@ -28,7 +28,8 @@
 - **Tenancy:**
   - Entities implement `ITenantOwned`. `TenantStampingInterceptor` stamps `TenantId` and rejects cross-tenant or tenant-less writes.
   - A global query filter hides everything when no tenant is set.
-  - `TenantContext` is scoped. `DevelopmentHeaderTenantResolver` (`X-Tenant-Id`) is registered only in Development; everywhere else resolution fails closed.
+  - `TenantContext` is scoped. Since M2-2 the only resolver is `MembershipTenantResolver` (ADR 0018): the session's active organization, re-checked against an active `staff_membership` on every request. The M1 dev header (`X-Tenant-Id`) is gone; integration tests sign in through a test-only scheme (`TestAuthentication`).
+  - `UserContext` (scoped) holds the signed-in account; `TenantTransactionInterceptor` also runs `SET LOCAL app.user_id`, read by `platform.current_user_id()` and the `self_read` policy (`EnableSelfRead`).
 - **RLS (ADR 0004):**
   - `UnitOfWorkEndpointFilter` wraps every tenant request in a transaction.
   - `TenantTransactionInterceptor` runs `SET LOCAL app.tenant_id` when the transaction starts.
@@ -76,6 +77,7 @@
 - Audit rows are append-only for the runtime role, with before/after values and actor: `AuditCaptureTests`, `RuntimeRoleTests`.
 - Personal values are unrecoverable after a shred: `CryptoShreddingTests`. Person-linked entities are fully classified: `ClassificationRuleTests`.
 - Reference overrides stay inside their tenant, and system values are read-only: `ReferenceDataEndpointTests`.
+- Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
 
@@ -92,7 +94,6 @@
 
 - **M2:**
   - Add an authorization `FallbackPolicy` and permissions for ping, the reference lists, `IAuditReader` and the Hangfire dashboard.
-  - Replace the dev header resolver.
 - Known gaps (from the reviewer):
   - `AuditRecord.Metadata` is not classified, so callers must keep personal data out of it.
   - `EntityId` is assumed to be non-personal.

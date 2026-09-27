@@ -22,17 +22,20 @@ public sealed class ShelterDbContext : DbContext
 
     /// <summary>
     /// Creates the context. Without an <paramref name="auditContext"/>, changes are audited as the system actor;
-    /// without a <paramref name="keyProvider"/>, personal values in audit payloads are redacted, not encrypted.
+    /// without a <paramref name="keyProvider"/>, personal values in audit payloads are redacted, not encrypted;
+    /// without a <paramref name="userContext"/>, no account is set for self-read policies.
     /// </summary>
     public ShelterDbContext(
         DbContextOptions<ShelterDbContext> options,
         ITenantContext tenantContext,
         IEnumerable<IModelContributor> contributors,
         AuditContext? auditContext = null,
-        IKeyProvider? keyProvider = null)
+        IKeyProvider? keyProvider = null,
+        IUserContext? userContext = null)
         : base(options)
     {
         TenantContext = tenantContext;
+        UserContext = userContext ?? new UserContext();
         AuditContext = auditContext ?? new AuditContext();
         KeyProvider = keyProvider;
         _contributors = [.. contributors.OrderBy(c => c.GetType().FullName, StringComparer.Ordinal)];
@@ -44,6 +47,9 @@ public sealed class ShelterDbContext : DbContext
 
     /// <summary>The tenant this context reads and writes for.</summary>
     public ITenantContext TenantContext { get; }
+
+    /// <summary>The signed-in account, set as <c>app.user_id</c> for self-read policies (never for tenant access).</summary>
+    public IUserContext UserContext { get; }
 
     /// <summary>Actor, source and correlation stamped on the audit events this context records.</summary>
     public AuditContext AuditContext { get; }

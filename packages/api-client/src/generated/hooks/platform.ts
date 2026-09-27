@@ -547,3 +547,86 @@ export function useGetPlatformSession<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getSelectPlatformSessionOrganizationUrl = (organizationId: string) => {
+  return `/api/platform/session/organization/${organizationId}`;
+};
+
+export const selectPlatformSessionOrganization = async (
+  organizationId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getSelectPlatformSessionOrganizationUrl(organizationId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getSelectPlatformSessionOrganizationMutationKey = () =>
+  ['selectPlatformSessionOrganization'] as const;
+
+export const getSelectPlatformSessionOrganizationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof selectPlatformSessionOrganization>>,
+    TError,
+    SelectPlatformSessionOrganizationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof selectPlatformSessionOrganization>>,
+  TError,
+  SelectPlatformSessionOrganizationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSelectPlatformSessionOrganizationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof selectPlatformSessionOrganization>>,
+    SelectPlatformSessionOrganizationMutationVariables
+  > = (props) => {
+    const { organizationId } = props ?? {};
+
+    return selectPlatformSessionOrganization(organizationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SelectPlatformSessionOrganizationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof selectPlatformSessionOrganization>>
+>;
+
+export type SelectPlatformSessionOrganizationMutationError = ErrorType<unknown>;
+export type SelectPlatformSessionOrganizationMutationVariables = { organizationId: string };
+
+export const useSelectPlatformSessionOrganization = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof selectPlatformSessionOrganization>>,
+      TError,
+      SelectPlatformSessionOrganizationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof selectPlatformSessionOrganization>>,
+  TError,
+  SelectPlatformSessionOrganizationMutationVariables,
+  TContext
+> => {
+  return useMutation(getSelectPlatformSessionOrganizationMutationOptions(options), queryClient);
+};

@@ -60,7 +60,9 @@ ADR 0007 chose ASP.NET Identity with a same-site cookie. M2 has to connect that 
   - Tenant resolution, permission checks and MFA enforcement are centralized and default-deny.
   - The client never supplies an authoritative tenant.
 - Negative / accepted trade-offs:
-  - One extra single-row query per authenticated request.
+  - One extra transaction per authenticated request (the membership re-check), on its own before the endpoint's unit of work.
+  - Self-read lookups filter on `user_id` alone, while every index leads with `tenant_id` (hard rule 1), so they scan the table. Fine at pilot scale; revisit (for example a partial or per-tenant strategy that keeps the rule) if memberships grow large.
+  - Authenticated requests now always open a transaction (`app.user_id`), even with no organization chosen.
   - Account changes appear in `security_event`, not in the tenant audit trail.
   - The runtime role can read every account row. That is inherent to global accounts, and endpoints expose only the caller's own account.
 - Follow-ups:

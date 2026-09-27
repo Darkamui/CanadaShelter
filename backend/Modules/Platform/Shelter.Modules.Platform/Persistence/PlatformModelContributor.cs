@@ -21,6 +21,7 @@ internal sealed class PlatformModelContributor : IModelContributor
         modelBuilder.ApplyConfiguration(new UserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new UserTokenConfiguration());
         modelBuilder.ApplyConfiguration(new SecurityEventConfiguration());
+        modelBuilder.ApplyConfiguration(new StaffMembershipConfiguration());
     }
 }
 
@@ -165,5 +166,23 @@ internal sealed class SecurityEventConfiguration : IEntityTypeConfiguration<Secu
         builder.Property(e => e.OccurredAt).IsRequired().IsNonPersonalData();
         builder.Property(e => e.CorrelationId).HasMaxLength(64).IsNonPersonalData();
         builder.HasIndex(e => new { e.UserId, e.OccurredAt });
+    }
+}
+
+/// <summary>
+/// Staff memberships: tenant-owned, RLS plus a self-read policy (ADR 0018). No personal data; the account ID is a
+/// plain column (no foreign key), so every index starts with the tenant.
+/// </summary>
+internal sealed class StaffMembershipConfiguration : IEntityTypeConfiguration<StaffMembership>
+{
+    public void Configure(EntityTypeBuilder<StaffMembership> builder)
+    {
+        builder.ToTable("staff_membership", PlatformModelContributor.Schema);
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Id).ValueGeneratedNever();
+        builder.Property(m => m.UserId).IsNonPersonalData();
+        builder.Property(m => m.Status).HasConversion<string>().HasMaxLength(20).IsRequired().IsNonPersonalData();
+        builder.Property(m => m.CreatedAt).IsRequired().IsNonPersonalData();
+        builder.HasIndex(m => new { m.TenantId, m.UserId }).IsUnique();
     }
 }

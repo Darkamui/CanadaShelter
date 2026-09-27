@@ -31,4 +31,17 @@ export const GetPlatformSessionResponse = zod.object({
     isPlatformOperator: zod.boolean(),
     mfaEnabled: zod.boolean(),
   }),
+  memberships: zod.array(
+    zod.object({
+      organizationId: zod.uuid(),
+      organizationName: zod.string(),
+    }),
+  ),
+  activeOrganizationId: zod.uuid().nullable(),
 });
+
+export const SelectPlatformSessionOrganizationParams = zod.object({
+  organizationId: zod.uuid(),
+});
+
+export const SelectPlatformSessionOrganizationResponse = zod.void();

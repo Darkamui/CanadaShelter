@@ -19,7 +19,7 @@ builder.Logging.AddShelterRedaction();
 
 builder.Services.AddShelterProblemDetails();
 builder.Services.AddShelterOpenApi();
-builder.Services.AddShelterTenancy(builder.Environment);
+builder.Services.AddShelterTenancy();
 builder.Services.AddShelterAuthentication(builder.Environment);
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();

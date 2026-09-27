@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Shelter.BuildingBlocks.Authorization;
 
@@ -43,7 +44,9 @@ internal static class Authentication
             .AddCookie(IdentityConstants.TwoFactorRememberMeScheme, options => ConfigureCookie(options, strict, "shelter-mfa-remember"));
 
         services.AddAuthorizationBuilder()
-            .AddPolicy(AuthorizationPolicies.Session, policy => policy.RequireAuthenticatedUser());
+            .AddPolicy(AuthorizationPolicies.Session, policy => policy.RequireAuthenticatedUser())
+            .AddPolicy(AuthorizationPolicies.Tenant, policy => policy.RequireAuthenticatedUser().AddRequirements(TenantRequirement.Instance));
+        services.AddScoped<IAuthorizationHandler, TenantAuthorizationHandler>();
 
         services.AddAntiforgery(options =>
         {

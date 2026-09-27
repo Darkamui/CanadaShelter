@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shelter.BuildingBlocks.Persistence;
+using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Modules.Platform.Domain;
+using Shelter.Modules.Platform.Features.Memberships;
 
 namespace Shelter.Modules.Platform.Identity;
 
@@ -35,7 +38,7 @@ internal static class IdentityServiceCollectionExtensions
                 options.User.AllowedUserNameCharacters = string.Empty;
             })
             .AddUserStore<UserOnlyStore<UserAccount, ShelterDbContext, Guid>>()
-            .AddSignInManager()
+            .AddSignInManager<ShelterSignInManager>()
             .AddDefaultTokenProviders()
             .AddClaimsPrincipalFactory<ShelterClaimsPrincipalFactory>();
 
@@ -60,6 +63,10 @@ internal static class IdentityServiceCollectionExtensions
         });
 
         services.AddScoped<SecurityEventWriter>();
+        services.AddScoped<StaffMembershipDirectory>();
+
+        // Replaces the building blocks' no-tenant fallback.
+        services.Replace(ServiceDescriptor.Singleton<ITenantResolver, MembershipTenantResolver>());
         return services;
     }
 }

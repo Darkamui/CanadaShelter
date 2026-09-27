@@ -1,7 +1,7 @@
 ---
 name: new-migration
 description: Add an EF Core migration for the current issue, verify RLS and TenantId-leading indexes in the generated SQL, apply it to the local database, then run tenancy-check.
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: <MigrationName>
 ---
 

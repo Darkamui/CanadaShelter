@@ -11,6 +11,7 @@ services:
       SHELTER_DB: ${SHELTER_DB:-shelter}
       SHELTER_MIGRATOR_PASSWORD: ${SHELTER_MIGRATOR_PASSWORD:-shelter_migrator_dev}
       SHELTER_APP_PASSWORD: ${SHELTER_APP_PASSWORD:-shelter_app_dev}
+      SHELTER_PLATFORM_ADMIN_PASSWORD: ${SHELTER_PLATFORM_ADMIN_PASSWORD:-shelter_platform_admin_dev}
     ports:
       - '${POSTGRES_PORT:-55432}:5432'
     volumes:

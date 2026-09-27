@@ -43,3 +43,28 @@ public sealed class TenantIsolationException : InvalidOperationException
     {
     }
 }
+
+/// <summary>
+/// A tenant-scoped database command ran outside a transaction, where <c>SET LOCAL</c> cannot apply. A bug: the
+/// work must run inside a unit of work.
+/// </summary>
+public sealed class TenantTransactionRequiredException : InvalidOperationException
+{
+    /// <summary>Creates the exception.</summary>
+    public TenantTransactionRequiredException()
+        : base("Tenant-scoped database work must run inside a unit-of-work transaction.")
+    {
+    }
+
+    /// <summary>Creates the exception.</summary>
+    public TenantTransactionRequiredException(string message)
+        : base(message)
+    {
+    }
+
+    /// <summary>Creates the exception.</summary>
+    public TenantTransactionRequiredException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+}

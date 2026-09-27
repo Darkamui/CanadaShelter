@@ -63,8 +63,8 @@ namespace Shelter.Migrations.Migrations
             // Runtime role: read the tenant registry, read/write tenant settings. Organization writes go
             // through the platform-admin path (M1-2), never shelter_app.
             migrationBuilder.GrantRuntimeSchemaUsage("platform");
-            migrationBuilder.GrantRuntime("platform", "organization", RuntimePrivileges.Select);
-            migrationBuilder.GrantRuntime("platform", "tenant_setting", RuntimePrivileges.ReadWrite);
+            migrationBuilder.GrantRuntime("platform", "organization", TablePrivileges.Select);
+            migrationBuilder.GrantRuntime("platform", "tenant_setting", TablePrivileges.ReadWrite);
         }
 
         /// <inheritdoc />

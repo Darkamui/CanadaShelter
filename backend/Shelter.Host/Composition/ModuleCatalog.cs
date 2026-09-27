@@ -1,4 +1,5 @@
 using Shelter.BuildingBlocks.Modules;
+using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Animals;
 using Shelter.Modules.Engagement;
 using Shelter.Modules.Medical;
@@ -43,7 +44,10 @@ internal static class ModuleCatalog
         // Resolved from DI (registered above) so integration tests can add a test-only module.
         foreach (var module in endpoints.ServiceProvider.GetServices<IModule>())
         {
-            var group = endpoints.MapGroup($"/api/{module.RoutePrefix}").WithTags(module.RoutePrefix);
+            // Every module endpoint runs in one unit of work when the request has a tenant (ADR 0004).
+            var group = endpoints.MapGroup($"/api/{module.RoutePrefix}")
+                .WithTags(module.RoutePrefix)
+                .AddEndpointFilter<UnitOfWorkEndpointFilter>();
             module.MapEndpoints(group);
         }
 

@@ -20,8 +20,8 @@ public sealed class TenantStampingTests(PostgresFixture fixture)
             await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
-        await using var reader = fixture.CreateContext(_tenantA);
-        var stored = await reader.Set<TenantSetting>().SingleAsync(s => s.Id == setting.Id, TestContext.Current.CancellationToken);
+        var stored = await fixture.InTenantAsync(
+            _tenantA, db => db.Set<TenantSetting>().SingleAsync(s => s.Id == setting.Id, TestContext.Current.CancellationToken));
         Assert.Equal(_tenantA, stored.TenantId);
     }
 
@@ -41,8 +41,9 @@ public sealed class TenantStampingTests(PostgresFixture fixture)
     {
         await SeedAsync(_tenantA, "locale");
 
-        await using var db = fixture.CreateContext(_tenantB);
-        Assert.Empty(await db.Set<TenantSetting>().Where(s => s.Key == "locale").ToListAsync(TestContext.Current.CancellationToken));
+        var visible = await fixture.InTenantAsync(
+            _tenantB, db => db.Set<TenantSetting>().Where(s => s.Key == "locale").ToListAsync(TestContext.Current.CancellationToken));
+        Assert.Empty(visible);
     }
 
     [Fact]
@@ -74,11 +75,12 @@ public sealed class TenantStampingTests(PostgresFixture fixture)
     {
         var seeded = await SeedAsync(_tenantA, "locale");
 
-        await using var db = fixture.CreateContext(_tenantA);
-        var setting = await db.Set<TenantSetting>().SingleAsync(s => s.Id == seeded.Id, TestContext.Current.CancellationToken);
-        db.Entry(setting).Property(s => s.TenantId).CurrentValue = _tenantB;
-
-        await Assert.ThrowsAsync<TenantIsolationException>(() => db.SaveChangesAsync(TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<TenantIsolationException>(() => fixture.InTenantAsync(_tenantA, async db =>
+        {
+            var setting = await db.Set<TenantSetting>().SingleAsync(s => s.Id == seeded.Id, TestContext.Current.CancellationToken);
+            db.Entry(setting).Property(s => s.TenantId).CurrentValue = _tenantB;
+            return await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }));
     }
 
     [Fact]

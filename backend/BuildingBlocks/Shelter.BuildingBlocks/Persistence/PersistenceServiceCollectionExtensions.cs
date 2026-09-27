@@ -28,6 +28,7 @@ public static class PersistenceServiceCollectionExtensions
     public static IServiceCollection AddShelterPersistence(this IServiceCollection services)
     {
         services.AddDbContext<ShelterDbContext>((sp, options) => Configure(options, AppConnectionString(sp)));
+        services.AddScoped<UnitOfWork>();
         return services;
     }
 
@@ -42,7 +43,7 @@ public static class PersistenceServiceCollectionExtensions
                 .MigrationsHistoryTable(MigrationsHistoryTable, MigrationsHistorySchema))
             .UseSnakeCaseNamingConvention()
             .ReplaceService<IModelCacheKeyFactory, ShelterModelCacheKeyFactory>()
-            .AddInterceptors(TenantStampingInterceptor.Instance);
+            .AddInterceptors(TenantStampingInterceptor.Instance, TenantTransactionInterceptor.Instance, TenantCommandGuardInterceptor.Instance);
     }
 
     private static string AppConnectionString(IServiceProvider services) =>

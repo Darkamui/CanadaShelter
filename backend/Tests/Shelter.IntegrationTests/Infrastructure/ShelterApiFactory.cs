@@ -25,6 +25,9 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
     {
         builder.UseEnvironment(EnvironmentName);
         builder.UseSetting("ConnectionStrings:App", appConnectionString);
+
+        // Never fall through to the local-dev PlatformAdmin string in appsettings.Development.json.
+        builder.UseSetting("ConnectionStrings:PlatformAdmin", UnreachableDatabase);
         builder.ConfigureTestServices(services =>
         {
             foreach (var module in extraModules)

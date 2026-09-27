@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 
@@ -22,4 +23,21 @@ public static class TestDbContexts
 
         return new ShelterDbContext((DbContextOptions<ShelterDbContext>)options, tenantContext, contributors);
     }
+
+    /// <summary>A platform-admin factory on <paramref name="connectionString"/>, as the Platform module registers it.</summary>
+    public static PlatformAdminDbContextFactory CreatePlatformAdminFactory(string connectionString, params IModelContributor[] contributors)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"ConnectionStrings:{PlatformAdminDbContextFactory.ConnectionName}"] = connectionString,
+            })
+            .Build();
+
+        return new PlatformAdminDbContextFactory(configuration, contributors);
+    }
+
+    /// <summary>Runs <paramref name="work"/> in one committed unit of work on <paramref name="db"/>, as an endpoint does.</summary>
+    public static Task<T> InUnitOfWorkAsync<T>(this ShelterDbContext db, Func<Task<T>> work) =>
+        new UnitOfWork(db).ExecuteAsync(_ => work(), static _ => true);
 }

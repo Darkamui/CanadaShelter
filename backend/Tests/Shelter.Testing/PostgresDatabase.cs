@@ -19,11 +19,13 @@ public sealed class PostgresDatabase : IAsyncDisposable
     private const string Database = "shelter";
     private const string MigratorPassword = "shelter_migrator_test";
     private const string AppPassword = "shelter_app_test";
+    private const string PlatformAdminPassword = "shelter_platform_admin_test";
 
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(Image)
         .WithEnvironment("SHELTER_DB", Database)
         .WithEnvironment("SHELTER_MIGRATOR_PASSWORD", MigratorPassword)
         .WithEnvironment("SHELTER_APP_PASSWORD", AppPassword)
+        .WithEnvironment("SHELTER_PLATFORM_ADMIN_PASSWORD", PlatformAdminPassword)
         .WithResourceMapping(
             File.ReadAllBytes(RepositoryPaths.RolesInitScript),
             "/docker-entrypoint-initdb.d/01-roles.sh",
@@ -35,6 +37,9 @@ public sealed class PostgresDatabase : IAsyncDisposable
 
     /// <summary>Connection string for the schema owner (<c>shelter_migrator</c>). Test setup only.</summary>
     public string MigratorConnectionString => ConnectionStringFor("shelter_migrator", MigratorPassword);
+
+    /// <summary>Connection string for the platform-admin role (<c>shelter_platform_admin</c>).</summary>
+    public string PlatformAdminConnectionString => ConnectionStringFor("shelter_platform_admin", PlatformAdminPassword);
 
     /// <summary>Starts the container and applies every migration.</summary>
     public async Task StartAsync()

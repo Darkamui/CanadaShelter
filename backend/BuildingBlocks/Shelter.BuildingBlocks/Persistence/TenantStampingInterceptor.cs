@@ -36,10 +36,30 @@ internal sealed class TenantStampingInterceptor : SaveChangesInterceptor
         shelter.ChangeTracker.DetectChanges();
         foreach (var entry in shelter.ChangeTracker.Entries<ITenantOwned>())
         {
-            if (entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            {
+                continue;
+            }
+
+            if (shelter.IsPlatformAdmin)
+            {
+                CheckPlatformAdmin(entry);
+            }
+            else
             {
                 Check(entry, shelter.TenantContext.RequireTenantId());
             }
+        }
+    }
+
+    // Platform admin writes across tenants, but every row still names its tenant and never moves to another one.
+    private static void CheckPlatformAdmin(EntityEntry<ITenantOwned> entry)
+    {
+        var property = entry.Property(e => e.TenantId);
+        if (property.CurrentValue == Guid.Empty
+            || (entry.State != EntityState.Added && property.OriginalValue != property.CurrentValue))
+        {
+            throw new TenantIsolationException();
         }
     }
 

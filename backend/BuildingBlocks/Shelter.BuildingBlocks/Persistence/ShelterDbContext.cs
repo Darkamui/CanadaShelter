@@ -26,10 +26,19 @@ public sealed class ShelterDbContext : DbContext
         TenantContext = tenantContext;
         _contributors = [.. contributors.OrderBy(c => c.GetType().FullName, StringComparer.Ordinal)];
         ModelKey = string.Join('|', _contributors.Select(c => c.GetType().FullName));
+
+        // EF skips the transaction for a single-statement SaveChanges; without one, SET LOCAL has nothing to apply to.
+        Database.AutoTransactionBehavior = AutoTransactionBehavior.Always;
     }
 
     /// <summary>The tenant this context reads and writes for.</summary>
     public ITenantContext TenantContext { get; }
+
+    /// <summary>
+    /// True for contexts from <see cref="PlatformAdminDbContextFactory"/> only: no <c>SET LOCAL</c>, no transaction
+    /// guard, and writes keep an explicit <see cref="ITenantOwned.TenantId"/> instead of the context's tenant.
+    /// </summary>
+    internal bool IsPlatformAdmin { get; init; }
 
     /// <summary>Identifies the contributor set, so differently composed contexts get their own cached model.</summary>
     internal string ModelKey { get; }

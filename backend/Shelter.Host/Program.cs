@@ -1,4 +1,8 @@
+using System.Reflection;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Logging;
+using Shelter.BuildingBlocks.Persistence;
+using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Host.Composition;
 using Shelter.Host.Middleware;
 
@@ -14,15 +18,26 @@ builder.Logging.AddJsonConsole(options =>
 builder.Logging.AddShelterRedaction();
 
 builder.Services.AddShelterProblemDetails();
-builder.Services.AddOpenApi();
+builder.Services.AddShelterOpenApi();
+builder.Services.AddShelterTenancy(builder.Environment);
+builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
+builder.Services.AddShelterJobHosting(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 var app = builder.Build();
 
+// Fail at startup, not at the first personal-data write, when audit keys are not configured (ADR 0016).
+// Skipped by the build-time OpenAPI export, which runs this file without secrets and serves no request.
+if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
+{
+    _ = app.Services.GetRequiredService<IKeyProvider>();
+}
+
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseMiddleware<TenantResolutionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -30,6 +45,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapShelterHealthChecks();
+app.MapShelterJobDashboard();
 app.MapModules();
 
 app.Run();

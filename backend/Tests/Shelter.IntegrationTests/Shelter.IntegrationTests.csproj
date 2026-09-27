@@ -6,11 +6,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shelter.Host\Shelter.Host.csproj" />
+    <ProjectReference Include="..\Shelter.Testing\Shelter.Testing.csproj" />
   </ItemGroup>
 </Project>

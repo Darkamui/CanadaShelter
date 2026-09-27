@@ -67,3 +67,7 @@ dotnet_diagnostic.CA2007.severity = none
 [**/{Tests,*.Tests,*.IntegrationTests,ArchitectureTests}/**.cs]
 # xUnit test method names use underscores.
 dotnet_diagnostic.CA1707.severity = none
+
+[backend/Shelter.Migrations/Migrations/**.cs]
+# EF Core scaffolds these; hand edits are limited to grant/RLS helper calls (hard rule 10).
+generated_code = true

@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Modules;
+using Shelter.Testing;
 
 namespace Shelter.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// The real Host pipeline against a given database. Runs in a non-Development environment so
+/// The real Host pipeline against a given database. Runs in a non-Development environment by default so
 /// responses match production (no developer exception page).
 /// </summary>
 public sealed class ShelterApiFactory(string appConnectionString, params IModule[] extraModules)
@@ -17,17 +18,34 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
     public const string UnreachableDatabase =
         "Host=127.0.0.1;Port=1;Database=shelter;Username=shelter_app;Password=x;Timeout=2";
 
+    /// <summary>Host environment name; <c>Test</c> unless a test needs Development-only behaviour.</summary>
+    public string EnvironmentName { get; init; } = "Test";
+
+    /// <summary>Runs the Hangfire server. Off by default: only job tests process jobs.</summary>
+    public bool JobServerEnabled { get; init; }
+
+    /// <summary>Extra service registrations (e.g. test-only jobs), applied after the Host's.</summary>
+    public Action<IServiceCollection>? ConfigureServices { get; init; }
+
     /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Test");
+        builder.UseEnvironment(EnvironmentName);
         builder.UseSetting("ConnectionStrings:App", appConnectionString);
+
+        // Never fall through to the local-dev PlatformAdmin string in appsettings.Development.json.
+        builder.UseSetting("ConnectionStrings:PlatformAdmin", UnreachableDatabase);
+        builder.UseSetting("Audit:MasterKey", TestKeys.MasterKeyBase64);
+        builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
+        builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
         builder.ConfigureTestServices(services =>
         {
             foreach (var module in extraModules)
             {
                 services.AddSingleton(module);
             }
+
+            ConfigureServices?.Invoke(services);
         });
     }
 }

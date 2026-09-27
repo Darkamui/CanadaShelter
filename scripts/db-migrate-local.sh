@@ -44,15 +44,8 @@ if [ "${1:-}" = "--check" ]; then
   exit 0
 fi
 
-# The migrations project is decided by ADR 0005 (DbContext strategy) and created in M1.
-migrations_project="${SHELTER_MIGRATIONS_PROJECT:-}"
-if [ -z "$migrations_project" ]; then
-  if ! find "$repo_root/backend" -type d -name Migrations -not -path '*/bin/*' -not -path '*/obj/*' | grep -q .; then
-    echo "db-migrate-local: no migrations project yet (arrives in M1 after ADR 0005) — nothing to apply."
-    exit 0
-  fi
-  fail "migrations exist but SHELTER_MIGRATIONS_PROJECT is not set; set it (and update this script's default)"
-fi
+# The single migrations assembly (ADR 0005).
+migrations_project="${SHELTER_MIGRATIONS_PROJECT:-backend/Shelter.Migrations}"
 
 cd "$repo_root"
 dotnet tool restore >/dev/null

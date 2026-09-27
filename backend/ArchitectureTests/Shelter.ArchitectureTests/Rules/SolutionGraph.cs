@@ -28,7 +28,7 @@ internal static class SolutionGraph
     private static IEnumerable<string> FindProjects() =>
         Directory.EnumerateFiles(Path.Combine(RepositoryPaths.Root, "backend"), "*.csproj", SearchOption.AllDirectories)
             .Where(path => !IsBuildOutput(path))
-            .Where(path => ProjectName.Parse(Path.GetFileNameWithoutExtension(path)).Kind != ProjectKind.Other);
+            .Where(path => ProjectName.Parse(Path.GetFileNameWithoutExtension(path)).Kind is not (ProjectKind.Other or ProjectKind.Tests));
 
     private static bool IsBuildOutput(string path)
     {

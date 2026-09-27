@@ -1,6 +1,6 @@
-namespace Shelter.IntegrationTests.Infrastructure;
+namespace Shelter.Testing;
 
-internal static class RepositoryPaths
+public static class RepositoryPaths
 {
     public static string Root { get; } = FindRoot();
 

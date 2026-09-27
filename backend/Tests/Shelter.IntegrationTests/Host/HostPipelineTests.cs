@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.IntegrationTests.Infrastructure;
 
@@ -123,6 +124,15 @@ public sealed class HostPipelineTests(PostgresFixture postgres)
         var echoed = Assert.Single(response.Headers.GetValues(CorrelationHeader));
         Assert.NotEqual("bad value\twith spaces", echoed);
         Assert.Matches("^[0-9a-f]{32}$", echoed);
+    }
+
+    [Fact]
+    public async Task No_raw_data_source_is_registered()
+    {
+        // A raw NpgsqlDataSource would let module code bypass the tenant filter and tenant transaction.
+        await using var factory = new ShelterApiFactory(postgres.AppConnectionString);
+
+        Assert.Null(factory.Services.GetService<NpgsqlDataSource>());
     }
 
     /// <summary>Test-only module whose endpoint throws, to exercise the exception handler.</summary>

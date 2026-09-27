@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
+using Shelter.BuildingBlocks.Persistence;
 
 namespace Shelter.Host.Composition;
 
@@ -11,14 +13,8 @@ internal static class HealthChecks
 
     public static IServiceCollection AddShelterHealthChecks(this IServiceCollection services)
     {
-        // Resolved lazily: /health/live and the OpenAPI export must work without a configured database.
-        services.AddSingleton(sp =>
-        {
-            var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("App")
-                ?? throw new InvalidOperationException("Connection string 'App' is not configured.");
-            return NpgsqlDataSource.Create(connectionString);
-        });
-
+        // The DbContext resolves its connection string lazily:
+        // /health/live and the OpenAPI export must work without a configured database.
         services.AddHealthChecks()
             .AddCheck<PostgresReadyCheck>("postgres", tags: [ReadyTag], timeout: TimeSpan.FromSeconds(5));
 
@@ -37,16 +33,20 @@ internal static class HealthChecks
     }
 }
 
-/// <summary>Runs <c>SELECT 1</c> as the runtime role.</summary>
+/// <summary>
+/// Opens a connection as the runtime role through <see cref="ShelterDbContext"/>. No raw <c>NpgsqlDataSource</c> is
+/// registered in DI: every database access goes through the tenant-aware context.
+/// </summary>
 internal sealed partial class PostgresReadyCheck(IServiceProvider services, ILogger<PostgresReadyCheck> logger) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
-            var dataSource = services.GetRequiredService<NpgsqlDataSource>();
-            await using var command = dataSource.CreateCommand("SELECT 1");
-            await command.ExecuteScalarAsync(cancellationToken);
+            await using var scope = services.CreateAsyncScope();
+            var database = scope.ServiceProvider.GetRequiredService<ShelterDbContext>().Database;
+            await database.OpenConnectionAsync(cancellationToken);
+            await database.CloseConnectionAsync();
             return HealthCheckResult.Healthy();
         }
         catch (Exception ex) when (ex is NpgsqlException or InvalidOperationException or TimeoutException or OperationCanceledException)

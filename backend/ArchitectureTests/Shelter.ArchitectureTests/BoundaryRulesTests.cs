@@ -69,4 +69,39 @@ public sealed class BoundaryRulesTests
 
         Assert.Equal(BoundaryRules.ModuleToHost, violation.Rule);
     }
+
+    [Theory]
+    [InlineData("Shelter.Modules.Animals")]
+    [InlineData("Shelter.Modules.Animals.Contracts")]
+    [InlineData("Shelter.BuildingBlocks")]
+    public void Referencing_migrations_outside_the_host_is_a_violation(string from)
+    {
+        var graph = GraphOf((from, ["Shelter.Migrations"]));
+
+        var violation = Assert.Single(BoundaryRules.FindViolations(graph));
+
+        Assert.Equal(BoundaryRules.MigrationsReferencedOutsideHost, violation.Rule);
+    }
+
+    [Fact]
+    public void Migrations_referencing_a_module_is_a_violation()
+    {
+        var graph = GraphOf(
+            ("Shelter.Migrations", ["Shelter.BuildingBlocks", "Shelter.Modules.Animals"]),
+            ("Shelter.Host", ["Shelter.Migrations"]));
+
+        var violation = Assert.Single(BoundaryRules.FindViolations(graph));
+
+        Assert.Equal(BoundaryRules.MigrationsTooWide, violation.Rule);
+    }
+
+    [Theory]
+    [InlineData("Shelter.Modules.Platform.Tests")]
+    [InlineData("Shelter.BuildingBlocks.Tests")]
+    [InlineData("Shelter.IntegrationTests")]
+    [InlineData("Shelter.Testing")]
+    public void Test_projects_are_classified_as_tests(string name)
+    {
+        Assert.Equal(ProjectKind.Tests, ProjectName.Parse(name).Kind);
+    }
 }

@@ -21,6 +21,8 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0013](0013-localized-text-paired-columns.md) | Bilingual reference data as paired columns (`LocalizedText`) | Accepted |
 | [0014](0014-postgresql-search.md) | Search in PostgreSQL (`unaccent` + stemming + trigram) | Accepted |
 | [0015](0015-backend-project-and-test-layout.md) | Backend project and test layout | Accepted |
+| [0016](0016-audit-key-management.md) | Audit key management for crypto-shredding | Accepted |
+| [0017](0017-reference-data-overrides.md) | Reference data: global system tables plus per-tenant override tables | Accepted |
 
 ## Backlog
 

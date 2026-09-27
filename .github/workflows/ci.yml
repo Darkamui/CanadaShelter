@@ -90,7 +90,7 @@ jobs:
   migrations:
     name: migrations
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -107,6 +107,13 @@ jobs:
             echo "::error::Existing migrations were modified or deleted. Add a new migration instead (CLAUDE.md hard rule 10)."
             exit 1
           fi
+      - uses: ./.github/actions/setup-dotnet
+      # The composed model (ADR 0005) must match the latest migration snapshot: no model change without a migration.
+      - name: No pending model changes
+        run: |
+          dotnet tool restore
+          dotnet restore backend
+          dotnet tool run dotnet-ef migrations has-pending-model-changes             --project backend/Shelter.Migrations --startup-project backend/Shelter.Host
 
   # Flags vulnerable or disallowed-licence packages introduced by a PR (supports hard rule 9 review).
   dependency-review:

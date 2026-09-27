@@ -18,7 +18,10 @@ Inside Shelter.Modules.<Module>/:
   Features/<Feature>/    Endpoint + request/response + handler + validator (colocated)
   Persistence/           EF configurations, module schema
   Authorization/         Permission constants + policies
+Shelter.Migrations/      The single EF migrations assembly for the composed ShelterDbContext (ADR 0005)
 Tests/Shelter.IntegrationTests/  Host pipeline tests (Testcontainers PostgreSQL, one container per run)
+Tests/Shelter.Testing/   Shared test infrastructure: PostgresDatabase (migrates once), TenantHarness
+Tests/Shelter.BuildingBlocks.Tests/  Pure unit tests for BuildingBlocks
 Modules/<Module>/Shelter.Modules.<Module>.Tests/  Module tests, created with the first one (ADR 0015)
 ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real solution graph)
 ```
@@ -52,7 +55,9 @@ ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real s
 ## Migrations
 
 - One migration per issue where possible, named after the change.
-- Every new tenant-owned table's migration includes: `ENABLE` + `FORCE ROW LEVEL SECURITY`, the tenant policy (via the policy helper), and `TenantId`-leading indexes.
+- Add one: `dotnet tool run dotnet-ef migrations add <Name> --project backend/Shelter.Migrations --startup-project backend/Shelter.Host`. Check: `dotnet tool run dotnet-ef migrations has-pending-model-changes --project backend/Shelter.Migrations --startup-project backend/Shelter.Host` (also in CI).
+- Every new tenant-owned table's migration includes `migrationBuilder.EnableTenantRls(schema, table)` (ENABLE + FORCE RLS, tenant + platform-admin policies), `GrantRuntime(...)`/`GrantRuntimeSchemaUsage(...)` for `shelter_app`, and `TenantId`-leading indexes. `Down` mirrors it (`DisableTenantRls`, `RevokeRuntime...`).
+- Global reference/system tables: runtime `SELECT` only, seeded by migration (ADR 0017).
 - Never modify a migration that exists on `main`.
 
 ## Tests

@@ -24,7 +24,8 @@ Québec-first, bilingual shelter & rescue management SaaS. Multi-tenant. ASP.NET
 - `pnpm test:e2e` — Playwright E2E (first run: `pnpm --filter @shelter/admin exec playwright install chromium`)
 - pnpm comes from corepack (`packageManager` in root `package.json`). If `corepack enable` fails with EPERM on Windows, use `corepack enable --install-directory "$APPDATA/npm" pnpm`.
 - `pnpm api:generate` — regenerate Orval client after any API contract change
-- `./scripts/db-migrate-local.sh` — apply migrations to the **local** database only
+- `./scripts/db-migrate-local.sh` — apply migrations to the **local** database only (as `shelter_migrator`)
+- Local DB created before M1? Reset once for the `shelter_platform_admin` role: `docker compose -f infrastructure/docker/compose.yml down -v` then `up -d`
 
 (Keep this list accurate. If a command changes, update it in the same PR.)
 

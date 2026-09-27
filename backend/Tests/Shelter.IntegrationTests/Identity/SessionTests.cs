@@ -176,20 +176,6 @@ public sealed class SessionTests(PostgresFixture postgres)
         return JsonSerializer.Serialize(problem.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary());
     }
 
-    /// <summary>The account's security events, oldest first. The runtime role cannot read them; the migrator can.</summary>
-    private async Task<List<string>> SecurityEventsAsync(Guid userId)
-    {
-        await using var connection = new NpgsqlConnection(postgres.Database.MigratorConnectionString);
-        await connection.OpenAsync(TestContext.Current.CancellationToken);
-        await using var command = new NpgsqlCommand("SELECT type FROM platform.security_event WHERE user_id = @id ORDER BY occurred_at, id", connection);
-        command.Parameters.AddWithValue("id", userId);
-        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
-        var types = new List<string>();
-        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
-        {
-            types.Add(reader.GetString(0));
-        }
-
-        return types;
-    }
+    private Task<List<string>> SecurityEventsAsync(Guid userId) =>
+        TestSecurityEvents.ListAsync(postgres.Database.MigratorConnectionString, userId);
 }

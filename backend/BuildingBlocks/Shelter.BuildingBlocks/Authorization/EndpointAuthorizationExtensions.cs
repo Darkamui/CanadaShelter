@@ -20,12 +20,13 @@ public static class AuthorizationPolicies
 
     /// <summary>
     /// The floor of every organization endpoint, and the fallback policy of endpoints that declare nothing: a
-    /// signed-in user with an active membership in the session's organization.
+    /// signed-in user with an active membership in the session's organization, who signed in with MFA if the account
+    /// must use it (M2-4).
     /// </summary>
     public static AuthorizationPolicyBuilder Tenant(this AuthorizationPolicyBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.RequireAuthenticatedUser().AddRequirements(TenantRequirement.Instance);
+        return builder.RequireAuthenticatedUser().AddRequirements(TenantRequirement.Instance, MfaRequirement.Instance);
     }
 }
 

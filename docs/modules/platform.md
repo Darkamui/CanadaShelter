@@ -28,7 +28,7 @@
 - **Tenancy:**
   - Entities implement `ITenantOwned`. `TenantStampingInterceptor` stamps `TenantId` and rejects cross-tenant or tenant-less writes.
   - A global query filter hides everything when no tenant is set.
-  - `TenantContext` is scoped. Since M2-2 the only resolver is `MembershipTenantResolver` (ADR 0018): the session's active organization, re-checked against an active `staff_membership` on every request. The M1 dev header (`X-Tenant-Id`) is gone; integration tests sign in through a test-only scheme (`TestAuthentication`).
+  - `TenantContext` is scoped. Since M2-2 the only resolver is `MembershipTenantResolver` (ADR 0018): the session's active organization, re-checked against an active `staff_membership` on every request. The M1 dev header (`X-Tenant-Id`) is gone; integration tests sign in through a test-only scheme (`TestAuthentication`). `SignInAs` counts as signed in with MFA (`amr=mfa`) unless the test passes its own `amr` claim.
   - `UserContext` (scoped) holds the signed-in account; `TenantTransactionInterceptor` also runs `SET LOCAL app.user_id`, read by `platform.current_user_id()` and the `self_read` policy (`EnableSelfRead`).
 - **RLS (ADR 0004):**
   - `UnitOfWorkEndpointFilter` wraps every tenant request in a transaction.
@@ -79,6 +79,7 @@
 - Reference overrides stay inside their tenant, and system values are read-only: `ReferenceDataEndpointTests`.
 - Permissions (M2-3): every endpoint declares a permission, the session policy or the operator policy, or is allowlisted anonymous. Every permission endpoint returns 403 to a member without it. An undeclared endpoint needs a member: `EndpointAuthorizationTests`. The role → permission mapping: `PermissionCatalogTests`.
 - Staff (M2-3): the organization keeps at least one active administrator (409, serialized by `FOR UPDATE` on its administrators). Role changes are audited and apply on the next request. Other organizations' memberships return 404: `StaffManagementTests`.
+- MFA (M2-4): an administrator or operator without MFA reaches only the session endpoints, and full access follows enrollment in the same session. Two-step login, a recovery code works once and is stored hashed, disabling needs a code, other staff are unaffected, the bypass flag is ignored outside Development: `MfaTests`, `MfaEnforcementTests`.
 - Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
@@ -91,12 +92,30 @@
   - `.RequirePermission(name)` = active member of the active organization + that permission.
   - `.RequireSession()` = signed in, no organization needed.
   - The fallback policy (every endpoint that declares nothing, including unknown routes) = authenticated active member.
-  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, health.
+  - Both the permission policies and the fallback also require MFA when the session must use it (see MFA below). `.RequireSession()` does not, so enrollment stays reachable.
+  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, `session/login/mfa`, health.
   - The Hangfire dashboard (`/hangfire`, all environments) needs the `PlatformOperator` policy: `shelter:operator=true` and `amr=mfa`.
 - Platform permissions:
   - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
   - `platform.staff.manage` (sensitive): change roles, suspend, reactivate. Sensitive so that no non-admin role can grant itself anything.
   - `audit.read` (sensitive): checked by `AuditReader` itself (`AuditReadDeniedException`).
+
+## MFA
+
+- M2-4, ADR 0018. Identity's TOTP authenticator (RFC 6238, 6 digits, 30 s) and 10 single-use recovery codes.
+- Required for the `administrator` role of the active organization and for platform operators. `MembershipTenantResolver` sets `IMfaContext.EnrollmentRequired` when such a session did not sign in with MFA (`amr` is not `mfa`). The `MfaRequirement` in every tenant policy then answers 403, and `GET /api/platform/session` returns `mfaEnrollmentRequired: true`. Optional for everyone else.
+- Endpoints, under `/api/platform/session`, antiforgery like every module route:
+  - `POST /login/mfa` (`LoginPlatformSessionMfa`, anonymous): the second login step after `status: mfaRequired`, with `code` or `recoveryCode`. It needs Identity's 5-minute two-factor cookie from the password step; otherwise 401.
+  - `POST /mfa/setup` (`SetupPlatformSessionMfa`): a new key (`sharedKey`, `otpauth://totp/Shelter:{email}?…`). 409 once enabled.
+  - `POST /mfa/enable` (`EnablePlatformSessionMfa`): confirms a code. It returns the recovery codes (shown once) and re-issues the session cookie as `amr=mfa`.
+  - `POST /mfa/disable` (`DisablePlatformSessionMfa`): needs a current code; the session goes back to `amr=pwd`.
+  - Enrollment, removal and each reset of the key rotate the security stamp, so other sessions end.
+- Codes:
+  - A wrong code counts toward the lockout (5 → 15 min), including on enable and disable.
+  - Recovery codes are stored as SHA-256 hashes (`ShelterUserStore`); Identity's default keeps them in plain text.
+  - The authenticator key is stored in plain text in `user_token`, because checking a code needs it.
+- `security_event` records `MfaEnabled`, `MfaDisabled` and `RecoveryCodeUsed`, plus `LoginSucceeded`/`LoginFailed`/`LockedOut` for the second step. The password step of an MFA login records nothing.
+- Development bypass: `Auth:Mfa:DevelopmentBypass=true` (set in `appsettings.Development.json`) turns enforcement off **only** when the environment is Development, with a startup warning. It is ignored everywhere else (`MfaEnforcement.From`).
 
 ## Key files
 
@@ -107,13 +126,15 @@
   - `GET` (`ListPlatformStaff`)
   - `PUT /{membershipId}/roles` (`ChangePlatformStaffRoles`)
   - `POST /{membershipId}/suspend` (`SuspendPlatformStaff`) and `POST /{membershipId}/reactivate` (`ReactivatePlatformStaff`)
+- `Features/Session/MfaEndpoints.cs`, `Identity/ShelterUserStore.cs`; the shared enforcement is in `BuildingBlocks/Authorization/Mfa.cs`.
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
 
 ## Open questions / TODO
 
-- **M2:**
-  - M2-4: the tenant and fallback policies will also require MFA for administrators.
+- MFA follow-ups:
+  - The authenticator key could be encrypted at rest.
+  - A used TOTP code can be replayed within its validity window (Identity does not track used steps).
 - Memberships created before M2-3 have no roles, and so no permissions. The development seed gives the demo account `administrator` again.
 - Known gaps (from the reviewer):
   - `AuditRecord.Metadata` is not classified, so callers must keep personal data out of it.

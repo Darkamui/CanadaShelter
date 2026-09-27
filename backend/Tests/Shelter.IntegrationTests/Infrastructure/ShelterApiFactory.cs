@@ -24,6 +24,9 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
     /// <summary>Runs the Hangfire server. Off by default: only job tests process jobs.</summary>
     public bool JobServerEnabled { get; init; }
 
+    /// <summary>Extra configuration values, applied after the defaults above.</summary>
+    public IReadOnlyDictionary<string, string?> Settings { get; init; } = new Dictionary<string, string?>();
+
     /// <summary>Extra service registrations (e.g. test-only jobs), applied after the Host's.</summary>
     public Action<IServiceCollection>? ConfigureServices { get; init; }
 
@@ -38,6 +41,11 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
         builder.UseSetting("Audit:MasterKey", TestKeys.MasterKeyBase64);
         builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
         builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
+        foreach (var (key, value) in Settings)
+        {
+            builder.UseSetting(key, value);
+        }
+
         builder.ConfigureTestServices(services =>
         {
             foreach (var module in extraModules)

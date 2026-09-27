@@ -26,8 +26,9 @@ internal static class TestAuthentication
     private const string TestScheme = "Test";
     private const string SelectorScheme = "TestOrCookie";
 
-    // PlatformClaims.ActiveOrganization is internal to the Platform module.
+    // PlatformClaims.ActiveOrganization and AuthenticationMethod are internal to the Platform module.
     private const string ActiveOrganizationClaim = "shelter:org";
+    private const string AuthenticationMethodClaim = "amr";
 
     public static void AddTestAuthentication(this IServiceCollection services)
     {
@@ -45,7 +46,11 @@ internal static class TestAuthentication
         });
     }
 
-    /// <summary>Headers that sign a request in as <paramref name="userId"/>, optionally with an active organization.</summary>
+    /// <summary>
+    /// Headers that sign a request in as <paramref name="userId"/>, optionally with an active organization. The
+    /// session counts as signed in with MFA (<c>amr=mfa</c>), so administrators reach tenant endpoints, unless
+    /// <paramref name="claims"/> gives its own <c>amr</c> (M2-4).
+    /// </summary>
     public static void SignInAs(this HttpClient client, Guid userId, Guid? organizationId = null, params (string Type, string Value)[] claims)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -57,6 +62,11 @@ internal static class TestAuthentication
         if (organizationId is { } organization)
         {
             client.DefaultRequestHeaders.Add(OrganizationHeader, organization.ToString("D"));
+        }
+
+        if (!claims.Any(c => c.Type == AuthenticationMethodClaim))
+        {
+            client.DefaultRequestHeaders.Add(ClaimHeader, $"{AuthenticationMethodClaim}=mfa");
         }
 
         foreach (var (type, value) in claims)

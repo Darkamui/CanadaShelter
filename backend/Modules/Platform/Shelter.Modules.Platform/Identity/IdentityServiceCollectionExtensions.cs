@@ -37,7 +37,7 @@ internal static class IdentityServiceCollectionExtensions
                 options.User.RequireUniqueEmail = true;
                 options.User.AllowedUserNameCharacters = string.Empty;
             })
-            .AddUserStore<UserOnlyStore<UserAccount, ShelterDbContext, Guid>>()
+            .AddUserStore<ShelterUserStore>()
             .AddSignInManager<ShelterSignInManager>()
             .AddDefaultTokenProviders()
             .AddClaimsPrincipalFactory<ShelterClaimsPrincipalFactory>();

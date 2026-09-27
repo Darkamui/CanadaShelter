@@ -18,6 +18,12 @@ internal static class PlatformClaims
     /// <summary>Authentication methods of this session (<c>pwd</c>, <c>mfa</c>), set by the sign-in manager.</summary>
     public const string AuthenticationMethod = AuthorizationPolicies.AuthenticationMethodClaim;
 
+    /// <summary><see cref="AuthenticationMethod"/> value of a session that signed in with a second factor.</summary>
+    public const string MfaMethod = "mfa";
+
+    /// <summary><see cref="AuthenticationMethod"/> value of a password sign-in.</summary>
+    public const string PasswordMethod = "pwd";
+
     /// <summary>Claims that belong to the session, not the account; kept when the security stamp check rebuilds the principal.</summary>
     public static readonly IReadOnlySet<string> SessionClaims = new HashSet<string>(StringComparer.Ordinal)
     {

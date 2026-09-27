@@ -20,13 +20,14 @@ builder.Logging.AddShelterRedaction();
 builder.Services.AddShelterProblemDetails();
 builder.Services.AddShelterOpenApi();
 builder.Services.AddShelterTenancy();
-builder.Services.AddShelterAuthentication(builder.Environment);
+builder.Services.AddShelterAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
 builder.Services.AddShelterJobHosting(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 var app = builder.Build();
+app.WarnIfMfaBypassed();
 
 // Fail at startup, not at the first personal-data write, when audit keys are not configured (ADR 0016).
 // Skipped by the build-time OpenAPI export, which runs this file without secrets and serves no request.

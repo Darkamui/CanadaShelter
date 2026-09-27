@@ -139,12 +139,14 @@ public static class PermissionServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>The catalog and the scoped <see cref="IPermissionContext"/>.</summary>
+    /// <summary>The catalog and the scoped <see cref="IPermissionContext"/> and <see cref="IMfaContext"/>.</summary>
     public static IServiceCollection AddShelterPermissions(this IServiceCollection services)
     {
         services.AddSingleton<PermissionCatalog>();
         services.AddScoped<PermissionContext>();
         services.AddScoped<IPermissionContext>(sp => sp.GetRequiredService<PermissionContext>());
+        services.AddScoped<MfaContext>();
+        services.AddScoped<IMfaContext>(sp => sp.GetRequiredService<MfaContext>());
         return services;
     }
 }

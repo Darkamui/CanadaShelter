@@ -117,3 +117,44 @@ internal static class TestAccounts
         return (id, email);
     }
 }
+
+/// <summary>Reads an account's security events. The runtime role cannot read them; the migrator can.</summary>
+internal static class TestSecurityEvents
+{
+    /// <summary>The account's event types, oldest first.</summary>
+    public static async Task<List<string>> ListAsync(string migratorConnectionString, Guid userId)
+    {
+        await using var connection = new NpgsqlConnection(migratorConnectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new NpgsqlCommand("SELECT type FROM platform.security_event WHERE user_id = @id ORDER BY occurred_at, id", connection);
+        command.Parameters.AddWithValue("id", userId);
+        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        var types = new List<string>();
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+        {
+            types.Add(reader.GetString(0));
+        }
+
+        return types;
+    }
+}
+
+/// <summary>Creates organizations, as the platform-admin role (the runtime role cannot).</summary>
+internal static class TestOrganizations
+{
+    /// <summary>An active organization named <paramref name="name"/>.</summary>
+    public static async Task<Guid> CreateAsync(string platformAdminConnectionString, string name = "Refuge test")
+    {
+        var id = Guid.CreateVersion7();
+        await using var connection = new NpgsqlConnection(platformAdminConnectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new NpgsqlCommand(
+            "INSERT INTO platform.organization (id, name, slug, status, created_at) VALUES (@id, @name, @slug, 'Active', now())",
+            connection);
+        command.Parameters.AddWithValue("id", id);
+        command.Parameters.AddWithValue("name", name);
+        command.Parameters.AddWithValue("slug", $"org-{id:N}");
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        return id;
+    }
+}

@@ -13,4 +13,5 @@ export interface SessionResponse {
   /** @nullable */
   activeOrganizationId: string | null;
   permissions: string[];
+  mfaEnrollmentRequired: boolean;
 }

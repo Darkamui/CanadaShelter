@@ -125,6 +125,109 @@
         }
       }
     },
+    "/api/platform/session/login/mfa": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "LoginPlatformSessionMfa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginMfaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/session/mfa/setup": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "SetupPlatformSessionMfa",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/session/mfa/enable": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "EnablePlatformSessionMfa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaRecoveryCodesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/session/mfa/disable": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "operationId": "DisablePlatformSessionMfa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/platform/staff": {
       "get": {
         "tags": [
@@ -400,6 +503,27 @@
         },
         "description": "A value stored in both supported languages (ADR 0013). Both are required: reference data is always bilingual.\nClients pick the label by UI locale."
       },
+      "LoginMfaRequest": {
+        "required": [
+          "code",
+          "recoveryCode"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recoveryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -422,6 +546,49 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string"
+          }
+        }
+      },
+      "MfaCodeRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MfaRecoveryCodesResponse": {
+        "required": [
+          "recoveryCodes"
+        ],
+        "type": "object",
+        "properties": {
+          "recoveryCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MfaSetupResponse": {
+        "required": [
+          "sharedKey",
+          "authenticatorUri"
+        ],
+        "type": "object",
+        "properties": {
+          "sharedKey": {
+            "type": "string"
+          },
+          "authenticatorUri": {
             "type": "string"
           }
         }
@@ -476,7 +643,8 @@
           "user",
           "memberships",
           "activeOrganizationId",
-          "permissions"
+          "permissions",
+          "mfaEnrollmentRequired"
         ],
         "type": "object",
         "properties": {
@@ -501,6 +669,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "mfaEnrollmentRequired": {
+            "type": "boolean"
           }
         }
       },

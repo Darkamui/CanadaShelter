@@ -235,20 +235,8 @@ public sealed class MembershipTests(PostgresFixture postgres) : IAsyncDisposable
     }
 
     // Organizations are provisioned by the platform admin role; the runtime role only reads them.
-    private async Task<Guid> CreateOrganizationAsync(string name)
-    {
-        var id = Guid.CreateVersion7();
-        await using var connection = new NpgsqlConnection(postgres.Database.PlatformAdminConnectionString);
-        await connection.OpenAsync(TestContext.Current.CancellationToken);
-        await using var command = new NpgsqlCommand(
-            "INSERT INTO platform.organization (id, name, slug, status, created_at) VALUES (@id, @name, @slug, 'Active', now())",
-            connection);
-        command.Parameters.AddWithValue("id", id);
-        command.Parameters.AddWithValue("name", name);
-        command.Parameters.AddWithValue("slug", $"org-{id:N}");
-        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
-        return id;
-    }
+    private Task<Guid> CreateOrganizationAsync(string name) =>
+        TestOrganizations.CreateAsync(postgres.Database.PlatformAdminConnectionString, name);
 
     // The runtime role has no UPDATE on memberships yet (staff management comes with M2-3). RLS is forced, so even
     // the table owner writes inside the organization.

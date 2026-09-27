@@ -88,11 +88,11 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] TOTP enrollment (setup key and `otpauth://` link, confirmed by a code), 10 single-use recovery codes, a two-step login, and disabling that requires a code.
-- [ ] MFA is **required** for administrators and platform operators. Until they enroll, their session is limited to enrollment. It is optional for other staff.
-- [ ] **Local development bypass:** a configuration flag skips enforcement **only in the Development environment**. It logs a startup warning and has no effect in any other environment.
-- [ ] MFA enrollment and removal are recorded in `security_event`.
-- [ ] Tests: an administrator without MFA is blocked outside enrollment; full access after enrollment; a recovery code works once; the bypass is honored only in Development.
+- [x] TOTP enrollment (setup key and `otpauth://` link, confirmed by a code), 10 single-use recovery codes, a two-step login, and disabling that requires a code.
+- [x] MFA is **required** for administrators and platform operators. Until they enroll, their session is limited to enrollment. It is optional for other staff.
+- [x] **Local development bypass:** a configuration flag skips enforcement **only in the Development environment**. It logs a startup warning and has no effect in any other environment.
+- [x] MFA enrollment and removal are recorded in `security_event`.
+- [x] Tests: an administrator without MFA is blocked outside enrollment; full access after enrollment; a recovery code works once; the bypass is honored only in Development.
 
 ---
 

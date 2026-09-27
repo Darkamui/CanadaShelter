@@ -17,7 +17,7 @@ internal static class Authentication
     /// <summary>How long a password-verified login may wait for its MFA code.</summary>
     public static readonly TimeSpan TwoFactorLifetime = TimeSpan.FromMinutes(5);
 
-    public static IServiceCollection AddShelterAuthentication(this IServiceCollection services, IHostEnvironment environment)
+    public static IServiceCollection AddShelterAuthentication(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         // Development serves plain HTTP on localhost (Vite proxy), where browsers refuse __Host- cookies, which must
         // be Secure. Every other environment gets the prefix and Secure unconditionally.
@@ -54,7 +54,9 @@ internal static class Authentication
                 .RequireClaim(AuthorizationPolicies.AuthenticationMethodClaim, "mfa"));
         services.AddScoped<IAuthorizationHandler, TenantAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, MfaAuthorizationHandler>();
         services.AddShelterPermissions();
+        services.AddSingleton(MfaEnforcement.From(configuration, environment));
 
         services.AddAntiforgery(options =>
         {
@@ -66,6 +68,17 @@ internal static class Authentication
         });
 
         return services;
+    }
+
+    /// <summary>Warns at startup when the Development MFA bypass is on, so it is never on by accident.</summary>
+    public static WebApplication WarnIfMfaBypassed(this WebApplication app)
+    {
+        if (!app.Services.GetRequiredService<MfaEnforcement>().Enforced)
+        {
+            app.Logger.LogWarning("MFA enforcement is bypassed ({Key}); Development only", MfaEnforcement.DevelopmentBypassKey);
+        }
+
+        return app;
     }
 
     private static void ConfigureCookie(CookieAuthenticationOptions options, bool strict, string name)

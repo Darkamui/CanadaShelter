@@ -42,6 +42,8 @@ internal static class SessionEndpoints
         session.MapPost("/organization/{organizationId:guid}", SelectOrganization)
             .WithName("SelectPlatformSessionOrganization")
             .RequireSession();
+
+        MfaEndpoints.Map(session);
     }
 
     /// <summary>Sets the readable <c>XSRF-TOKEN</c> cookie the SPA echoes in <c>X-XSRF-TOKEN</c>.</summary>
@@ -81,7 +83,7 @@ internal static class SessionEndpoints
 
         if (result.RequiresTwoFactor)
         {
-            // The password was right; the two-factor cookie now waits for the code (M2-4).
+            // The password was right; the two-factor cookie now waits for the code (POST /session/login/mfa).
             return TypedResults.Ok(new LoginResponse(LoginStatus.MfaRequired));
         }
 
@@ -110,6 +112,7 @@ internal static class SessionEndpoints
         StaffMembershipDirectory memberships,
         ITenantContext tenantContext,
         IPermissionContext permissions,
+        IMfaContext mfa,
         CancellationToken cancellationToken)
     {
         var user = await userManager.GetUserAsync(principal);
@@ -123,7 +126,8 @@ internal static class SessionEndpoints
             new SessionUser(user.Id, user.DisplayName, user.PreferredLanguage, user.IsPlatformOperator, user.TwoFactorEnabled),
             [.. organizations.Select(o => new SessionMembership(o.OrganizationId, o.OrganizationName))],
             tenantContext.TenantId,
-            [.. permissions.Permissions.Order(StringComparer.Ordinal)]));
+            [.. permissions.Permissions.Order(StringComparer.Ordinal)],
+            mfa.EnrollmentRequired));
     }
 
     /// <summary>
@@ -202,7 +206,8 @@ internal sealed record LoginResponse(string Status);
 /// <param name="Memberships">Organizations the account may select (active memberships only).</param>
 /// <param name="ActiveOrganizationId">The organization this request acts in, or <c>null</c> when none is selected or its membership is no longer active.</param>
 /// <param name="Permissions">What the active membership's roles grant; empty without one. For showing or hiding UI only: the server checks every call.</param>
-internal sealed record SessionResponse(SessionUser User, IReadOnlyList<SessionMembership> Memberships, Guid? ActiveOrganizationId, IReadOnlyList<string> Permissions);
+/// <param name="MfaEnrollmentRequired">The account must use MFA (administrator or platform operator) and this session did not sign in with it: only enrollment is reachable until it does.</param>
+internal sealed record SessionResponse(SessionUser User, IReadOnlyList<SessionMembership> Memberships, Guid? ActiveOrganizationId, IReadOnlyList<string> Permissions, bool MfaEnrollmentRequired);
 
 /// <summary>An organization the account may select.</summary>
 /// <param name="OrganizationId">Organization ID.</param>

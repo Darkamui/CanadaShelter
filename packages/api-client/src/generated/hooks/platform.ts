@@ -23,8 +23,12 @@ import type {
 import type {
   ChangeStaffRolesRequest,
   HttpValidationProblemDetails,
+  LoginMfaRequest,
   LoginRequest,
   LoginResponse,
+  MfaCodeRequest,
+  MfaRecoveryCodesResponse,
+  MfaSetupResponse,
   PingResponse,
   SessionResponse,
   StaffMemberResponse,
@@ -637,6 +641,377 @@ export const useSelectPlatformSessionOrganization = <
   TContext
 > => {
   return useMutation(getSelectPlatformSessionOrganizationMutationOptions(options), queryClient);
+};
+export const getLoginPlatformSessionMfaUrl = () => {
+  return `/api/platform/session/login/mfa`;
+};
+
+export const loginPlatformSessionMfa = async (
+  loginMfaRequest: LoginMfaRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<LoginResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<LoginResponse>(getLoginPlatformSessionMfaUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(loginMfaRequest),
+  });
+};
+
+export const getLoginPlatformSessionMfaMutationKey = () => ['loginPlatformSessionMfa'] as const;
+
+export const getLoginPlatformSessionMfaMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof loginPlatformSessionMfa>>,
+    TError,
+    LoginPlatformSessionMfaMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof loginPlatformSessionMfa>>,
+  TError,
+  LoginPlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLoginPlatformSessionMfaMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof loginPlatformSessionMfa>>,
+    LoginPlatformSessionMfaMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return loginPlatformSessionMfa(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LoginPlatformSessionMfaMutationResult = NonNullable<
+  Awaited<ReturnType<typeof loginPlatformSessionMfa>>
+>;
+export type LoginPlatformSessionMfaMutationBody = LoginMfaRequest;
+export type LoginPlatformSessionMfaMutationError = ErrorType<unknown>;
+export type LoginPlatformSessionMfaMutationVariables = { data: LoginMfaRequest };
+
+export const useLoginPlatformSessionMfa = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof loginPlatformSessionMfa>>,
+      TError,
+      LoginPlatformSessionMfaMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof loginPlatformSessionMfa>>,
+  TError,
+  LoginPlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  return useMutation(getLoginPlatformSessionMfaMutationOptions(options), queryClient);
+};
+export const getSetupPlatformSessionMfaUrl = () => {
+  return `/api/platform/session/mfa/setup`;
+};
+
+export const setupPlatformSessionMfa = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MfaSetupResponse> => {
+  return shelterFetch<MfaSetupResponse>(getSetupPlatformSessionMfaUrl(), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getSetupPlatformSessionMfaMutationKey = () => ['setupPlatformSessionMfa'] as const;
+
+export const getSetupPlatformSessionMfaMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setupPlatformSessionMfa>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setupPlatformSessionMfa>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getSetupPlatformSessionMfaMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setupPlatformSessionMfa>>,
+    void
+  > = () => {
+    return setupPlatformSessionMfa(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetupPlatformSessionMfaMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setupPlatformSessionMfa>>
+>;
+
+export type SetupPlatformSessionMfaMutationError = ErrorType<unknown>;
+
+export const useSetupPlatformSessionMfa = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setupPlatformSessionMfa>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setupPlatformSessionMfa>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSetupPlatformSessionMfaMutationOptions(options), queryClient);
+};
+export const getEnablePlatformSessionMfaUrl = () => {
+  return `/api/platform/session/mfa/enable`;
+};
+
+export const enablePlatformSessionMfa = async (
+  mfaCodeRequest: MfaCodeRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MfaRecoveryCodesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<MfaRecoveryCodesResponse>(getEnablePlatformSessionMfaUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mfaCodeRequest),
+  });
+};
+
+export const getEnablePlatformSessionMfaMutationKey = () => ['enablePlatformSessionMfa'] as const;
+
+export const getEnablePlatformSessionMfaMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof enablePlatformSessionMfa>>,
+    TError,
+    EnablePlatformSessionMfaMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof enablePlatformSessionMfa>>,
+  TError,
+  EnablePlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEnablePlatformSessionMfaMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof enablePlatformSessionMfa>>,
+    EnablePlatformSessionMfaMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return enablePlatformSessionMfa(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EnablePlatformSessionMfaMutationResult = NonNullable<
+  Awaited<ReturnType<typeof enablePlatformSessionMfa>>
+>;
+export type EnablePlatformSessionMfaMutationBody = MfaCodeRequest;
+export type EnablePlatformSessionMfaMutationError = ErrorType<unknown>;
+export type EnablePlatformSessionMfaMutationVariables = { data: MfaCodeRequest };
+
+export const useEnablePlatformSessionMfa = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof enablePlatformSessionMfa>>,
+      TError,
+      EnablePlatformSessionMfaMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof enablePlatformSessionMfa>>,
+  TError,
+  EnablePlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  return useMutation(getEnablePlatformSessionMfaMutationOptions(options), queryClient);
+};
+export const getDisablePlatformSessionMfaUrl = () => {
+  return `/api/platform/session/mfa/disable`;
+};
+
+export const disablePlatformSessionMfa = async (
+  mfaCodeRequest: MfaCodeRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<void>(getDisablePlatformSessionMfaUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mfaCodeRequest),
+  });
+};
+
+export const getDisablePlatformSessionMfaMutationKey = () => ['disablePlatformSessionMfa'] as const;
+
+export const getDisablePlatformSessionMfaMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof disablePlatformSessionMfa>>,
+    TError,
+    DisablePlatformSessionMfaMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof disablePlatformSessionMfa>>,
+  TError,
+  DisablePlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDisablePlatformSessionMfaMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof disablePlatformSessionMfa>>,
+    DisablePlatformSessionMfaMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return disablePlatformSessionMfa(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DisablePlatformSessionMfaMutationResult = NonNullable<
+  Awaited<ReturnType<typeof disablePlatformSessionMfa>>
+>;
+export type DisablePlatformSessionMfaMutationBody = MfaCodeRequest;
+export type DisablePlatformSessionMfaMutationError = ErrorType<unknown>;
+export type DisablePlatformSessionMfaMutationVariables = { data: MfaCodeRequest };
+
+export const useDisablePlatformSessionMfa = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof disablePlatformSessionMfa>>,
+      TError,
+      DisablePlatformSessionMfaMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof disablePlatformSessionMfa>>,
+  TError,
+  DisablePlatformSessionMfaMutationVariables,
+  TContext
+> => {
+  return useMutation(getDisablePlatformSessionMfaMutationOptions(options), queryClient);
 };
 export const getListPlatformStaffUrl = () => {
   return `/api/platform/staff`;

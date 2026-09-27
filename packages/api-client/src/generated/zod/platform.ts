@@ -39,6 +39,7 @@ export const GetPlatformSessionResponse = zod.object({
   ),
   activeOrganizationId: zod.uuid().nullable(),
   permissions: zod.array(zod.string()),
+  mfaEnrollmentRequired: zod.boolean(),
 });
 
 export const SelectPlatformSessionOrganizationParams = zod.object({
@@ -46,6 +47,34 @@ export const SelectPlatformSessionOrganizationParams = zod.object({
 });
 
 export const SelectPlatformSessionOrganizationResponse = zod.void();
+
+export const LoginPlatformSessionMfaBody = zod.object({
+  code: zod.string().nullable(),
+  recoveryCode: zod.string().nullable(),
+});
+
+export const LoginPlatformSessionMfaResponse = zod.object({
+  status: zod.string(),
+});
+
+export const SetupPlatformSessionMfaResponse = zod.object({
+  sharedKey: zod.string(),
+  authenticatorUri: zod.string(),
+});
+
+export const EnablePlatformSessionMfaBody = zod.object({
+  code: zod.string().nullable(),
+});
+
+export const EnablePlatformSessionMfaResponse = zod.object({
+  recoveryCodes: zod.array(zod.string()),
+});
+
+export const DisablePlatformSessionMfaBody = zod.object({
+  code: zod.string().nullable(),
+});
+
+export const DisablePlatformSessionMfaResponse = zod.void();
 
 export const ListPlatformStaffResponseItem = zod.object({
   membershipId: zod.uuid(),

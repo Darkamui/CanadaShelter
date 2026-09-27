@@ -6,9 +6,8 @@
  */
 
 /**
- * A value stored in both supported languages (ADR 0013), mapped to two columns with
- * EntityTypeBuilder&lt;TEntity&gt; LocalizedTextMappingExtensions.MapLocalizedText&lt;TEntity&gt;(EntityTypeBuilder&lt;TEntity&gt; builder, Expression&lt;Func&lt;TEntity, LocalizedText?&gt;&gt; property, string column, int maxLength). Both are required: reference data is
- * always bilingual. Serialized as `{ "fr": …, "en": … }`; clients pick by UI locale.
+ * A value stored in both supported languages (ADR 0013). Both are required: reference data is always bilingual.
+ * Clients pick the label by UI locale.
  */
 export interface LocalizedText {
   /** fr-CA text. */

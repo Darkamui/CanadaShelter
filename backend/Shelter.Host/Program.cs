@@ -18,7 +18,7 @@ builder.Logging.AddJsonConsole(options =>
 builder.Logging.AddShelterRedaction();
 
 builder.Services.AddShelterProblemDetails();
-builder.Services.AddOpenApi();
+builder.Services.AddShelterOpenApi();
 builder.Services.AddShelterTenancy(builder.Environment);
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();

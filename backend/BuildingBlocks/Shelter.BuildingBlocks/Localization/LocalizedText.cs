@@ -1,10 +1,10 @@
 namespace Shelter.BuildingBlocks.Localization;
 
 /// <summary>
-/// A value stored in both supported languages (ADR 0013), mapped to two columns with
-/// <see cref="LocalizedTextMappingExtensions.MapLocalizedText{TEntity}"/>. Both are required: reference data is
-/// always bilingual. Serialized as <c>{ "fr": …, "en": … }</c>; clients pick by UI locale.
+/// A value stored in both supported languages (ADR 0013). Both are required: reference data is always bilingual.
+/// Clients pick the label by UI locale.
 /// </summary>
+/// <remarks>Mapped to two columns with <see cref="LocalizedTextMappingExtensions.MapLocalizedText{TEntity}"/>.</remarks>
 public sealed record LocalizedText
 {
     /// <summary>Default locale (architecture §11.1).</summary>

@@ -112,6 +112,7 @@ jobs:
       - name: No pending model changes
         run: |
           dotnet tool restore
+          dotnet restore backend
           dotnet tool run dotnet-ef migrations has-pending-model-changes             --project backend/Shelter.Migrations --startup-project backend/Shelter.Host
 
   # Flags vulnerable or disallowed-licence packages introduced by a PR (supports hard rule 9 review).

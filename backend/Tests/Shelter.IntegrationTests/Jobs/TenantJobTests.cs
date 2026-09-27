@@ -16,6 +16,7 @@ namespace Shelter.IntegrationTests.Jobs;
 /// payload, so it sees only its tenant's rows; a payload without a tenant fails before any data access.
 /// The probe job uses raw SQL on purpose: no EF filter, only the database scopes what it sees.
 /// </summary>
+[Collection(HangfireTests.Name)]
 public sealed class TenantJobTests(PostgresFixture postgres)
 {
     private static readonly TimeSpan JobTimeout = TimeSpan.FromSeconds(60);

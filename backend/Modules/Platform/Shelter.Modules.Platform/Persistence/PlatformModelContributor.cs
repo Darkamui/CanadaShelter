@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Platform.Domain;
 
@@ -33,6 +34,10 @@ internal sealed class OrganizationConfiguration : IEntityTypeConfiguration<Organ
     }
 }
 
+/// <summary>
+/// Tenant configuration values: codes and switches, never personal data. Key and Value are audited in plain form,
+/// so a setting must never hold free text about a person (a contact email belongs on its own classified entity).
+/// </summary>
 internal sealed class TenantSettingConfiguration : IEntityTypeConfiguration<TenantSetting>
 {
     public void Configure(EntityTypeBuilder<TenantSetting> builder)
@@ -40,8 +45,8 @@ internal sealed class TenantSettingConfiguration : IEntityTypeConfiguration<Tena
         builder.ToTable("tenant_setting", PlatformModelContributor.Schema);
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).ValueGeneratedNever();
-        builder.Property(s => s.Key).HasMaxLength(100).IsRequired();
-        builder.Property(s => s.Value).HasMaxLength(4000).IsRequired();
+        builder.Property(s => s.Key).HasMaxLength(100).IsRequired().IsNonPersonalData();
+        builder.Property(s => s.Value).HasMaxLength(4000).IsRequired().IsNonPersonalData();
         builder.HasIndex(s => new { s.TenantId, s.Key }).IsUnique();
     }
 }

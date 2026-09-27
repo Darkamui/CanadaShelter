@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 
@@ -6,7 +7,7 @@ namespace Shelter.BuildingBlocks.Jobs;
 
 /// <summary>
 /// Hangfire's entry point for every tenant job. Each run gets a new DI scope, so no tenant context, DbContext or
-/// transaction leaks between jobs; the tenant is set before the job is resolved, and the job runs inside one
+/// transaction leaks between jobs; the tenant and audit source are set before the job is resolved, and the job runs inside one
 /// unit of work, so <c>SET LOCAL app.tenant_id</c> covers all of its data access (ADR 0004, ADR 0010).
 /// A payload without a tenant fails before any data access. A closed generic type (not a generic method) so
 /// Hangfire resolves the method from the stored job reliably.
@@ -25,6 +26,8 @@ public sealed class TenantJobRunner<TJob, TArgs>(IServiceScopeFactory scopeFacto
         await using var scope = scopeFactory.CreateAsyncScope();
         var services = scope.ServiceProvider;
         services.GetRequiredService<TenantContext>().Set(payload.TenantId);
+        services.GetRequiredService<AuditContext>()
+            .Set(AuditActorType.System, actorId: null, AuditSources.Job(typeof(TJob).Name), payload.CorrelationId);
 
         var job = services.GetRequiredService<TJob>();
         await services.GetRequiredService<UnitOfWork>()

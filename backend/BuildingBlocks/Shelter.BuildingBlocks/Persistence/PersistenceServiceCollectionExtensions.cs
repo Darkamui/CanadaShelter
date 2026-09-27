@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shelter.BuildingBlocks.Auditing;
 
 namespace Shelter.BuildingBlocks.Persistence;
 
@@ -29,6 +30,8 @@ public static class PersistenceServiceCollectionExtensions
     {
         services.AddDbContext<ShelterDbContext>((sp, options) => Configure(options, AppConnectionString(sp)));
         services.AddScoped<UnitOfWork>();
+        services.AddScoped<AuditContext>();
+        services.AddScoped<IAuditWriter, AuditWriter>();
         return services;
     }
 
@@ -43,7 +46,11 @@ public static class PersistenceServiceCollectionExtensions
                 .MigrationsHistoryTable(MigrationsHistoryTable, MigrationsHistorySchema))
             .UseSnakeCaseNamingConvention()
             .ReplaceService<IModelCacheKeyFactory, ShelterModelCacheKeyFactory>()
-            .AddInterceptors(TenantStampingInterceptor.Instance, TenantTransactionInterceptor.Instance, TenantCommandGuardInterceptor.Instance);
+            .AddInterceptors(
+                TenantStampingInterceptor.Instance,
+                AuditSaveChangesInterceptor.Instance,
+                TenantTransactionInterceptor.Instance,
+                TenantCommandGuardInterceptor.Instance);
     }
 
     private static string AppConnectionString(IServiceProvider services) =>

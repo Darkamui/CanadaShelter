@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Shelter.BuildingBlocks.Auditing;
 
 namespace Shelter.Host.Middleware;
 
 /// <summary>
 /// Assigns every request a correlation ID: a well-formed inbound <c>X-Correlation-Id</c>, otherwise the W3C trace ID.
-/// The ID is echoed on the response, added to the logging scope, and put on ProblemDetails.
+/// The ID is echoed on the response, added to the logging scope, put on ProblemDetails, and stamped on the
+/// request's audit events with source <c>api</c>.
 /// </summary>
 internal sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
 {
@@ -13,10 +15,13 @@ internal sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<Corr
     private const int MaxLength = 64;
     private static readonly object ItemKey = new();
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, AuditContext auditContext)
     {
         var correlationId = Resolve(context);
         context.Items[ItemKey] = correlationId;
+
+        // TODO(M2): the authenticated staff user once authentication exists.
+        auditContext.Set(AuditActorType.Anonymous, actorId: null, AuditSources.Api, correlationId);
         context.Response.OnStarting(() =>
         {
             context.Response.Headers[HeaderName] = correlationId;

@@ -1,8 +1,10 @@
 using Npgsql;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Platform.Features.Provisioning;
 using Shelter.Modules.Platform.Persistence;
 using Shelter.Testing;
+using Shelter.Testing.Auditing;
 
 [assembly: AssemblyFixture(typeof(Shelter.Modules.Platform.Tests.PostgresFixture))]
 
@@ -21,6 +23,13 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     /// <summary>Runs <paramref name="work"/> for <paramref name="tenantId"/> inside one committed unit of work.</summary>
     public Task<T> InTenantAsync<T>(Guid? tenantId, Func<ShelterDbContext, Task<T>> work) => Tenants.InTenantAsync(tenantId, work);
+
+    /// <summary>
+    /// A runtime-role context for <paramref name="tenantId"/> over the Platform model plus
+    /// <see cref="SamplePerson"/>, stamping <paramref name="auditContext"/> on its audit events.
+    /// </summary>
+    public ShelterDbContext CreateAuditedContext(Guid tenantId, AuditContext auditContext) =>
+        TestDbContexts.Create(_database.AppConnectionString, tenantId, auditContext, new PlatformModelContributor(), new SamplePersonModelContributor());
 
     /// <summary>A platform-admin (<c>shelter_platform_admin</c>) context factory over the Platform model.</summary>
     public PlatformAdminDbContextFactory CreatePlatformAdminFactory() =>
@@ -46,7 +55,15 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     /// <inheritdoc />
-    public async ValueTask InitializeAsync() => await _database.StartAsync();
+    public async ValueTask InitializeAsync()
+    {
+        await _database.StartAsync();
+
+        await using var connection = new NpgsqlConnection(_database.MigratorConnectionString);
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(SamplePerson.CreateTableSql, connection);
+        await command.ExecuteNonQueryAsync();
+    }
 
     /// <inheritdoc />
     public ValueTask DisposeAsync() => _database.DisposeAsync();

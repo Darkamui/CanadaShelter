@@ -17,7 +17,8 @@ public interface ITenantJob<in TArgs>
 }
 
 /// <summary>
-/// What Hangfire stores for a tenant job: the tenant, taken from the scheduling scope's tenant context, and the
-/// job's arguments. Public only because Hangfire serializes it.
+/// What Hangfire stores for a tenant job: the tenant, taken from the scheduling scope's tenant context, the
+/// job's arguments, and the scheduling scope's correlation ID (for the audit trail). Public only because
+/// Hangfire serializes it.
 /// </summary>
-public sealed record TenantJobPayload<TArgs>(Guid TenantId, TArgs Args);
+public sealed record TenantJobPayload<TArgs>(Guid TenantId, TArgs Args, string? CorrelationId = null);

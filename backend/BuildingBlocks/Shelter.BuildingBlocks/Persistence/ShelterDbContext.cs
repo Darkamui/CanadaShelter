@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Tenancy;
 
 namespace Shelter.BuildingBlocks.Persistence;
@@ -19,11 +20,16 @@ public sealed class ShelterDbContext : DbContext
 
     private readonly IReadOnlyList<IModelContributor> _contributors;
 
-    /// <summary>Creates the context.</summary>
-    public ShelterDbContext(DbContextOptions<ShelterDbContext> options, ITenantContext tenantContext, IEnumerable<IModelContributor> contributors)
+    /// <summary>Creates the context. Without an <paramref name="auditContext"/>, changes are audited as the system actor.</summary>
+    public ShelterDbContext(
+        DbContextOptions<ShelterDbContext> options,
+        ITenantContext tenantContext,
+        IEnumerable<IModelContributor> contributors,
+        AuditContext? auditContext = null)
         : base(options)
     {
         TenantContext = tenantContext;
+        AuditContext = auditContext ?? new AuditContext();
         _contributors = [.. contributors.OrderBy(c => c.GetType().FullName, StringComparer.Ordinal)];
         ModelKey = string.Join('|', _contributors.Select(c => c.GetType().FullName));
 
@@ -33,6 +39,9 @@ public sealed class ShelterDbContext : DbContext
 
     /// <summary>The tenant this context reads and writes for.</summary>
     public ITenantContext TenantContext { get; }
+
+    /// <summary>Actor, source and correlation stamped on the audit events this context records.</summary>
+    public AuditContext AuditContext { get; }
 
     /// <summary>
     /// True for contexts from <see cref="PlatformAdminDbContextFactory"/> only: no <c>SET LOCAL</c>, no transaction
@@ -49,6 +58,8 @@ public sealed class ShelterDbContext : DbContext
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        AuditEvent.Configure(modelBuilder);
+
         foreach (var contributor in _contributors)
         {
             contributor.ConfigureModel(modelBuilder);

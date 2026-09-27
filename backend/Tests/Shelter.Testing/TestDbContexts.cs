@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Shelter.BuildingBlocks.Auditing;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 
@@ -9,7 +10,15 @@ namespace Shelter.Testing;
 public static class TestDbContexts
 {
     /// <summary>A context for <paramref name="tenantId"/> (or none) composed from <paramref name="contributors"/>.</summary>
-    public static ShelterDbContext Create(string connectionString, Guid? tenantId, params IModelContributor[] contributors)
+    public static ShelterDbContext Create(string connectionString, Guid? tenantId, params IModelContributor[] contributors) =>
+        Create(connectionString, tenantId, new AuditContext(), contributors);
+
+    /// <summary>
+    /// A context for <paramref name="tenantId"/> (or none) that stamps <paramref name="auditContext"/> on its audit
+    /// events.
+    /// </summary>
+    public static ShelterDbContext Create(
+        string connectionString, Guid? tenantId, AuditContext auditContext, params IModelContributor[] contributors)
     {
         var tenantContext = new TenantContext();
         if (tenantId is { } id)
@@ -21,7 +30,7 @@ public static class TestDbContexts
             .Configure(new DbContextOptionsBuilder<ShelterDbContext>(), connectionString)
             .Options;
 
-        return new ShelterDbContext((DbContextOptions<ShelterDbContext>)options, tenantContext, contributors);
+        return new ShelterDbContext((DbContextOptions<ShelterDbContext>)options, tenantContext, contributors, auditContext);
     }
 
     /// <summary>A platform-admin factory on <paramref name="connectionString"/>, as the Platform module registers it.</summary>

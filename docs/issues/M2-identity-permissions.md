@@ -166,7 +166,7 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 - [ ] Every endpoint declares a permission or is on the anonymous allowlist (coverage test green in CI).
 - [x] No `TODO(M2)` authentication or permission markers remain.
-- [ ] `tenancy-privacy-reviewer` reports no Critical/High findings on M2 code.
+- [x] `tenancy-privacy-reviewer` reports no Critical/High findings on M2 code (full M2 range reviewed 2026-09-27: none; deferred items listed in `docs/modules/platform.md`).
 - [x] `docs/modules/platform.md` describes identity, memberships, permissions and MFA.
 - [ ] Daniel has personally reviewed all M2 migrations.
 

@@ -169,6 +169,7 @@
     "resend": "Renvoyer",
     "resendTo": "Renvoyer l’invitation à {{email}}",
     "revoke": "Révoquer",
-    "revokeFor": "Révoquer l’invitation de {{email}}"
+    "revokeFor": "Révoquer l’invitation de {{email}}",
+    "rolesRequired": "Choisissez au moins un rôle."
   }
 }

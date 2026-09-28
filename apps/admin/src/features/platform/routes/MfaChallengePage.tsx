@@ -1,14 +1,19 @@
 import { useLoginPlatformSessionMfa } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { z } from 'zod';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
 import { resetSession } from '../../../lib/auth/session';
-import { FormAlert } from '../components/FormAlert';
-import { FormField } from '../components/FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { requiredText } from '../../../lib/forms/schemas';
+import { useZodForm } from '../../../lib/forms/useZodForm';
+
+const codeSchema = z.object({ code: requiredText() });
 
 /** Second login step: an authenticator code, or a recovery code. */
 export function MfaChallengePage() {
@@ -19,25 +24,19 @@ export function MfaChallengePage() {
   const state = readAuthState(location.state);
   const verify = useLoginPlatformSessionMfa();
   const [useRecovery, setUseRecovery] = useState(false);
-  const [code, setCode] = useState('');
+  const form = useZodForm(codeSchema, { defaultValues: { code: '' } });
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const value = code.trim();
+  const submit = form.handleSubmit(({ code }) =>
     verify.mutate(
-      {
-        data: useRecovery
-          ? { code: null, recoveryCode: value }
-          : { code: value, recoveryCode: null },
-      },
+      { data: useRecovery ? { code: null, recoveryCode: code } : { code, recoveryCode: null } },
       {
         onSuccess: async () => {
           await resetSession(queryClient);
           await navigate(afterSignIn(state), { replace: true, state: stateAfterSignIn(state) });
         },
       },
-    );
-  };
+    ),
+  );
 
   return (
     <>
@@ -57,15 +56,14 @@ export function MfaChallengePage() {
         <FormField
           key={useRecovery ? 'recovery' : 'code'}
           label={useRecovery ? t('mfaChallenge.recoveryCode') : t('mfa.code')}
-          name="code"
           inputMode={useRecovery ? 'text' : 'numeric'}
           autoComplete="one-time-code"
           autoFocus
           required
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
+          error={form.formState.errors.code}
+          {...form.register('code')}
         />
-        <Button type="submit" disabled={verify.isPending || code.trim().length === 0}>
+        <Button type="submit" disabled={verify.isPending}>
           {t('mfaChallenge.submit')}
         </Button>
       </form>
@@ -74,7 +72,7 @@ export function MfaChallengePage() {
         className="self-start px-0"
         onClick={() => {
           setUseRecovery(!useRecovery);
-          setCode('');
+          form.reset();
           verify.reset();
         }}
       >

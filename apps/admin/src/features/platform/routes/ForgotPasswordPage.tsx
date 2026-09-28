@@ -1,22 +1,23 @@
 import { useForgotPlatformSessionPassword } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
-import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { z } from 'zod';
 import { paths } from '../../../lib/auth/paths';
-import { FormAlert } from '../components/FormAlert';
-import { FormField } from '../components/FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { emailAddress } from '../../../lib/forms/schemas';
+import { useZodForm } from '../../../lib/forms/useZodForm';
+
+const forgotSchema = z.object({ email: emailAddress() });
 
 /** Asks for a reset link. The answer is the same whether or not the email has an account. */
 export function ForgotPasswordPage() {
   const { t } = useTranslation('platform');
   const forgot = useForgotPlatformSessionPassword();
-  const [email, setEmail] = useState('');
+  const form = useZodForm(forgotSchema, { defaultValues: { email: '' } });
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    forgot.mutate({ data: { email: email.trim() } });
-  };
+  const submit = form.handleSubmit((data) => forgot.mutate({ data }));
 
   return (
     <>
@@ -30,14 +31,13 @@ export function ForgotPasswordPage() {
           <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
             <FormField
               label={t('fields.email')}
-              name="email"
               type="email"
               autoComplete="username"
               required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              error={form.formState.errors.email}
+              {...form.register('email')}
             />
-            <Button type="submit" disabled={forgot.isPending || email.trim().length === 0}>
+            <Button type="submit" disabled={forgot.isPending}>
               {t('forgot.submit')}
             </Button>
           </form>

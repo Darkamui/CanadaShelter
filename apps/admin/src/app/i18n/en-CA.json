@@ -41,5 +41,9 @@
     "label": "Account",
     "switchOrganization": "Change organization",
     "security": "Security"
+  },
+  "forms": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address."
   }
 }

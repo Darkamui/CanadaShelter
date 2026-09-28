@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { visibleModules } from '../../app/modules';
 import { formatSharedKey } from './mfa';
 import { afterSignIn, readAuthState, readFragment, stateAfterSignIn } from './navigation';
-import { passwordProblem } from './passwords';
+import { z } from 'zod';
+import { newPasswordFields, passwordsMatch } from './passwords';
 import { hasPermission } from './session';
 
 describe('afterSignIn', () => {
@@ -67,11 +68,22 @@ describe('formatSharedKey', () => {
   });
 });
 
-describe('passwordProblem', () => {
+describe('new password schema', () => {
+  const schema = z.object(newPasswordFields).refine(passwordsMatch.check, passwordsMatch.params);
+  const issues = (password: string, confirmation: string) =>
+    schema.safeParse({ password, confirmation }).error?.issues.map((i) => [i.path, i.message]);
+
   it('needs 12 characters, then a matching confirmation', () => {
-    expect(passwordProblem('short', 'short')).toBe('tooShort');
-    expect(passwordProblem('long enough pass', 'different')).toBe('mismatch');
-    expect(passwordProblem('long enough pass', 'long enough pass')).toBeUndefined();
+    expect(issues('short', 'short')).toEqual([[['password'], 'platform:password.tooShort']]);
+    expect(issues('long enough pass', 'different')).toEqual([
+      [['confirmation'], 'platform:password.mismatch'],
+    ]);
+    expect(issues('long enough pass', 'long enough pass')).toBeUndefined();
+  });
+
+  it('keeps spaces: they are part of the password', () => {
+    const parsed = schema.parse({ password: ' twelve chars ', confirmation: ' twelve chars ' });
+    expect(parsed.password).toBe(' twelve chars ');
   });
 });
 

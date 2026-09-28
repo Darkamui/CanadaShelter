@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isRoleKey, type RoleKey } from '../../../lib/auth/permissions';
 import { statusOf } from '../../../lib/auth/session';
-import { FormAlert } from './FormAlert';
+import { FormAlert } from '../../../lib/forms/FormAlert';
 import { RoleCheckboxes } from './RoleCheckboxes';
 
 export function StaffMembersTable({ canManage }: { canManage: boolean }) {

@@ -1,14 +1,23 @@
 import { useResetPlatformSessionPassword } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
+import { z } from 'zod';
 import type { AuthState } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
-import { MIN_PASSWORD_LENGTH, passwordProblem } from '../../../lib/auth/passwords';
+import {
+  MIN_PASSWORD_LENGTH,
+  newPasswordFields,
+  passwordsMatch,
+} from '../../../lib/auth/passwords';
 import { useLinkFragment } from '../../../lib/auth/useLinkFragment';
-import { FormAlert } from '../components/FormAlert';
-import { FormField } from '../components/FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
+import { useZodForm } from '../../../lib/forms/useZodForm';
+
+const resetSchema = z.object(newPasswordFields).refine(passwordsMatch.check, passwordsMatch.params);
 
 /** From the emailed link `/reset-password#user={id}&token={token}`. */
 export function ResetPasswordPage() {
@@ -18,12 +27,11 @@ export function ResetPasswordPage() {
   const [userId] = useState(() => fragment.get('user'));
   const [token] = useState(() => fragment.get('token'));
   const reset = useResetPlatformSessionPassword();
-  const [password, setPassword] = useState('');
-  const [confirmation, setConfirmation] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const form = useZodForm(resetSchema, { defaultValues: { password: '', confirmation: '' } });
+  const { errors } = form.formState;
 
-  const problem = passwordProblem(password, confirmation);
-  const linkRejected = reset.isError && !hasValidationErrors(reset.error.problem);
+  // A 400 without field errors means the link itself was refused (expired, used, or tampered with).
+  const linkRejected = reset.isError && !validationErrors(reset.error);
 
   if (!userId || !token || linkRejected) {
     return (
@@ -37,10 +45,7 @@ export function ResetPasswordPage() {
     );
   }
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitted(true);
-    if (problem) return;
+  const submit = form.handleSubmit(({ password }) =>
     reset.mutate(
       { data: { userId, token, newPassword: password } },
       {
@@ -48,36 +53,35 @@ export function ResetPasswordPage() {
           const state: AuthState = { notice: 'passwordReset' };
           void navigate(paths.login, { replace: true, state });
         },
+        onError: (error) =>
+          applyValidationErrors(error, form.setError, {
+            newPassword: ['password', 'platform:password.rejected'],
+          }),
       },
-    );
-  };
+    ),
+  );
 
   return (
     <>
       <h1 className="text-2xl font-semibold">{t('reset.title')}</h1>
-      {reset.isError && <FormAlert tone="error">{t('password.rejected')}</FormAlert>}
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
         <FormField
           label={t('fields.newPassword')}
-          name="newPassword"
           type="password"
           autoComplete="new-password"
           required
           minLength={MIN_PASSWORD_LENGTH}
           hint={t('password.hint', { count: MIN_PASSWORD_LENGTH })}
-          error={submitted && problem === 'tooShort' ? t('password.tooShort') : undefined}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          error={errors.password}
+          {...form.register('password')}
         />
         <FormField
           label={t('fields.confirmPassword')}
-          name="confirmPassword"
           type="password"
           autoComplete="new-password"
           required
-          error={submitted && problem === 'mismatch' ? t('password.mismatch') : undefined}
-          value={confirmation}
-          onChange={(event) => setConfirmation(event.target.value)}
+          error={errors.confirmation}
+          {...form.register('confirmation')}
         />
         <Button type="submit" disabled={reset.isPending}>
           {t('reset.submit')}
@@ -85,8 +89,4 @@ export function ResetPasswordPage() {
       </form>
     </>
   );
-}
-
-function hasValidationErrors(problem: unknown): boolean {
-  return typeof problem === 'object' && problem !== null && 'errors' in problem;
 }

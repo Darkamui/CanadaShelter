@@ -5,12 +5,17 @@ import {
 import type { MfaSetupResponse } from '@shelter/api-client/model';
 import { Button } from '@shelter/ui/components/button';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { formatSharedKey } from '../../../lib/auth/mfa';
 import { resetSession } from '../../../lib/auth/session';
-import { FormAlert } from './FormAlert';
-import { FormField } from './FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { requiredText } from '../../../lib/forms/schemas';
+import { useZodForm } from '../../../lib/forms/useZodForm';
+
+const codeSchema = z.object({ code: requiredText() });
 
 /**
  * TOTP enrollment: a new key (setup key + `otpauth://` link), confirmed by a code, then the recovery codes,
@@ -23,7 +28,7 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
   const setup = useSetupPlatformSessionMfa();
   const enable = useEnablePlatformSessionMfa();
   const [key, setKey] = useState<MfaSetupResponse>();
-  const [code, setCode] = useState('');
+  const form = useZodForm(codeSchema, { defaultValues: { code: '' } });
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>();
 
   if (recoveryCodes) {
@@ -67,10 +72,9 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
     );
   }
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = form.handleSubmit((data) =>
     enable.mutate(
-      { data: { code: code.trim() } },
+      { data },
       {
         onSuccess: (result) => {
           setRecoveryCodes(result.recoveryCodes);
@@ -78,8 +82,8 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
           void resetSession(queryClient);
         },
       },
-    );
-  };
+    ),
+  );
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
@@ -104,14 +108,13 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
       {enable.isError && <FormAlert tone="error">{t('mfa.invalidCode')}</FormAlert>}
       <FormField
         label={t('mfa.code')}
-        name="code"
         inputMode="numeric"
         autoComplete="one-time-code"
         required
-        value={code}
-        onChange={(event) => setCode(event.target.value)}
+        error={form.formState.errors.code}
+        {...form.register('code')}
       />
-      <Button type="submit" disabled={enable.isPending || code.trim().length === 0}>
+      <Button type="submit" disabled={enable.isPending}>
         {t('mfa.confirm')}
       </Button>
     </form>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../../../lib/auth/session';
-import { FormAlert } from '../components/FormAlert';
+import { FormAlert } from '../../../lib/forms/FormAlert';
 import { MfaEnrollment } from '../components/MfaEnrollment';
 
 /**

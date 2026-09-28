@@ -8,13 +8,18 @@ import {
 import { Button } from '@shelter/ui/components/button';
 import { Label } from '@shelter/ui/components/label';
 import { useQueryClient } from '@tanstack/react-query';
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { RoleKey } from '../../../lib/auth/permissions';
+import { z } from 'zod';
+import { ROLE_KEYS } from '../../../lib/auth/permissions';
 import { statusOf } from '../../../lib/auth/session';
 import { formatDate } from '../../../lib/format';
-import { FormAlert } from './FormAlert';
-import { FormField } from './FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { emailAddress } from '../../../lib/forms/schemas';
+import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
+import { useZodForm } from '../../../lib/forms/useZodForm';
 import { RoleCheckboxes } from './RoleCheckboxes';
 import { RoleList } from './StaffMembersTable';
 
@@ -138,27 +143,41 @@ export function InvitationsPanel({ canManage }: { canManage: boolean }) {
   );
 }
 
+const inviteSchema = z.object({
+  email: emailAddress(),
+  roles: z.array(z.enum(ROLE_KEYS)).min(1, { error: 'platform:invitations.rolesRequired' }),
+  language: z.enum(['fr', 'en']),
+});
+
 function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void> }) {
   const { t, i18n } = useTranslation('platform');
   const create = useCreatePlatformInvitation();
   const languageId = useId();
-  const [email, setEmail] = useState('');
-  const [roles, setRoles] = useState<RoleKey[]>(['staff']);
-  const [language, setLanguage] = useState(i18n.language === 'en-CA' ? 'en' : 'fr');
+  const form = useZodForm(inviteSchema, {
+    defaultValues: {
+      email: '',
+      roles: ['staff'],
+      language: i18n.language === 'en-CA' ? 'en' : 'fr',
+    },
+  });
+  const { errors } = form.formState;
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = form.handleSubmit((data) =>
     create.mutate(
-      { data: { email: email.trim(), roles, language } },
+      { data },
       {
         onSuccess: async (invitation) => {
-          setEmail('');
-          setRoles(['staff']);
+          form.reset({ ...data, email: '', roles: ['staff'] });
           await onInvited(invitation.email);
         },
+        onError: (error) =>
+          applyValidationErrors(error, form.setError, {
+            email: ['email', 'platform:invitations.invalid'],
+            roles: ['roles', 'platform:invitations.invalid'],
+          }),
       },
-    );
-  };
+    ),
+  );
 
   return (
     <form
@@ -167,7 +186,7 @@ function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void>
       noValidate
       aria-label={t('invitations.invite')}
     >
-      {create.isError && (
+      {create.isError && !validationErrors(create.error) && (
         <FormAlert tone="error">
           {statusOf(create.error) === 409
             ? t('invitations.duplicate')
@@ -178,31 +197,36 @@ function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void>
       )}
       <FormField
         label={t('fields.email')}
-        name="email"
         type="email"
         autoComplete="off"
         required
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        error={errors.email}
+        {...form.register('email')}
       />
-      <RoleCheckboxes legend={t('staff.roles')} value={roles} onChange={setRoles} />
+      <Controller
+        control={form.control}
+        name="roles"
+        render={({ field, fieldState }) => (
+          <RoleCheckboxes
+            legend={t('staff.roles')}
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error}
+          />
+        )}
+      />
       <div className="flex flex-col gap-2">
         <Label htmlFor={languageId}>{t('invitations.language')}</Label>
         <select
           id={languageId}
           className="h-9 rounded-md border bg-transparent px-3 text-sm"
-          value={language}
-          onChange={(event) => setLanguage(event.target.value)}
+          {...form.register('language')}
         >
           <option value="fr">{t('invitations.languages.fr')}</option>
           <option value="en">{t('invitations.languages.en')}</option>
         </select>
       </div>
-      <Button
-        type="submit"
-        className="self-start"
-        disabled={create.isPending || email.trim().length === 0 || roles.length === 0}
-      >
+      <Button type="submit" className="self-start" disabled={create.isPending}>
         {t('invitations.invite')}
       </Button>
     </form>

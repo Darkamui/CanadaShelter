@@ -1,14 +1,22 @@
 import { useLoginPlatformSession } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
 import { isUnauthorized, resetSession } from '../../../lib/auth/session';
-import { FormAlert } from '../components/FormAlert';
-import { FormField } from '../components/FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { emailAddress, formMessages } from '../../../lib/forms/schemas';
+import { useZodForm } from '../../../lib/forms/useZodForm';
+
+const loginSchema = z.object({
+  email: emailAddress(),
+  // Never trimmed: spaces are part of a password.
+  password: z.string().min(1, { error: formMessages.required }),
+});
 
 export function LoginPage() {
   const { t } = useTranslation('platform');
@@ -17,13 +25,14 @@ export function LoginPage() {
   const queryClient = useQueryClient();
   const state = readAuthState(location.state);
   const login = useLoginPlatformSession();
-  const [email, setEmail] = useState(state.email ?? '');
-  const [password, setPassword] = useState('');
+  const form = useZodForm(loginSchema, {
+    defaultValues: { email: state.email ?? '', password: '' },
+  });
+  const { errors } = form.formState;
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = form.handleSubmit((data) =>
     login.mutate(
-      { data: { email: email.trim(), password } },
+      { data },
       {
         onSuccess: async (result) => {
           if (result.status === 'mfaRequired') {
@@ -37,8 +46,8 @@ export function LoginPage() {
           await navigate(afterSignIn(state), { replace: true, state: stateAfterSignIn(state) });
         },
       },
-    );
-  };
+    ),
+  );
 
   return (
     <>
@@ -54,21 +63,19 @@ export function LoginPage() {
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
         <FormField
           label={t('fields.email')}
-          name="email"
           type="email"
           autoComplete="username"
           required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          error={errors.email}
+          {...form.register('email')}
         />
         <FormField
           label={t('fields.password')}
-          name="password"
           type="password"
           autoComplete="current-password"
           required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          error={errors.password}
+          {...form.register('password')}
         />
         <Button type="submit" disabled={login.isPending}>
           {t('login.submit')}

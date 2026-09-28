@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { afterSignIn, readAuthState } from '../../../lib/auth/navigation';
 import { resetSession, useSession } from '../../../lib/auth/session';
-import { FormAlert } from '../components/FormAlert';
+import { FormAlert } from '../../../lib/forms/FormAlert';
 import { LogoutButton } from '../components/LogoutButton';
 
 /** Chooses the session's organization. With a single membership and none active, it is chosen for the user. */

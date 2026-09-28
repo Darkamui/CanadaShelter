@@ -4,16 +4,24 @@ import {
 } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { z } from 'zod';
 import { readAuthState, type AuthState } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
-import { MIN_PASSWORD_LENGTH, passwordProblem } from '../../../lib/auth/passwords';
+import {
+  MIN_PASSWORD_LENGTH,
+  newPasswordFields,
+  passwordsMatch,
+} from '../../../lib/auth/passwords';
 import { resetSession, statusOf, useSession } from '../../../lib/auth/session';
 import { useLinkFragment } from '../../../lib/auth/useLinkFragment';
-import { FormAlert } from '../components/FormAlert';
-import { FormField } from '../components/FormField';
+import { FormAlert } from '../../../lib/forms/FormAlert';
+import { FormField } from '../../../lib/forms/FormField';
+import { requiredText } from '../../../lib/forms/schemas';
+import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
+import { useZodForm } from '../../../lib/forms/useZodForm';
 
 /**
  * From the emailed link `/accept-invitation#token={token}`. A new email creates its account here; an email
@@ -70,68 +78,68 @@ export function AcceptInvitationPage() {
   );
 }
 
+const newAccountSchema = z
+  .object({ displayName: requiredText('platform:accept.nameRequired'), ...newPasswordFields })
+  .refine(passwordsMatch.check, passwordsMatch.params);
+
 function NewAccount({ token, email }: { token: string; email: string }) {
   const { t } = useTranslation('platform');
   const navigate = useNavigate();
   const accept = useAcceptPlatformInvitation();
-  const [displayName, setDisplayName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmation, setConfirmation] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const form = useZodForm(newAccountSchema, {
+    defaultValues: { displayName: '', password: '', confirmation: '' },
+  });
+  const { errors } = form.formState;
 
-  const nameMissing = displayName.trim().length === 0;
-  const problem = passwordProblem(password, confirmation);
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitted(true);
-    if (nameMissing || problem) return;
+  const submit = form.handleSubmit(({ displayName, password }) =>
     accept.mutate(
-      { data: { token, displayName: displayName.trim(), password } },
+      { data: { token, displayName, password } },
       {
         onSuccess: () => {
           const state: AuthState = { notice: 'accountCreated', email };
           void navigate(paths.login, { replace: true, state });
         },
+        onError: (error) =>
+          applyValidationErrors(error, form.setError, {
+            displayName: ['displayName', 'platform:accept.nameRequired'],
+            password: ['password', 'platform:password.rejected'],
+          }),
       },
-    );
-  };
+    ),
+  );
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
       <p className="text-sm">{t('accept.newAccount')}</p>
-      {accept.isError && <FormAlert tone="error">{acceptError(accept.error, t)}</FormAlert>}
+      {/* Field errors show on their fields; anything else here. */}
+      {accept.isError && !validationErrors(accept.error) && (
+        <FormAlert tone="error">{acceptError(accept.error, t)}</FormAlert>
+      )}
       <FormField
         label={t('fields.displayName')}
-        name="displayName"
         autoComplete="name"
         required
         maxLength={200}
-        error={submitted && nameMissing ? t('accept.nameRequired') : undefined}
-        value={displayName}
-        onChange={(event) => setDisplayName(event.target.value)}
+        error={errors.displayName}
+        {...form.register('displayName')}
       />
       <FormField
         label={t('fields.password')}
-        name="password"
         type="password"
         autoComplete="new-password"
         required
         minLength={MIN_PASSWORD_LENGTH}
         hint={t('password.hint', { count: MIN_PASSWORD_LENGTH })}
-        error={submitted && problem === 'tooShort' ? t('password.tooShort') : undefined}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
+        error={errors.password}
+        {...form.register('password')}
       />
       <FormField
         label={t('fields.confirmPassword')}
-        name="confirmPassword"
         type="password"
         autoComplete="new-password"
         required
-        error={submitted && problem === 'mismatch' ? t('password.mismatch') : undefined}
-        value={confirmation}
-        onChange={(event) => setConfirmation(event.target.value)}
+        error={errors.confirmation}
+        {...form.register('confirmation')}
       />
       <Button type="submit" disabled={accept.isPending}>
         {t('accept.createAndJoin')}

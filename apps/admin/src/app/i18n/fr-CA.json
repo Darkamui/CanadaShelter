@@ -50,5 +50,9 @@
     "label": "Compte",
     "switchOrganization": "Changer d’organisme",
     "security": "Sécurité"
+  },
+  "forms": {
+    "required": "Ce champ est obligatoire.",
+    "email": "Entrez une adresse courriel valide."
   }
 }

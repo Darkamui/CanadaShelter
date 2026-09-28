@@ -159,6 +159,7 @@
     "resend": "Resend",
     "resendTo": "Resend the invitation to {{email}}",
     "revoke": "Revoke",
-    "revokeFor": "Revoke the invitation for {{email}}"
+    "revokeFor": "Revoke the invitation for {{email}}",
+    "rolesRequired": "Choose at least one role."
   }
 }

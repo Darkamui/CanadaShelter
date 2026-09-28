@@ -152,7 +152,8 @@
 - Guards: `RequireSession` (401 → `/login`, remembering the page), then `RequireOrganization` (no active organization → picker; `mfaEnrollmentRequired` → forced enrollment), then `RequirePermission` per page. Navigation hides modules without their read permission; placeholder modules with no permission yet stay listed. All of this is UX only: the server enforces.
 - The picker chooses automatically when there is exactly one membership. The staff page shows actions only with `platform.staff.manage`; a 409 from the last-administrator guard gets its own message.
 - MFA enrollment shows the setup key and the `otpauth://` link (no QR code: it would need a new dependency) and the recovery codes once. There is no screen to turn MFA off yet (`DisablePlatformSessionMfa` exists).
-- Tests: `apps/admin/src/app/router.test.tsx` (guards, forced enrollment, permission gating, 401 mid-session), `src/lib/auth/auth.test.ts`, the fetcher CSRF tests, and `tests/e2e/auth.spec.ts` (login → organization → animals, forced enrollment) in both locales.
+- Forms use React Hook Form + Zod (`lib/forms`, ADR 0019). Server field refusals, such as a password rejected by Identity, show on the field.
+- Tests: `apps/admin/src/app/router.test.tsx` (guards, forced enrollment, permission gating, 401 mid-session), `src/lib/auth/auth.test.ts`, `src/features/platform/forms.test.tsx` (client and server validation), the fetcher CSRF tests, and `tests/e2e/auth.spec.ts` (login → organization → animals, forced enrollment) in both locales.
 
 ## Key files
 

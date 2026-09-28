@@ -10,7 +10,7 @@ function renderShellParts() {
   return render(
     <I18nextProvider i18n={i18n}>
       <MemoryRouter>
-        <Sidebar />
+        <Sidebar permissions={['animal.read']} />
         <LanguageSwitcher />
       </MemoryRouter>
     </I18nextProvider>,

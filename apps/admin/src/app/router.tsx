@@ -1,18 +1,79 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AnimalsPage } from '../features/animals/routes/AnimalsPage';
+import { AcceptInvitationPage } from '../features/platform/routes/AcceptInvitationPage';
+import { ForgotPasswordPage } from '../features/platform/routes/ForgotPasswordPage';
+import { LoginPage } from '../features/platform/routes/LoginPage';
+import { MfaChallengePage } from '../features/platform/routes/MfaChallengePage';
+import { MfaEnrollPage } from '../features/platform/routes/MfaEnrollPage';
+import { OrganizationPickerPage } from '../features/platform/routes/OrganizationPickerPage';
+import { ResetPasswordPage } from '../features/platform/routes/ResetPasswordPage';
+import { SecurityPage } from '../features/platform/routes/SecurityPage';
+import { StaffPage } from '../features/platform/routes/StaffPage';
+import { Permissions } from '../lib/auth/permissions';
+import { paths } from '../lib/auth/paths';
+import { RequireOrganization } from './auth/RequireOrganization';
+import { RequirePermission } from './auth/RequirePermission';
+import { RequireSession } from './auth/RequireSession';
 import { AppShell } from './layout/AppShell';
+import { AuthLayout } from './layout/AuthLayout';
 import { HomePage } from './pages/HomePage';
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export const routes: RouteObject[] = [
   {
-    element: <AppShell />,
+    // Public: no session needed.
+    element: <AuthLayout />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'animals', element: <AnimalsPage /> },
-      { path: ':module', element: <ModulePlaceholderPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      { path: paths.login, element: <LoginPage /> },
+      { path: paths.loginMfa, element: <MfaChallengePage /> },
+      { path: paths.forgotPassword, element: <ForgotPasswordPage /> },
+      { path: paths.resetPassword, element: <ResetPasswordPage /> },
+      { path: paths.acceptInvitation, element: <AcceptInvitationPage /> },
+    ],
+  },
+  {
+    element: <RequireSession />,
+    children: [
+      {
+        // Signed in, before an organization is open or MFA is set up.
+        element: <AuthLayout />,
+        children: [
+          { path: paths.organizations, element: <OrganizationPickerPage /> },
+          { path: paths.mfaEnroll, element: <MfaEnrollPage /> },
+        ],
+      },
+      {
+        element: <RequireOrganization />,
+        children: [
+          {
+            element: <AppShell />,
+            children: [
+              { index: true, element: <HomePage /> },
+              {
+                path: 'animals',
+                element: (
+                  <RequirePermission permission={Permissions.animalRead}>
+                    <AnimalsPage />
+                  </RequirePermission>
+                ),
+              },
+              { path: 'platform', element: <Navigate to={paths.staff} replace /> },
+              {
+                path: paths.staff,
+                element: (
+                  <RequirePermission permission={Permissions.staffRead}>
+                    <StaffPage />
+                  </RequirePermission>
+                ),
+              },
+              { path: paths.security, element: <SecurityPage /> },
+              { path: ':module', element: <ModulePlaceholderPage /> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
+        ],
+      },
     ],
   },
 ];

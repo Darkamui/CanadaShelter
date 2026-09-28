@@ -146,6 +146,14 @@
 - `PlatformEmails` builds the invitation and reset emails in `fr` or `en`: the account's preferred language, otherwise the invitation's. `PublicLinks` builds links from `App:PublicBaseUrl`.
 - Tests swap in `CapturingEmailSender` (`ShelterApiFactory.Emails`).
 
+## Admin app (M2-6)
+
+- Screens in `apps/admin/src/features/platform/routes`. Routes are English and match the emailed links (`PublicLinks`): `/login`, `/login/mfa`, `/forgot-password`, `/reset-password`, `/accept-invitation` (public); `/organizations`, `/mfa/enroll` (signed in); `/platform/staff`, `/account/security` (inside the shell).
+- Guards: `RequireSession` (401 → `/login`, remembering the page), then `RequireOrganization` (no active organization → picker; `mfaEnrollmentRequired` → forced enrollment), then `RequirePermission` per page. Navigation hides modules without their read permission; placeholder modules with no permission yet stay listed. All of this is UX only: the server enforces.
+- The picker chooses automatically when there is exactly one membership. The staff page shows actions only with `platform.staff.manage`; a 409 from the last-administrator guard gets its own message.
+- MFA enrollment shows the setup key and the `otpauth://` link (no QR code: it would need a new dependency) and the recovery codes once. There is no screen to turn MFA off yet (`DisablePlatformSessionMfa` exists).
+- Tests: `apps/admin/src/app/router.test.tsx` (guards, forced enrollment, permission gating, 401 mid-session), `src/lib/auth/auth.test.ts`, the fetcher CSRF tests, and `tests/e2e/auth.spec.ts` (login → organization → animals, forced enrollment) in both locales.
+
 ## Key files
 
 - `Domain/Organization.cs`, `Domain/TenantSetting.cs`, `Persistence/PlatformModelContributor.cs`, `Provisioning/OrganizationProvisioner.cs`.

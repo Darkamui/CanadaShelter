@@ -28,6 +28,11 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
 - **Reference data:** the API returns both `fr`/`en` labels; pick by UI locale via the shared helper.
 - **Dates/numbers/currency:** `Intl` helpers in `lib/format`, organization timezone, CAD.
 - **Auth:** cookie-based (same-site). Never store tokens in `localStorage`/`sessionStorage`.
+  - `lib/auth/session.ts` (`useSession`, `hasPermission`, `resetSession`) and the route guards in `app/auth/` (`RequireSession` → `RequireOrganization` → `RequirePermission`). A 401 from any API call rechecks the session (`onUnauthorized` in `app/providers.tsx`), and the guard sends the user to `/login`.
+  - The fetcher (`packages/api-client/src/http/fetcher.ts`) echoes the `XSRF-TOKEN` cookie as `X-XSRF-TOKEN` on unsafe requests, fetching it first if missing.
+  - The return path and notices travel in router state only (`AuthState`). Emailed secrets arrive in the URL fragment and are stripped on read (`useLinkFragment`).
+  - After sign-in, an organization switch or an MFA change, call `resetSession(queryClient)`: cached data belonged to the previous user or organization.
+  - The auth forms use plain controlled state: React Hook Form and Zod are not installed yet (adding them needs approval).
 - **Permissions:** hide actions the user lacks, but the backend is the enforcement point.
 - **Accessibility:** public routes target WCAG 2.2 AA. Use shadcn/Radix primitives, labelled inputs, visible focus, accessible errors.
 - **Tables:** TanStack Table; server-side pagination/filtering for anything that can exceed ~200 rows.

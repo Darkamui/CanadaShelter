@@ -1,7 +1,174 @@
 {
+  "_frReview": [
+    "mfa.title",
+    "mfa.intro",
+    "mfa.required.body",
+    "organizations.title",
+    "organizations.none",
+    "organizations.current",
+    "staff.lastAdministrator",
+    "accept.alreadyMember"
+  ],
   "ping": {
     "checking": "Vérification du serveur…",
     "up": "Serveur connecté",
     "down": "Serveur injoignable"
+  },
+  "logout": "Se déconnecter",
+  "common": {
+    "unexpectedError": "Une erreur inattendue est survenue. Réessayez.",
+    "loading": "Chargement…",
+    "backToLogin": "Retour à la connexion",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "fields": {
+    "email": "Courriel",
+    "password": "Mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "displayName": "Nom"
+  },
+  "login": {
+    "title": "Connexion",
+    "submit": "Se connecter",
+    "forgot": "Mot de passe oublié ?",
+    "invalid": "Courriel ou mot de passe incorrect.",
+    "notice": {
+      "passwordReset": "Votre mot de passe a été modifié. Connectez-vous avec le nouveau mot de passe.",
+      "accountCreated": "Votre compte a été créé. Connectez-vous pour continuer.",
+      "signedOut": "Vous êtes maintenant déconnecté."
+    }
+  },
+  "mfaChallenge": {
+    "title": "Vérification en deux étapes",
+    "intro": "Entrez le code à six chiffres affiché dans votre application d’authentification.",
+    "recoveryIntro": "Entrez un de vos codes de récupération. Chaque code ne peut servir qu’une fois.",
+    "invalid": "Code invalide. Réessayez.",
+    "backToLogin": "Retour à la connexion",
+    "recoveryCode": "Code de récupération",
+    "submit": "Vérifier",
+    "useCode": "Utiliser un code de l’application",
+    "useRecovery": "Utiliser un code de récupération"
+  },
+  "mfa": {
+    "title": "Authentification à deux facteurs",
+    "intro": "Protégez votre compte avec une application d’authentification (Microsoft Authenticator, Google Authenticator, 1Password…).",
+    "code": "Code à six chiffres",
+    "setupFailed": "Impossible de générer une clé. Réessayez.",
+    "start": "Configurer l’application",
+    "step": {
+      "scan": "Ajoutez un compte dans votre application d’authentification.",
+      "key": "Si le lien ne fonctionne pas, entrez cette clé de configuration :",
+      "code": "Entrez le code affiché par l’application pour confirmer."
+    },
+    "openApp": "Ouvrir dans l’application",
+    "setupKey": "Clé de configuration",
+    "invalidCode": "Code invalide. Vérifiez l’heure de votre appareil et réessayez.",
+    "confirm": "Activer",
+    "enabled": "L’authentification à deux facteurs est activée.",
+    "recoveryCodes": {
+      "title": "Codes de récupération",
+      "body": "Conservez ces codes en lieu sûr. Ils vous permettent de vous connecter si vous perdez l’accès à votre application. Ils ne seront plus affichés.",
+      "saved": "J’ai conservé mes codes"
+    },
+    "required": {
+      "title": "Sécurisez votre compte",
+      "body": "Votre rôle exige l’authentification à deux facteurs. Configurez-la pour continuer."
+    }
+  },
+  "forgot": {
+    "title": "Mot de passe oublié",
+    "intro": "Entrez votre courriel. Si un compte y est associé, vous recevrez un lien pour choisir un nouveau mot de passe.",
+    "sent": "Si un compte est associé à ce courriel, un lien vient d’être envoyé. Vérifiez votre boîte de réception.",
+    "submit": "Envoyer le lien"
+  },
+  "reset": {
+    "title": "Nouveau mot de passe",
+    "invalidLink": "Ce lien est invalide ou expiré.",
+    "requestNew": "Demander un nouveau lien",
+    "submit": "Changer le mot de passe"
+  },
+  "password": {
+    "hint": "Au moins {{count}} caractères.",
+    "tooShort": "Le mot de passe est trop court.",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "rejected": "Ce mot de passe ne respecte pas les exigences de sécurité."
+  },
+  "accept": {
+    "title": "Invitation",
+    "invalidLink": "Cette invitation est invalide, expirée ou révoquée.",
+    "heading": "Rejoindre {{organization}}",
+    "for": "Invitation envoyée à {{email}}.",
+    "newAccount": "Créez votre compte pour accepter l’invitation.",
+    "nameRequired": "Entrez votre nom.",
+    "createAndJoin": "Créer mon compte",
+    "signInFirst": "Un compte existe déjà pour ce courriel. Connectez-vous pour accepter l’invitation.",
+    "signIn": "Se connecter",
+    "signedInAs": "Connecté en tant que {{name}}.",
+    "join": "Accepter l’invitation",
+    "wrongAccount": "Cette invitation est destinée à un autre compte. Déconnectez-vous, puis reconnectez-vous avec le bon courriel.",
+    "alreadyMember": "Vous êtes déjà membre de cet organisme."
+  },
+  "organizations": {
+    "title": "Choisir un organisme",
+    "selectFailed": "Impossible d’ouvrir cet organisme. Réessayez.",
+    "none": "Votre compte n’est lié à aucun organisme. Communiquez avec un administrateur.",
+    "current": "Organisme actuel"
+  },
+  "security": {
+    "title": "Sécurité du compte",
+    "mfaOn": "L’authentification à deux facteurs est activée pour votre compte.",
+    "mfaOff": "L’authentification à deux facteurs n’est pas activée."
+  },
+  "roles": {
+    "administrator": "Administrateur",
+    "staff": "Personnel",
+    "read_only": "Lecture seule"
+  },
+  "staff": {
+    "title": "Équipe",
+    "members": "Membres",
+    "loadFailed": "Impossible de charger les membres.",
+    "roles": "Rôles",
+    "rolesOf": "Rôles de {{name}}",
+    "status": "Statut",
+    "statuses": {
+      "active": "Actif",
+      "suspended": "Suspendu"
+    },
+    "actions": "Actions",
+    "editRoles": "Modifier les rôles",
+    "editRolesOf": "Modifier les rôles de {{name}}",
+    "suspend": "Suspendre",
+    "suspendName": "Suspendre {{name}}",
+    "reactivate": "Réactiver",
+    "reactivateName": "Réactiver {{name}}",
+    "lastAdministrator": "L’organisme doit conserver au moins un administrateur actif."
+  },
+  "invitations": {
+    "title": "Invitations",
+    "invite": "Inviter",
+    "language": "Langue du courriel",
+    "languages": {
+      "fr": "Français",
+      "en": "Anglais"
+    },
+    "sent": "Invitation envoyée à {{email}}.",
+    "revoked": "Invitation révoquée.",
+    "duplicate": "Cette personne est déjà membre ou a déjà une invitation en attente.",
+    "invalid": "Vérifiez le courriel et les rôles.",
+    "closed": "Cette invitation n’est plus en attente.",
+    "loadFailed": "Impossible de charger les invitations.",
+    "none": "Aucune invitation en attente.",
+    "expires": "Expire le",
+    "statuses": {
+      "pending": "En attente",
+      "expired": "Expirée"
+    },
+    "resend": "Renvoyer",
+    "resendTo": "Renvoyer l’invitation à {{email}}",
+    "revoke": "Révoquer",
+    "revokeFor": "Révoquer l’invitation de {{email}}"
   }
 }

@@ -20,7 +20,7 @@ internal sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<Corr
         var correlationId = Resolve(context);
         context.Items[ItemKey] = correlationId;
 
-        // TODO(M2): the authenticated staff user once authentication exists.
+        // Anonymous until authentication: TenantResolutionMiddleware then sets the signed-in user.
         auditContext.Set(AuditActorType.Anonymous, actorId: null, AuditSources.Api, correlationId);
         context.Response.OnStarting(() =>
         {

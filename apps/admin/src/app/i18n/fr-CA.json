@@ -5,7 +5,8 @@
     "nav.operations",
     "nav.engagement",
     "nav.municipal",
-    "nav.platform"
+    "nav.platform",
+    "account.switchOrganization"
   ],
   "appName": "Gestion de refuge",
   "skipToContent": "Aller au contenu",
@@ -35,5 +36,19 @@
   "notFound": {
     "title": "Page introuvable",
     "backHome": "Retour à l'accueil"
+  },
+  "session": {
+    "loading": "Chargement de la session…",
+    "error": "Impossible de joindre le serveur.",
+    "retry": "Réessayer"
+  },
+  "forbidden": {
+    "title": "Accès refusé",
+    "body": "Vous n’avez pas la permission d’afficher cette page."
+  },
+  "account": {
+    "label": "Compte",
+    "switchOrganization": "Changer d’organisme",
+    "security": "Sécurité"
   }
 }

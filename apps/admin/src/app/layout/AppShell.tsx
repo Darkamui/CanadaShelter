@@ -1,10 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
+import { useSession } from '../../lib/auth/session';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
+/** Staff layout. Rendered under `RequireSession` and `RequireOrganization`, so the session is loaded. */
 export function AppShell() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
+  if (!session) return null;
 
   return (
     <div className="flex min-h-svh">
@@ -14,9 +18,9 @@ export function AppShell() {
       >
         {t('skipToContent')}
       </a>
-      <Sidebar />
+      <Sidebar permissions={session.permissions} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
+        <Header session={session} />
         <main id="main" tabIndex={-1} className="flex-1 p-6 outline-none">
           <Outlet />
         </main>

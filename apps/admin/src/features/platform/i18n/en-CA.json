@@ -3,5 +3,162 @@
     "checking": "Checking server…",
     "up": "Server connected",
     "down": "Server unreachable"
+  },
+  "logout": "Sign out",
+  "common": {
+    "unexpectedError": "Something went wrong. Please try again.",
+    "loading": "Loading…",
+    "backToLogin": "Back to sign in",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "fields": {
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "displayName": "Name"
+  },
+  "login": {
+    "title": "Sign in",
+    "submit": "Sign in",
+    "forgot": "Forgot your password?",
+    "invalid": "Incorrect email or password.",
+    "notice": {
+      "passwordReset": "Your password was changed. Sign in with your new password.",
+      "accountCreated": "Your account was created. Sign in to continue.",
+      "signedOut": "You are now signed out."
+    }
+  },
+  "mfaChallenge": {
+    "title": "Two-step verification",
+    "intro": "Enter the six-digit code shown in your authenticator app.",
+    "recoveryIntro": "Enter one of your recovery codes. Each code works only once.",
+    "invalid": "Invalid code. Please try again.",
+    "backToLogin": "Back to sign in",
+    "recoveryCode": "Recovery code",
+    "submit": "Verify",
+    "useCode": "Use a code from the app",
+    "useRecovery": "Use a recovery code"
+  },
+  "mfa": {
+    "title": "Two-factor authentication",
+    "intro": "Protect your account with an authenticator app (Microsoft Authenticator, Google Authenticator, 1Password…).",
+    "code": "Six-digit code",
+    "setupFailed": "Could not generate a key. Please try again.",
+    "start": "Set up the app",
+    "step": {
+      "scan": "Add an account in your authenticator app.",
+      "key": "If the link does not work, enter this setup key:",
+      "code": "Enter the code shown by the app to confirm."
+    },
+    "openApp": "Open in the app",
+    "setupKey": "Setup key",
+    "invalidCode": "Invalid code. Check your device’s clock and try again.",
+    "confirm": "Turn on",
+    "enabled": "Two-factor authentication is on.",
+    "recoveryCodes": {
+      "title": "Recovery codes",
+      "body": "Keep these codes somewhere safe. They let you sign in if you lose access to your app. They will not be shown again.",
+      "saved": "I have saved my codes"
+    },
+    "required": {
+      "title": "Secure your account",
+      "body": "Your role requires two-factor authentication. Set it up to continue."
+    }
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "intro": "Enter your email. If an account uses it, you will receive a link to choose a new password.",
+    "sent": "If an account uses this email, a link is on its way. Check your inbox.",
+    "submit": "Send the link"
+  },
+  "reset": {
+    "title": "New password",
+    "invalidLink": "This link is invalid or has expired.",
+    "requestNew": "Request a new link",
+    "submit": "Change password"
+  },
+  "password": {
+    "hint": "At least {{count}} characters.",
+    "tooShort": "The password is too short.",
+    "mismatch": "The passwords do not match.",
+    "rejected": "This password does not meet the security requirements."
+  },
+  "accept": {
+    "title": "Invitation",
+    "invalidLink": "This invitation is invalid, expired or revoked.",
+    "heading": "Join {{organization}}",
+    "for": "Invitation sent to {{email}}.",
+    "newAccount": "Create your account to accept the invitation.",
+    "nameRequired": "Enter your name.",
+    "createAndJoin": "Create my account",
+    "signInFirst": "An account already exists for this email. Sign in to accept the invitation.",
+    "signIn": "Sign in",
+    "signedInAs": "Signed in as {{name}}.",
+    "join": "Accept the invitation",
+    "wrongAccount": "This invitation is for a different account. Sign out, then sign in with the right email.",
+    "alreadyMember": "You are already a member of this organization."
+  },
+  "organizations": {
+    "title": "Choose an organization",
+    "selectFailed": "Could not open this organization. Please try again.",
+    "none": "Your account is not linked to any organization. Contact an administrator.",
+    "current": "Current organization"
+  },
+  "security": {
+    "title": "Account security",
+    "mfaOn": "Two-factor authentication is on for your account.",
+    "mfaOff": "Two-factor authentication is off."
+  },
+  "roles": {
+    "administrator": "Administrator",
+    "staff": "Staff",
+    "read_only": "Read only"
+  },
+  "staff": {
+    "title": "Team",
+    "members": "Members",
+    "loadFailed": "Could not load members.",
+    "roles": "Roles",
+    "rolesOf": "Roles of {{name}}",
+    "status": "Status",
+    "statuses": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "actions": "Actions",
+    "editRoles": "Edit roles",
+    "editRolesOf": "Edit roles of {{name}}",
+    "suspend": "Suspend",
+    "suspendName": "Suspend {{name}}",
+    "reactivate": "Reactivate",
+    "reactivateName": "Reactivate {{name}}",
+    "lastAdministrator": "The organization must keep at least one active administrator."
+  },
+  "invitations": {
+    "title": "Invitations",
+    "invite": "Invite",
+    "language": "Email language",
+    "languages": {
+      "fr": "French",
+      "en": "English"
+    },
+    "sent": "Invitation sent to {{email}}.",
+    "revoked": "Invitation revoked.",
+    "duplicate": "This person is already a member or already has a pending invitation.",
+    "invalid": "Check the email and roles.",
+    "closed": "This invitation is no longer pending.",
+    "loadFailed": "Could not load invitations.",
+    "none": "No pending invitations.",
+    "expires": "Expires",
+    "statuses": {
+      "pending": "Pending",
+      "expired": "Expired"
+    },
+    "resend": "Resend",
+    "resendTo": "Resend the invitation to {{email}}",
+    "revoke": "Revoke",
+    "revokeFor": "Revoke the invitation for {{email}}"
   }
 }

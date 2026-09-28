@@ -20,23 +20,23 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] `UserAccount` (Platform, internal) on ASP.NET Identity, stored in the composed `ShelterDbContext` (`UserOnlyStore`, no Identity roles).
+- [x] `UserAccount` (Platform, internal) on ASP.NET Identity, stored in the composed `ShelterDbContext` (`UserOnlyStore`, no Identity roles).
   - It is a **global** table: one account, many organizations.
   - Every column is classified.
   - The table is excluded from the tenant audit, with the reason recorded in the ADR.
-- [ ] Secure session cookie:
+- [x] Secure session cookie:
   - `__Host-` name, HttpOnly, Secure, SameSite=Strict, sliding expiry.
   - Security stamp validation: a password or MFA change ends other sessions.
-- [ ] API requests get **401/403 ProblemDetails**, never login redirects.
-- [ ] Password policy (minimum length 12, no composition rules) and lockout (5 failures → 15 min).
-- [ ] Login responses never reveal whether an account exists.
-- [ ] Endpoints: login, logout, and current session (user, memberships, active organization, permissions).
-- [ ] CSRF protection on every state-changing request, including login, using built-in antiforgery (double-submit token and header).
-- [ ] Append-only `platform.security_event` (user id, event type, time, correlation id).
+- [x] API requests get **401/403 ProblemDetails**, never login redirects.
+- [x] Password policy (minimum length 12, no composition rules) and lockout (5 failures → 15 min).
+- [x] Login responses never reveal whether an account exists.
+- [x] Endpoints: login, logout, and current session (user, memberships, active organization, permissions).
+- [x] CSRF protection on every state-changing request, including login, using built-in antiforgery (double-submit token and header).
+- [x] Append-only `platform.security_event` (user id, event type, time, correlation id).
   - Covers login succeeded/failed/locked out, password changed, and MFA changes.
   - No email or IP address.
-- [ ] Development-only seed: a demo organization and an administrator. It is ignored outside Development.
-- [ ] Tests: login/logout/session; same response for a wrong password and an unknown email; lockout; unsafe request without a CSRF token → rejected; cookie flags; 401 is ProblemDetails.
+- [x] Development-only seed: a demo organization and an administrator. It is ignored outside Development.
+- [x] Tests: login/logout/session; same response for a wrong password and an unknown email; lockout; unsafe request without a CSRF token → rejected; cookie flags; 401 is ProblemDetails.
 
 ---
 
@@ -46,16 +46,16 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] Tenant-owned `StaffMembership` (user, status active/suspended):
+- [x] Tenant-owned `StaffMembership` (user, status active/suspended):
   - Unique `(TenantId, UserId)` and RLS through the helper.
   - A **self-read policy**: users can list their own memberships before choosing an organization. The unit of work sets `app.user_id` with `SET LOCAL`.
-- [ ] The tenant comes from the active organization in the session.
+- [x] The tenant comes from the active organization in the session.
   - Every request re-checks it against an **active** membership.
   - A suspended or removed membership → no tenant data (403).
-- [ ] A user with one membership has it selected automatically. Switching organizations only chooses among the caller's own memberships, validated server-side.
-- [ ] The dev `X-Tenant-Id` header resolver is removed. Tests authenticate through a test-only authentication handler, plus real cookie-login tests.
-- [ ] Staff and external participants remain separate authorization classes. An email address matching a staff member's **never** grants staff access.
-- [ ] Tests: a member of A cannot select or read B; suspended → 403; no membership → no tenant data; the self-read policy shows only the caller's rows; the pooled-connection test covers `app.user_id`.
+- [x] A user with one membership has it selected automatically. Switching organizations only chooses among the caller's own memberships, validated server-side.
+- [x] The dev `X-Tenant-Id` header resolver is removed. Tests authenticate through a test-only authentication handler, plus real cookie-login tests.
+- [x] Staff and external participants remain separate authorization classes. An email address matching a staff member's **never** grants staff access.
+- [x] Tests: a member of A cannot select or read B; suspended → 403; no membership → no tenant data; the self-read policy shows only the caller's rows; the pooled-connection test covers `app.user_id`.
 
 ---
 
@@ -124,25 +124,25 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 **Acceptance criteria**
 
-- [ ] The API client sends the CSRF header on unsafe requests. A 401 sends the user to the login page.
-- [ ] Screens:
+- [x] The API client sends the CSRF header on unsafe requests. A 401 sends the user to the login page.
+- [x] Screens:
   - login and MFA challenge;
   - MFA enrollment (setup key, otpauth link, recovery codes shown once) and forced enrollment;
   - organization picker;
   - forgot/reset password and accept invitation;
   - staff list (invite, change roles, suspend).
-- [ ] Routes are guarded by session. Navigation hides modules the user cannot access; the server still enforces.
-- [ ] All strings in fr-CA and en-CA (Québec French; `TODO(fr-review)` where unsure).
-- [ ] Tests: Vitest (guard, CSRF header, MFA and permission gating); Playwright (login → organization → animals, forced enrollment).
+- [x] Routes are guarded by session. Navigation hides modules the user cannot access; the server still enforces.
+- [x] All strings in fr-CA and en-CA (Québec French; `TODO(fr-review)` where unsure).
+- [x] Tests: Vitest (guard, CSRF header, MFA and permission gating); Playwright (login → organization → animals, forced enrollment).
 
 ---
 
 ## M2 exit criteria
 
 - [ ] Every endpoint declares a permission or is on the anonymous allowlist (coverage test green in CI).
-- [ ] No `TODO(M2)` authentication or permission markers remain.
+- [x] No `TODO(M2)` authentication or permission markers remain.
 - [ ] `tenancy-privacy-reviewer` reports no Critical/High findings on M2 code.
-- [ ] `docs/modules/platform.md` describes identity, memberships, permissions and MFA.
+- [x] `docs/modules/platform.md` describes identity, memberships, permissions and MFA.
 - [ ] Daniel has personally reviewed all M2 migrations.
 
 Follow-ups (not M2): custom roles, a shared DataProtection key ring before multi-instance deployment, external portal memberships (architecture §34 step 16), SSO (§9.4).

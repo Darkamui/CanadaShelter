@@ -10,22 +10,28 @@ import {
   Stethoscope,
   Users,
 } from 'lucide-react';
+import { Permissions } from '../lib/auth/permissions';
 
-/** The nine backend modules (architecture §6), in navigation order. Label key: `shell:nav.<key>`. */
+/**
+ * The nine backend modules (architecture §6), in navigation order. Label key: `shell:nav.<key>`.
+ * `permission` hides the entry without it (UX only: the server enforces); `null` = placeholder module
+ * with no read permission yet, always listed.
+ */
 export const MODULES = [
-  { key: 'animals', icon: PawPrint },
-  { key: 'people', icon: Users },
-  { key: 'movements', icon: ArrowLeftRight },
-  { key: 'medical', icon: Stethoscope },
-  { key: 'operations', icon: ClipboardList },
-  { key: 'engagement', icon: HeartHandshake },
-  { key: 'municipal', icon: Landmark },
-  { key: 'reporting', icon: ChartColumn },
-  { key: 'platform', icon: Settings },
-] as const satisfies readonly { key: string; icon: LucideIcon }[];
+  { key: 'animals', icon: PawPrint, permission: Permissions.animalRead },
+  { key: 'people', icon: Users, permission: null },
+  { key: 'movements', icon: ArrowLeftRight, permission: Permissions.movementRead },
+  { key: 'medical', icon: Stethoscope, permission: null },
+  { key: 'operations', icon: ClipboardList, permission: null },
+  { key: 'engagement', icon: HeartHandshake, permission: null },
+  { key: 'municipal', icon: Landmark, permission: null },
+  { key: 'reporting', icon: ChartColumn, permission: null },
+  { key: 'platform', icon: Settings, permission: Permissions.staffRead },
+] as const satisfies readonly { key: string; icon: LucideIcon; permission: string | null }[];
 
-export type ModuleKey = (typeof MODULES)[number]['key'];
-
-export function isModuleKey(value: string | undefined): value is ModuleKey {
-  return MODULES.some((module) => module.key === value);
+/** The modules a user with `permissions` may open. */
+export function visibleModules(permissions: readonly string[]) {
+  return MODULES.filter(
+    ({ permission }) => permission === null || permissions.includes(permission),
+  );
 }

@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-const LOCALE_STORAGE_KEY = 'shelter.locale';
-
-const species = [
-  { code: 'dog', label: { fr: 'Chien', en: 'Dog' } },
-  { code: 'cat', label: { fr: 'Chat', en: 'Cat' } },
-];
+import { mockBaseApi, seedLocale, sessionBody } from './api';
 
 const cases = [
   {
@@ -33,18 +27,11 @@ const cases = [
 for (const c of cases) {
   test.describe(c.locale, () => {
     test.beforeEach(async ({ page }) => {
-      // No backend in E2E: every API call is mocked.
-      await page.route('**/api/**', (route) => route.fulfill({ json: { status: 'ok' } }));
-      await page.route('**/api/animals/species', (route) => route.fulfill({ json: species }));
-      await page.addInitScript(
-        ([key, locale]) => {
-          if (!sessionStorage.getItem('e2e-seeded')) {
-            localStorage.setItem(key, locale);
-            sessionStorage.setItem('e2e-seeded', '1');
-          }
-        },
-        [LOCALE_STORAGE_KEY, c.locale] as const,
+      await mockBaseApi(page);
+      await page.route('**/api/platform/session', (route) =>
+        route.fulfill({ json: sessionBody() }),
       );
+      await seedLocale(page, c.locale);
     });
 
     test('shell renders localized navigation for all modules', async ({ page }) => {

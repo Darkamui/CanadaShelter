@@ -1,9 +1,10 @@
 import { cn } from '@shelter/ui/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
-import { MODULES } from '../modules';
+import { visibleModules } from '../modules';
 
-export function Sidebar() {
+/** Module navigation, limited to what `permissions` allows (UX only: the server enforces). */
+export function Sidebar({ permissions }: { permissions: readonly string[] }) {
   const { t } = useTranslation();
 
   return (
@@ -12,7 +13,7 @@ export function Sidebar() {
       className="w-60 shrink-0 border-r border-sidebar-border bg-sidebar p-3 text-sidebar-foreground"
     >
       <ul className="flex flex-col gap-1">
-        {MODULES.map(({ key, icon: Icon }) => (
+        {visibleModules(permissions).map(({ key, icon: Icon }) => (
           <li key={key}>
             <NavLink
               to={`/${key}`}

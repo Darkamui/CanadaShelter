@@ -27,5 +27,19 @@
   "notFound": {
     "title": "Page not found",
     "backHome": "Back to home"
+  },
+  "session": {
+    "loading": "Loading your session…",
+    "error": "Could not reach the server.",
+    "retry": "Try again"
+  },
+  "forbidden": {
+    "title": "Access denied",
+    "body": "You do not have permission to view this page."
+  },
+  "account": {
+    "label": "Account",
+    "switchOrganization": "Change organization",
+    "security": "Security"
   }
 }

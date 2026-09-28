@@ -81,7 +81,9 @@
 - Staff (M2-3): the organization keeps at least one active administrator (409, serialized by `FOR UPDATE` on its administrators). Role changes are audited and apply on the next request. Other organizations' memberships return 404: `StaffManagementTests`.
 - MFA (M2-4): an administrator or operator without MFA reaches only the session endpoints, and full access follows enrollment in the same session. Two-step login, a recovery code works once and is stored hashed, disabling needs a code, other staff are unaffected, the bypass flag is ignored outside Development: `MfaTests`, `MfaEnforcementTests`.
 - Invitations (M2-5): accepting creates the membership with the invited roles, once. Expired, revoked, replaced and used links are rejected. A link only reaches its own organization. An existing account must be signed in as itself: `InvitationTests`.
-- Password reset (M2-5): a link works once, and forgot/reset answer the same whether or not the account exists: `PasswordResetTests`.
+- Password reset (M2-5): a link works once, and forgot/reset answer the same whether or not the account exists. Both cases enqueue the email job (M2-8): `PasswordResetTests`.
+- Anonymous endpoints that take a password, code or secret are rate limited per client IP, and answer 429 over the limit (M2-8, ADR 0020): `RateLimitingTests`.
+- Expired invitation tokens are purged hourly, and pending ones are kept. A global job sees no tenant rows: `GlobalJobTests`.
 - Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
@@ -96,6 +98,7 @@
   - The fallback policy (every endpoint that declares nothing, including unknown routes) = authenticated active member.
   - Both the permission policies and the fallback also require MFA when the session must use it (see MFA below). `.RequireSession()` does not, so enrollment stays reachable.
   - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, `session/login/mfa`, `session/password/forgot`, `session/password/reset`, `invitations/lookup`, `invitations/accept`, health.
+  - Except for ping, antiforgery and health, these endpoints use the `RateLimitPolicies.Anonymous` limiter (M2-8, ADR 0020): one fixed window per client IP shared by all of them, 20 requests per minute by default (`RateLimiting:Anonymous:*`).
   - The Hangfire dashboard (`/hangfire`, all environments) needs the `PlatformOperator` policy: `shelter:operator=true` and `amr=mfa`.
 - Platform permissions:
   - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
@@ -124,7 +127,7 @@
 - M2-5, ADR 0018. Staff are onboarded by an email invitation; there is no self-sign-up.
 - `platform.staff_invitation` (tenant-owned, forced RLS): email (personal), role keys, language (`fr`/`en`), inviter, created, expires (7 days), accepted/revoked. At most one open invitation per email per organization (filtered unique index). Accepted and revoked rows stay for history.
 - The secret is 32 random bytes, sent base64url in the link's fragment (`{App:PublicBaseUrl}/accept-invitation#token=…`), stored only as its SHA-256.
-- `platform.invitation_token` is **intentionally global**: `token_hash` → `organization_id`, `invitation_id`, `expires_at`, no personal data. It lets an anonymous request find the organization before any tenant is set. Its rows are deleted on accept, revoke and resend.
+- `platform.invitation_token` is **intentionally global**: `token_hash` → `organization_id`, `invitation_id`, `expires_at`, no personal data. It lets an anonymous request find the organization before any tenant is set. Its rows are deleted on accept, revoke and resend. `PurgeExpiredInvitationTokensJob`, a recurring global job (ADR 0010 addendum), deletes expired ones every hour.
 - Endpoints, under `/api/platform/invitations`:
   - `GET` (`ListPlatformInvitations`, `platform.staff.read`): open invitations, `pending` or `expired`.
   - `POST` (`CreatePlatformInvitation`, `platform.staff.manage`): 409 when the email already has a membership or a pending invitation. An expired one is revoked and replaced. The email is sent in the same transaction: a failed send creates nothing.
@@ -137,7 +140,10 @@
 ## Password reset
 
 - M2-5. Identity's reset tokens (data protection, bound to the security stamp, 2 hours).
-- `POST /api/platform/session/password/forgot` (anonymous): always `202` with no body. A link (`{App:PublicBaseUrl}/reset-password#user={id}&token={token}`) is emailed only when the account exists. A failed send is logged by exception type only.
+- `POST /api/platform/session/password/forgot` (anonymous): always `202` with no body.
+  - The request looks up the email, then always enqueues `SendPasswordResetEmailJob` with the user ID, or none for an unknown email. Both answers take the same path and do not reveal whether the account exists.
+  - The job generates the token and emails the link (`{App:PublicBaseUrl}/reset-password#user={id}&token={token}`) when there is an account.
+  - A failed send is logged by exception type only and is not retried: Hangfire would store the exception, whose message can contain the address.
 - `POST /api/platform/session/password/reset` (anonymous): unknown account, wrong, expired or used token → the same 400. Password policy errors → validation problem. Success rotates the security stamp (other sessions end, the link is spent) and records `PasswordChanged`.
 
 ## Email
@@ -165,7 +171,8 @@
   - `PUT /{membershipId}/roles` (`ChangePlatformStaffRoles`)
   - `POST /{membershipId}/suspend` (`SuspendPlatformStaff`) and `POST /{membershipId}/reactivate` (`ReactivatePlatformStaff`)
 - `Features/Invitations/InvitationEndpoints.cs`, `InvitationRedemption.cs`, `Domain/StaffInvitation.cs`, `Communications/PlatformEmails.cs`.
-- `Features/Session/PasswordEndpoints.cs`.
+- `Features/Session/PasswordEndpoints.cs`, `Features/Session/SendPasswordResetEmailJob.cs`, `Features/Invitations/PurgeExpiredInvitationTokensJob.cs`.
+- Rate limiting: `Shelter.Host/Composition/RateLimiting.cs`, `BuildingBlocks/Authorization/RateLimitPolicies.cs`.
 - `Features/Session/MfaEndpoints.cs`, `Identity/ShelterUserStore.cs`; the shared enforcement is in `BuildingBlocks/Authorization/Mfa.cs`.
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
@@ -176,9 +183,7 @@
   - The authenticator key could be encrypted at rest.
   - A used TOTP code can be replayed within its validity window (Identity does not track used steps).
 - Invitation and reset follow-ups:
-  - Expired `invitation_token` rows are not purged (only accept, revoke and resend delete them).
-  - No rate limiting on the anonymous endpoints (forgot-password can be used to spam an address).
-  - Forgot-password takes longer when the account exists (a timing side channel).
+  - The rate limit is per IP and in memory (ADR 0020). Forgot-password can still flood an inbox from many IPs, and forwarded headers must be configured behind a proxy.
   - `lookup` tells the token holder whether the email has an account.
   - A reset does not clear a lockout.
 - Memberships created before M2-3 have no roles, and so no permissions. The development seed gives the demo account `administrator` again.

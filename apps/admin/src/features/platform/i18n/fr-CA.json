@@ -17,6 +17,7 @@
   "logout": "Se déconnecter",
   "common": {
     "unexpectedError": "Une erreur inattendue est survenue. Réessayez.",
+    "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
     "loading": "Chargement…",
     "backToLogin": "Retour à la connexion",
     "save": "Enregistrer",

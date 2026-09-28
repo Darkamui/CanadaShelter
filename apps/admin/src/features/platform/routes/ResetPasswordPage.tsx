@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router';
 import { z } from 'zod';
 import type { AuthState } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
+import { isRateLimited } from '../../../lib/auth/session';
 import {
   MIN_PASSWORD_LENGTH,
   newPasswordFields,
@@ -31,7 +32,8 @@ export function ResetPasswordPage() {
   const { errors } = form.formState;
 
   // A 400 without field errors means the link itself was refused (expired, used, or tampered with).
-  const linkRejected = reset.isError && !validationErrors(reset.error);
+  const rateLimited = isRateLimited(reset.error);
+  const linkRejected = reset.isError && !rateLimited && !validationErrors(reset.error);
 
   if (!userId || !token || linkRejected) {
     return (
@@ -64,6 +66,7 @@ export function ResetPasswordPage() {
   return (
     <>
       <h1 className="text-2xl font-semibold">{t('reset.title')}</h1>
+      {rateLimited && <FormAlert tone="error">{t('common.tooManyAttempts')}</FormAlert>}
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
         <FormField
           label={t('fields.newPassword')}

@@ -1,16 +1,23 @@
+using System.Globalization;
 using System.Net;
+using Npgsql;
 using Shelter.IntegrationTests.Infrastructure;
 
 namespace Shelter.IntegrationTests.Identity;
 
-/// <summary>M2-5: forgot/reset password by email, without revealing which emails have an account.</summary>
+/// <summary>
+/// M2-5: forgot/reset password by email, without revealing which emails have an account. M2-8: the email leaves from
+/// a background job, so this class runs a job server.
+/// </summary>
+[Collection(HangfireTests.Name)]
 public sealed class PasswordResetTests(PostgresFixture postgres) : IAsyncDisposable
 {
     private const string ForgotPath = "/api/platform/session/password/forgot";
     private const string ResetPath = "/api/platform/session/password/reset";
     private const string NewPassword = "une-toute-nouvelle-phrase";
 
-    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString);
+    private readonly DateTime _started = DateTime.UtcNow.AddSeconds(-1);
+    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString) { JobServerEnabled = true };
 
     [Fact]
     public async Task Reset_link_sets_a_new_password_once()
@@ -20,7 +27,7 @@ public sealed class PasswordResetTests(PostgresFixture postgres) : IAsyncDisposa
         await client.FetchAntiforgeryAsync();
 
         Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsync(ForgotPath, new { email = email.ToUpperInvariant() })).StatusCode);
-        var message = Assert.Single(_factory.Emails.SentTo(email));
+        var message = Assert.Single(await _factory.Emails.WaitForAsync(email));
         Assert.Equal("Réinitialisation de votre mot de passe", message.Subject);
         var (linkUser, token) = ParseLink(message.TextBody);
         Assert.Equal(userId, linkUser);
@@ -54,6 +61,10 @@ public sealed class PasswordResetTests(PostgresFixture postgres) : IAsyncDisposa
         Assert.Equal(
             await known.Content.ReadAsStringAsync(TestContext.Current.CancellationToken),
             await unknown.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+
+        // Every request enqueues a job; only the known account gets an email.
+        Assert.Single(await _factory.Emails.WaitForAsync(email));
+        Assert.Equal(3, await EnqueuedResetJobsAsync());
         Assert.Single(_factory.Emails.Sent);
     }
 
@@ -68,6 +79,17 @@ public sealed class PasswordResetTests(PostgresFixture postgres) : IAsyncDisposa
     }
 
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
+
+    // Hangfire (tables owned by the runtime role) stores the job's type and arguments; this factory is the only one enqueueing reset jobs in the class.
+    private async Task<int> EnqueuedResetJobsAsync()
+    {
+        await using var connection = new NpgsqlConnection(postgres.AppConnectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new NpgsqlCommand(
+            "SELECT count(*) FROM hangfire.job WHERE invocationdata::text LIKE '%SendPasswordResetEmailJob%' AND createdat > @since", connection);
+        command.Parameters.AddWithValue("since", _started);
+        return Convert.ToInt32(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken), CultureInfo.InvariantCulture);
+    }
 
     private static (Guid UserId, string Token) ParseLink(string body)
     {

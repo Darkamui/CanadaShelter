@@ -38,6 +38,8 @@ ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real s
 
 - **Module registration:** each module has one public `<Module>Module : IModule` (`BuildingBlocks/Modules`). The Host lists every module explicitly in `Shelter.Host/Composition/ModuleCatalog.cs` and maps it under `/api/{RoutePrefix}` (also the OpenAPI tag). No assembly scanning.
 - **Endpoints:** Minimal APIs, grouped per module, one file per feature. Every endpoint declares a permission with `.RequirePermission(ModulePermissions.X)`, declared in the module's `Authorization/` folder and registered via `services.AddPermissions(...)`. No anonymous endpoints outside the public route group; `EndpointAuthorizationTests` enforces both.
+- **Rate limiting:** an anonymous endpoint that takes a password, code or secret adds `.RequireRateLimiting(RateLimitPolicies.Anonymous)` (ADR 0020); `RateLimitingTests` enforces it.
+- **Jobs:** work on tenant data is an `ITenantJob` (`ITenantJobScheduler`); platform-wide work is an `IGlobalJob` (`IGlobalJobScheduler`, `AddRecurringGlobalJob`), ADR 0010. Job arguments are IDs and codes only.
 - **Handlers:** plain classes injected directly. No MediatR.
 - **Validation:** validator per request, errors returned as RFC 7807 ProblemDetails.
 - **Persistence:** follow ADR 0005: one composed `ShelterDbContext`, module-owned configurations, schema per module. Each module owns its own PostgreSQL schema. Cross-module foreign keys are by ID only, no navigation properties across modules.

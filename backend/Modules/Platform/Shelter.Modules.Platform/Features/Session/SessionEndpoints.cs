@@ -29,7 +29,8 @@ internal static class SessionEndpoints
 
         session.MapPost("/login", Login)
             .WithName("LoginPlatformSession")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
 
         session.MapPost("/logout", Logout)
             .WithName("LogoutPlatformSession")

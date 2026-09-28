@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
-import { isUnauthorized, resetSession } from '../../../lib/auth/session';
+import { isRateLimited, isUnauthorized, resetSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { emailAddress, formMessages } from '../../../lib/forms/schemas';
@@ -57,7 +57,11 @@ export function LoginPage() {
       )}
       {login.isError && (
         <FormAlert tone="error">
-          {isUnauthorized(login.error) ? t('login.invalid') : t('common.unexpectedError')}
+          {isUnauthorized(login.error)
+            ? t('login.invalid')
+            : isRateLimited(login.error)
+              ? t('common.tooManyAttempts')
+              : t('common.unexpectedError')}
         </FormAlert>
       )}
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>

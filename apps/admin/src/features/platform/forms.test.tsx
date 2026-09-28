@@ -90,6 +90,29 @@ describe('forms', () => {
     expect(password).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('says so when the server turns away too many attempts', async () => {
+    mockApi({
+      '/api/platform/session': () => json(401, { status: 401 }),
+      '/api/platform/session/password/reset': () => json(429, { status: 429 }),
+    });
+    renderAt('/reset-password#user=u1&token=t1');
+
+    fireEvent.change(await screen.findByLabelText('Nouveau mot de passe'), {
+      target: { value: 'long enough pass' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirmer le mot de passe'), {
+      target: { value: 'long enough pass' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Changer le mot de passe' }));
+
+    expect(
+      await screen.findByText('Trop de tentatives. Réessayez dans quelques minutes.'),
+    ).toBeInTheDocument();
+    // Not mistaken for a refused link: the form stays.
+    expect(screen.queryByText('Ce lien est invalide ou expiré.')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Nouveau mot de passe')).toBeInTheDocument();
+  });
+
   it('asks for an email before requesting a reset link', async () => {
     const calls = mockApi({ '/api/platform/session': () => json(401, { status: 401 }) });
     renderAt('/forgot-password');

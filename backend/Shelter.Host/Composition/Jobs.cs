@@ -46,6 +46,7 @@ internal static class Jobs
         if (configuration.GetValue(ServerEnabledKey, true) && !IsBuildTimeDocumentGeneration())
         {
             services.AddHangfireServer();
+            services.AddHostedService<RecurringJobRegistration>();
         }
 
         return services;
@@ -68,6 +69,25 @@ internal static class Jobs
             .RequireAuthorization(AuthorizationPolicies.PlatformOperator);
 
         return app;
+    }
+
+    /// <summary>
+    /// Writes every module's <see cref="RecurringGlobalJob"/> schedule to Hangfire's storage at startup. Only a host
+    /// with a job server runs it, so a host that only enqueues (tests, tools) leaves the schedules alone.
+    /// </summary>
+    private sealed class RecurringJobRegistration(IEnumerable<RecurringGlobalJob> jobs, IRecurringJobManager manager) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            foreach (var job in jobs)
+            {
+                job.Register(manager);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private static bool IsBuildTimeDocumentGeneration() =>

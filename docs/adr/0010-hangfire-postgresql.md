@@ -42,3 +42,15 @@ V1 needs work that is scheduled, recurring and retryable: reminders, scheduled c
   - The runner opens a new DI scope, sets the tenant, and runs the job inside a `UnitOfWork`.
   - A payload without a tenant throws before any data access.
 - **Dashboard:** until staff authentication and a platform-admin policy exist (M2), `/hangfire` is mapped only in Development and only for local requests. It does not exist in other environments.
+
+## Addendum (2026-09-27, M2-8): global jobs
+
+- **Why.** Some work belongs to no tenant: platform-wide tables such as accounts and `platform.invitation_token`. Running it as a tenant job would mean inventing a tenant.
+- **Pattern.** An `IGlobalJob<TArgs>` job runs through `GlobalJobRunner<TJob, TArgs>`:
+  - it gets a new DI scope, an audit source of `job:<name>` and one unit of work, like a tenant job;
+  - it never sets a tenant, so RLS hides every tenant-owned row.
+  - Enqueue with `IGlobalJobScheduler`, and register the job with `AddGlobalJob`. Tenant data stays in `ITenantJob`.
+- **Recurring jobs.** Modules declare them with `AddRecurringGlobalJob<TJob, TArgs>(id, cron, args)`. A host that runs a job server writes the schedules to Hangfire at startup. Hosts that only enqueue (tests, the OpenAPI export) leave them alone.
+- **Arguments.** The rule is unchanged: IDs and codes only, never personal data. The first two jobs:
+  - `SendPasswordResetEmailJob` carries a user ID or nothing.
+  - `PurgeExpiredInvitationTokensJob` runs hourly with no arguments.

@@ -24,6 +24,11 @@ export function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401;
 }
 
+/** The server's rate limiter turned the request away (429): too many attempts from this address. */
+export function isRateLimited(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 429;
+}
+
 export function statusOf(error: unknown): number | undefined {
   return error instanceof ApiError ? error.status : undefined;
 }

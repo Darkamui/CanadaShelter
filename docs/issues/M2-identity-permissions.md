@@ -137,6 +137,31 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 ---
 
+## M2-7 Admin form stack (follow-up, added before M3)
+
+**Docs:** ADR 0019
+
+**Acceptance criteria**
+
+- [x] The M2 forms use React Hook Form + Zod through `useZodForm`. Error messages are catalog keys, translated at render time.
+- [x] Server validation errors show on their field (`applyValidationErrors`).
+- [x] Tests: schemas and server-error mapping (Vitest); the reset, forgot and invite forms block invalid input.
+
+---
+
+## M2-8 Auth hardening (follow-up, added before M3)
+
+**Docs:** ADR 0020, ADR 0010 addendum
+
+**Acceptance criteria**
+
+- [x] The anonymous endpoints that take a password, code or secret are rate limited per client IP, with a `429` problem and `Retry-After`. The admin app says "too many attempts".
+- [x] Forgot-password sends its email from a background job, enqueued for known and unknown emails alike (closes the timing side channel). Job arguments are IDs only.
+- [x] A recurring global job purges expired `invitation_token` rows hourly.
+- [x] Tests: 429 over the limit and a guard that every other anonymous endpoint is limited (`RateLimitingTests`); the purge (`GlobalJobTests`); reset through the job (`PasswordResetTests`).
+
+---
+
 ## M2 exit criteria
 
 - [ ] Every endpoint declares a permission or is on the anonymous allowlist (coverage test green in CI).

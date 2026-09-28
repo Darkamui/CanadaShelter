@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { z } from 'zod';
 import { paths } from '../../../lib/auth/paths';
+import { isRateLimited } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { emailAddress } from '../../../lib/forms/schemas';
@@ -27,7 +28,13 @@ export function ForgotPasswordPage() {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{t('forgot.intro')}</p>
-          {forgot.isError && <FormAlert tone="error">{t('common.unexpectedError')}</FormAlert>}
+          {forgot.isError && (
+            <FormAlert tone="error">
+              {isRateLimited(forgot.error)
+                ? t('common.tooManyAttempts')
+                : t('common.unexpectedError')}
+            </FormAlert>
+          )}
           <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
             <FormField
               label={t('fields.email')}

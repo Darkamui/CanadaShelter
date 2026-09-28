@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.Jobs;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Platform.Authorization;
@@ -35,6 +36,9 @@ public sealed class PlatformModule : IModule
         services.AddShelterIdentity(configuration);
         services.AddSingleton<PublicLinks>();
         services.AddScoped<InvitationRedemption>();
+        services.AddGlobalJob<SendPasswordResetEmailJob, SendPasswordResetEmailArgs>();
+        services.AddRecurringGlobalJob<PurgeExpiredInvitationTokensJob, NoJobArgs>(
+            PurgeExpiredInvitationTokensJob.RecurringId, "0 * * * *", NoJobArgs.Value);
         services.AddHostedService<DevelopmentSeed>();
     }
 

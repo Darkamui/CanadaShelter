@@ -25,6 +25,7 @@ builder.Services.AddShelterAuthentication(builder.Configuration, builder.Environ
 builder.Services.AddShelterPersistence();
 builder.Services.AddShelterHealthChecks();
 builder.Services.AddShelterJobHosting(builder.Configuration);
+builder.Services.AddShelterRateLimiting(builder.Configuration);
 builder.Services.AddShelterEmail(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
@@ -44,6 +45,7 @@ app.UseStatusCodePages();
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

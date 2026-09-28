@@ -50,11 +50,13 @@ internal static class InvitationEndpoints
 
         invitations.MapPost("/lookup", Lookup)
             .WithName("LookupPlatformInvitation")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
 
         invitations.MapPost("/accept", Accept)
             .WithName("AcceptPlatformInvitation")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
     }
 
     /// <summary>Open invitations (not accepted, not revoked), newest first; expired ones included, to resend.</summary>

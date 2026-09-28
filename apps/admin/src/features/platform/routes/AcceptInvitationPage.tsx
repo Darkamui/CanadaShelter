@@ -15,7 +15,7 @@ import {
   newPasswordFields,
   passwordsMatch,
 } from '../../../lib/auth/passwords';
-import { resetSession, statusOf, useSession } from '../../../lib/auth/session';
+import { isRateLimited, resetSession, statusOf, useSession } from '../../../lib/auth/session';
 import { useLinkFragment } from '../../../lib/auth/useLinkFragment';
 import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
@@ -50,7 +50,9 @@ export function AcceptInvitationPage() {
         <FormAlert tone="error">
           {!token || statusOf(lookup.error) === 404
             ? t('accept.invalidLink')
-            : t('common.unexpectedError')}
+            : isRateLimited(lookup.error)
+              ? t('common.tooManyAttempts')
+              : t('common.unexpectedError')}
         </FormAlert>
       </>
     );
@@ -208,6 +210,8 @@ function acceptError(error: unknown, t: (key: string) => string): string {
       return t('accept.invalidLink');
     case 409:
       return t('accept.alreadyMember');
+    case 429:
+      return t('common.tooManyAttempts');
     default:
       return t('common.unexpectedError');
   }

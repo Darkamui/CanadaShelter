@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
-using Shelter.BuildingBlocks.Communications;
+using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.Jobs;
 using Shelter.Modules.Platform.Communications;
 using Shelter.Modules.Platform.Domain;
 using Shelter.Modules.Platform.Identity;
@@ -15,13 +15,14 @@ namespace Shelter.Modules.Platform.Features.Session;
 /// Password reset by email (M2-5), on Identity's reset tokens (data protection, bound to the security stamp, valid
 /// <see cref="PlatformEmails.PasswordResetLifetimeHours"/> hours):
 /// <list type="bullet">
-/// <item><c>POST /session/password/forgot</c>: always <c>202</c>, whether or not the email has an account.</item>
+/// <item><c>POST /session/password/forgot</c>: always <c>202</c>, whether or not the email has an account; the email
+/// leaves from <see cref="SendPasswordResetEmailJob"/>.</item>
 /// <item><c>POST /session/password/reset</c>: sets the new password; the security stamp rotates, so every session of
 /// the account ends. Recorded in <c>security_event</c>.</item>
 /// </list>
-/// Both are anonymous.
+/// Both are anonymous and rate limited per client IP (<see cref="RateLimitPolicies.Anonymous"/>).
 /// </summary>
-internal static partial class PasswordEndpoints
+internal static class PasswordEndpoints
 {
     public static void Map(RouteGroupBuilder session)
     {
@@ -29,39 +30,26 @@ internal static partial class PasswordEndpoints
 
         password.MapPost("/forgot", Forgot)
             .WithName("ForgotPlatformSessionPassword")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
 
         password.MapPost("/reset", Reset)
             .WithName("ResetPlatformSessionPassword")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
     }
 
     /// <summary>
-    /// Emails a reset link when the email has an account. The answer never says which: same status, same body, and a
-    /// failed send is logged (without the address) rather than reported.
+    /// Emails a reset link when the email has an account. The answer never says which: same status, same body, and the
+    /// email leaves from a background job enqueued either way, so the response time does not tell either.
     /// </summary>
     internal static async Task<Accepted> Forgot(
         ForgotPasswordRequest request,
         UserManager<UserAccount> userManager,
-        IEmailSender emailSender,
-        PublicLinks links,
-        ILoggerFactory loggerFactory,
-        CancellationToken cancellationToken)
+        IGlobalJobScheduler jobs)
     {
         var user = string.IsNullOrWhiteSpace(request.Email) ? null : await userManager.FindByEmailAsync(request.Email.Trim());
-        if (user?.Email is not null)
-        {
-            var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            try
-            {
-                await emailSender.SendAsync(PlatformEmails.PasswordReset(user.Email, user.PreferredLanguage, links.ResetPassword(user.Id, token)), cancellationToken);
-            }
-            catch (Exception exception) when (exception is System.Net.Mail.SmtpException or InvalidOperationException or IOException)
-            {
-                LogSendFailed(loggerFactory.CreateLogger(typeof(PasswordEndpoints)), exception.GetType().Name);
-            }
-        }
-
+        jobs.Enqueue<SendPasswordResetEmailJob, SendPasswordResetEmailArgs>(new SendPasswordResetEmailArgs(user?.Id));
         return TypedResults.Accepted((string?)null);
     }
 
@@ -98,9 +86,6 @@ internal static partial class PasswordEndpoints
 
     private static ProblemHttpResult InvalidLink() =>
         TypedResults.Problem(statusCode: StatusCodes.Status400BadRequest, title: "This reset link is invalid or has expired.");
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Password reset email could not be sent ({ExceptionType}).")]
-    private static partial void LogSendFailed(ILogger logger, string exceptionType);
 }
 
 /// <summary>Asks for a reset link.</summary>

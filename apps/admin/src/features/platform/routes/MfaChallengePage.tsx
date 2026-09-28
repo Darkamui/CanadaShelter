@@ -7,7 +7,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
-import { resetSession } from '../../../lib/auth/session';
+import { isRateLimited, resetSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { requiredText } from '../../../lib/forms/schemas';
@@ -46,7 +46,7 @@ export function MfaChallengePage() {
       </p>
       {verify.isError && (
         <FormAlert tone="error">
-          {t('mfaChallenge.invalid')}{' '}
+          {isRateLimited(verify.error) ? t('common.tooManyAttempts') : t('mfaChallenge.invalid')}{' '}
           <Link to={paths.login} className="underline underline-offset-4">
             {t('mfaChallenge.backToLogin')}
           </Link>

@@ -33,7 +33,8 @@ internal static class MfaEndpoints
     {
         session.MapPost("/login/mfa", Login)
             .WithName("LoginPlatformSessionMfa")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Anonymous);
 
         var mfa = session.MapGroup("/mfa");
 

@@ -50,6 +50,9 @@ public sealed class ShelterApiFactory(string appConnectionString, params IModule
         builder.UseSetting("Jobs:ServerEnabled", JobServerEnabled ? "true" : "false");
         builder.UseSetting("Jobs:QueuePollInterval", "00:00:00.500");
         builder.UseSetting("App:PublicBaseUrl", PublicBaseUrl);
+
+        // Test requests have no client IP, so they all share one window; only rate limit tests lower this.
+        builder.UseSetting("RateLimiting:Anonymous:PermitLimit", "100000");
         foreach (var (key, value) in Settings)
         {
             builder.UseSetting(key, value);

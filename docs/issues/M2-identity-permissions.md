@@ -164,11 +164,11 @@ Order: M2-1 → M2-2 → M2-3 → (M2-4, M2-5 in parallel) → M2-6.
 
 ## M2 exit criteria
 
-- [ ] Every endpoint declares a permission or is on the anonymous allowlist (coverage test green in CI).
+- [x] Every endpoint declares a permission or is on the anonymous allowlist (coverage test green in CI on PR #3).
 - [x] No `TODO(M2)` authentication or permission markers remain.
 - [x] `tenancy-privacy-reviewer` reports no Critical/High findings on M2 code (full M2 range reviewed 2026-09-27: none; deferred items listed in `docs/modules/platform.md`).
 - [x] `docs/modules/platform.md` describes identity, memberships, permissions and MFA.
-- [ ] Daniel has personally reviewed all M2 migrations.
+- [x] Daniel has personally reviewed all M2 migrations (PR #3, merged).
 
 Follow-ups (not M2): custom roles, a shared DataProtection key ring before multi-instance deployment, external portal memberships (architecture §34 step 16), SSO (§9.4).
 

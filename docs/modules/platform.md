@@ -28,7 +28,8 @@
 - **Tenancy:**
   - Entities implement `ITenantOwned`. `TenantStampingInterceptor` stamps `TenantId` and rejects cross-tenant or tenant-less writes.
   - A global query filter hides everything when no tenant is set.
-  - `TenantContext` is scoped. `DevelopmentHeaderTenantResolver` (`X-Tenant-Id`) is registered only in Development; everywhere else resolution fails closed.
+  - `TenantContext` is scoped. Since M2-2 the only resolver is `MembershipTenantResolver` (ADR 0018): the session's active organization, re-checked against an active `staff_membership` on every request. The M1 dev header (`X-Tenant-Id`) is gone; integration tests sign in through a test-only scheme (`TestAuthentication`). `SignInAs` counts as signed in with MFA (`amr=mfa`) unless the test passes its own `amr` claim.
+  - `UserContext` (scoped) holds the signed-in account; `TenantTransactionInterceptor` also runs `SET LOCAL app.user_id`, read by `platform.current_user_id()` and the `self_read` policy (`EnableSelfRead`).
 - **RLS (ADR 0004):**
   - `UnitOfWorkEndpointFilter` wraps every tenant request in a transaction.
   - `TenantTransactionInterceptor` runs `SET LOCAL app.tenant_id` when the transaction starts.
@@ -76,23 +77,116 @@
 - Audit rows are append-only for the runtime role, with before/after values and actor: `AuditCaptureTests`, `RuntimeRoleTests`.
 - Personal values are unrecoverable after a shred: `CryptoShreddingTests`. Person-linked entities are fully classified: `ClassificationRuleTests`.
 - Reference overrides stay inside their tenant, and system values are read-only: `ReferenceDataEndpointTests`.
+- Permissions (M2-3): every endpoint declares a permission, the session policy or the operator policy, or is allowlisted anonymous. Every permission endpoint returns 403 to a member without it. An undeclared endpoint needs a member: `EndpointAuthorizationTests`. The role → permission mapping: `PermissionCatalogTests`.
+- Staff (M2-3): the organization keeps at least one active administrator (409, serialized by `FOR UPDATE` on its administrators). Role changes are audited and apply on the next request. Other organizations' memberships return 404: `StaffManagementTests`.
+- MFA (M2-4): an administrator or operator without MFA reaches only the session endpoints, and full access follows enrollment in the same session. Two-step login, a recovery code works once and is stored hashed, disabling needs a code, other staff are unaffected, the bypass flag is ignored outside Development: `MfaTests`, `MfaEnforcementTests`.
+- Invitations (M2-5): accepting creates the membership with the invited roles, once. Expired, revoked, replaced and used links are rejected. A link only reaches its own organization. An existing account must be signed in as itself: `InvitationTests`.
+- Password reset (M2-5): a link works once, and forgot/reset answer the same whether or not the account exists. Both cases enqueue the email job (M2-8): `PasswordResetTests`.
+- Anonymous endpoints that take a password, code or secret are rate limited per client IP, and answer 429 over the limit (M2-8, ADR 0020): `RateLimitingTests`.
+- Expired invitation tokens are purged hourly, and pending ones are kept. A global job sees no tenant rows: `GlobalJobTests`.
+- Memberships (M2-2): no tenant without an active membership, suspension effective on the next request, organization switch only among own memberships, self-read limited to own rows and SELECT: `MembershipTests`. `app.user_id` never outlives its transaction: `PooledConnectionTests`.
 
 ## Permissions
 
-- None yet. `ping` and the reference-list endpoints are `.AllowAnonymous()` until identity arrives (M2).
+- Model (M2-3, ADR 0018):
+  - Each module declares `PermissionDefinition(name, Read/Write, Sensitive)` in its `Authorization/` folder and registers them with `services.AddPermissions(...)`. `PermissionCatalog` rejects duplicate names.
+  - System roles, stored in `staff_membership.role_keys`: `administrator` = all, `staff` = every non-sensitive permission, `read_only` = every non-sensitive read. Unknown keys grant nothing.
+  - `MembershipTenantResolver` resolves the tenant and the permissions from one membership row per request. They are exposed as `IPermissionContext` and returned sorted in `GET /api/platform/session` (`permissions`).
+- Endpoint rules:
+  - `.RequirePermission(name)` = active member of the active organization + that permission.
+  - `.RequireSession()` = signed in, no organization needed.
+  - The fallback policy (every endpoint that declares nothing, including unknown routes) = authenticated active member.
+  - Both the permission policies and the fallback also require MFA when the session must use it (see MFA below). `.RequireSession()` does not, so enrollment stays reachable.
+  - Anonymous endpoints are only those on the allowlist in `EndpointAuthorizationTests`: ping, `session/antiforgery`, `session/login`, `session/login/mfa`, `session/password/forgot`, `session/password/reset`, `invitations/lookup`, `invitations/accept`, health.
+  - Except for ping, antiforgery and health, these endpoints use the `RateLimitPolicies.Anonymous` limiter (M2-8, ADR 0020): one fixed window per client IP shared by all of them, 20 requests per minute by default (`RateLimiting:Anonymous:*`).
+  - The Hangfire dashboard (`/hangfire`, all environments) needs the `PlatformOperator` policy: `shelter:operator=true` and `amr=mfa`.
+- Platform permissions:
+  - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
+  - `platform.staff.manage` (sensitive): change roles, suspend, reactivate. Sensitive so that no non-admin role can grant itself anything.
+  - `audit.read` (sensitive): checked by `AuditReader` itself (`AuditReadDeniedException`).
+
+## MFA
+
+- M2-4, ADR 0018. Identity's TOTP authenticator (RFC 6238, 6 digits, 30 s) and 10 single-use recovery codes.
+- Required for the `administrator` role of the active organization and for platform operators. `MembershipTenantResolver` sets `IMfaContext.EnrollmentRequired` when such a session did not sign in with MFA (`amr` is not `mfa`). The `MfaRequirement` in every tenant policy then answers 403, and `GET /api/platform/session` returns `mfaEnrollmentRequired: true`. Optional for everyone else.
+- Endpoints, under `/api/platform/session`, antiforgery like every module route:
+  - `POST /login/mfa` (`LoginPlatformSessionMfa`, anonymous): the second login step after `status: mfaRequired`, with `code` or `recoveryCode`. It needs Identity's 5-minute two-factor cookie from the password step; otherwise 401.
+  - `POST /mfa/setup` (`SetupPlatformSessionMfa`): a new key (`sharedKey`, `otpauth://totp/Shelter:{email}?…`). 409 once enabled.
+  - `POST /mfa/enable` (`EnablePlatformSessionMfa`): confirms a code. It returns the recovery codes (shown once) and re-issues the session cookie as `amr=mfa`.
+  - `POST /mfa/disable` (`DisablePlatformSessionMfa`): needs a current code; the session goes back to `amr=pwd`.
+  - Enrollment, removal and each reset of the key rotate the security stamp, so other sessions end.
+- Codes:
+  - A wrong code counts toward the lockout (5 → 15 min), including on enable and disable.
+  - Recovery codes are stored as SHA-256 hashes (`ShelterUserStore`); Identity's default keeps them in plain text.
+  - The authenticator key is stored in plain text in `user_token`, because checking a code needs it.
+- `security_event` records `MfaEnabled`, `MfaDisabled` and `RecoveryCodeUsed`, plus `LoginSucceeded`/`LoginFailed`/`LockedOut` for the second step. The password step of an MFA login records nothing.
+- Development bypass: `Auth:Mfa:DevelopmentBypass=true` (set in `appsettings.Development.json`) turns enforcement off **only** when the environment is Development, with a startup warning. It is ignored everywhere else (`MfaEnforcement.From`).
+
+## Invitations
+
+- M2-5, ADR 0018. Staff are onboarded by an email invitation; there is no self-sign-up.
+- `platform.staff_invitation` (tenant-owned, forced RLS): email (personal), role keys, language (`fr`/`en`), inviter, created, expires (7 days), accepted/revoked. At most one open invitation per email per organization (filtered unique index). Accepted and revoked rows stay for history.
+- The secret is 32 random bytes, sent base64url in the link's fragment (`{App:PublicBaseUrl}/accept-invitation#token=…`), stored only as its SHA-256.
+- `platform.invitation_token` is **intentionally global**: `token_hash` → `organization_id`, `invitation_id`, `expires_at`, no personal data. It lets an anonymous request find the organization before any tenant is set. Its rows are deleted on accept, revoke and resend. `PurgeExpiredInvitationTokensJob`, a recurring global job (ADR 0010 addendum), deletes expired ones every hour.
+- Endpoints, under `/api/platform/invitations`:
+  - `GET` (`ListPlatformInvitations`, `platform.staff.read`): open invitations, `pending` or `expired`.
+  - `POST` (`CreatePlatformInvitation`, `platform.staff.manage`): 409 when the email already has a membership or a pending invitation. An expired one is revoked and replaced. The email is sent in the same transaction: a failed send creates nothing.
+  - `POST /{id}/resend` and `POST /{id}/revoke` (`platform.staff.manage`): resend renews the 7 days and issues a new secret (the old link dies).
+  - `POST /lookup` (anonymous): organization name, email, `accountExists`, for the accept page.
+  - `POST /accept` (anonymous): a new email sets a name and password (the account is created with the email confirmed). An email that already has an account needs that account signed in (403 otherwise); an email match alone grants nothing. 409 if already a member.
+  - An unknown, expired, revoked or used secret is always 404.
+- `InvitationRedemption` reads the global token, then works in a **new DI scope** whose tenant is the token's organization, in one unit of work, with the invitation locked `FOR UPDATE`. The request's own scope may belong to another organization.
+
+## Password reset
+
+- M2-5. Identity's reset tokens (data protection, bound to the security stamp, 2 hours).
+- `POST /api/platform/session/password/forgot` (anonymous): always `202` with no body.
+  - The request looks up the email, then always enqueues `SendPasswordResetEmailJob` with the user ID, or none for an unknown email. Both answers take the same path and do not reveal whether the account exists.
+  - The job generates the token and emails the link (`{App:PublicBaseUrl}/reset-password#user={id}&token={token}`) when there is an account.
+  - A failed send is logged by exception type only and is not retried: Hangfire would store the exception, whose message can contain the address.
+- `POST /api/platform/session/password/reset` (anonymous): unknown account, wrong, expired or used token → the same 400. Password policy errors → validation problem. Success rotates the security stamp (other sessions end, the link is spent) and records `PasswordChanged`.
+
+## Email
+
+- `IEmailSender` (`BuildingBlocks/Communications/EmailSender.cs`): minimal SMTP (`System.Net.Mail`), to be replaced by the Communications building block. Configuration section `Email` (`From`, `FromName`, `Host`, `Port`, `EnableSsl`, `UserName`, `Password`). Development points at Mailpit (`127.0.0.1:1025`, UI on `http://localhost:8025`).
+- `PlatformEmails` builds the invitation and reset emails in `fr` or `en`: the account's preferred language, otherwise the invitation's. `PublicLinks` builds links from `App:PublicBaseUrl`.
+- Tests swap in `CapturingEmailSender` (`ShelterApiFactory.Emails`).
+
+## Admin app (M2-6)
+
+- Screens in `apps/admin/src/features/platform/routes`. Routes are English and match the emailed links (`PublicLinks`): `/login`, `/login/mfa`, `/forgot-password`, `/reset-password`, `/accept-invitation` (public); `/organizations`, `/mfa/enroll` (signed in); `/platform/staff`, `/account/security` (inside the shell).
+- Guards: `RequireSession` (401 → `/login`, remembering the page), then `RequireOrganization` (no active organization → picker; `mfaEnrollmentRequired` → forced enrollment), then `RequirePermission` per page. Navigation hides modules without their read permission; placeholder modules with no permission yet stay listed. All of this is UX only: the server enforces.
+- The picker chooses automatically when there is exactly one membership. The staff page shows actions only with `platform.staff.manage`; a 409 from the last-administrator guard gets its own message.
+- MFA enrollment shows the setup key and the `otpauth://` link (no QR code: it would need a new dependency) and the recovery codes once. There is no screen to turn MFA off yet (`DisablePlatformSessionMfa` exists).
+- Forms use React Hook Form + Zod (`lib/forms`, ADR 0019). Server field refusals, such as a password rejected by Identity, show on the field.
+- Tests: `apps/admin/src/app/router.test.tsx` (guards, forced enrollment, permission gating, 401 mid-session), `src/lib/auth/auth.test.ts`, `src/features/platform/forms.test.tsx` (client and server validation), the fetcher CSRF tests, and `tests/e2e/auth.spec.ts` (login → organization → animals, forced enrollment) in both locales.
 
 ## Key files
 
 - `Domain/Organization.cs`, `Domain/TenantSetting.cs`, `Persistence/PlatformModelContributor.cs`, `Provisioning/OrganizationProvisioner.cs`.
 - `Features/Ping/PingEndpoint.cs`: `GET /api/platform/ping` (`GetPlatformPing`).
+- `Authorization/PlatformPermissions.cs`; the shared model is in `BuildingBlocks/Authorization/Permissions.cs` and `EndpointAuthorizationExtensions.cs`.
+- `Features/Staff/StaffEndpoints.cs`, under `/api/platform/staff`:
+  - `GET` (`ListPlatformStaff`)
+  - `PUT /{membershipId}/roles` (`ChangePlatformStaffRoles`)
+  - `POST /{membershipId}/suspend` (`SuspendPlatformStaff`) and `POST /{membershipId}/reactivate` (`ReactivatePlatformStaff`)
+- `Features/Invitations/InvitationEndpoints.cs`, `InvitationRedemption.cs`, `Domain/StaffInvitation.cs`, `Communications/PlatformEmails.cs`.
+- `Features/Session/PasswordEndpoints.cs`, `Features/Session/SendPasswordResetEmailJob.cs`, `Features/Invitations/PurgeExpiredInvitationTokensJob.cs`.
+- Rate limiting: `Shelter.Host/Composition/RateLimiting.cs`, `BuildingBlocks/Authorization/RateLimitPolicies.cs`.
+- `Features/Session/MfaEndpoints.cs`, `Identity/ShelterUserStore.cs`; the shared enforcement is in `BuildingBlocks/Authorization/Mfa.cs`.
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
 
 ## Open questions / TODO
 
-- **M2:**
-  - Add an authorization `FallbackPolicy` and permissions for ping, the reference lists, `IAuditReader` and the Hangfire dashboard.
-  - Replace the dev header resolver.
+- MFA follow-ups:
+  - The authenticator key could be encrypted at rest.
+  - A used TOTP code can be replayed within its validity window (Identity does not track used steps).
+- Invitation and reset follow-ups:
+  - The rate limit is per IP and in memory (ADR 0020). Forgot-password can still flood an inbox from many IPs, and forwarded headers must be configured behind a proxy.
+  - `lookup` tells the token holder whether the email has an account.
+  - A reset does not clear a lockout.
+- Memberships created before M2-3 have no roles, and so no permissions. The development seed gives the demo account `administrator` again.
 - Known gaps (from the reviewer):
   - `AuditRecord.Metadata` is not classified, so callers must keep personal data out of it.
   - `EntityId` is assumed to be non-personal.

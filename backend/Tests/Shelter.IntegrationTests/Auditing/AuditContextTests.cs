@@ -22,12 +22,10 @@ namespace Shelter.IntegrationTests.Auditing;
 [Collection(HangfireTests.Name)]
 public sealed class AuditContextTests(PostgresFixture postgres) : IAsyncDisposable
 {
-    private const string TenantHeader = "X-Tenant-Id";
     private const string CorrelationHeader = "X-Correlation-Id";
 
     private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString, new AuditProbeModule())
     {
-        EnvironmentName = "Development",
         ConfigureServices = services => services.AddTenantJob<AuditingJob, AuditingJobArgs>(),
     };
 
@@ -35,11 +33,11 @@ public sealed class AuditContextTests(PostgresFixture postgres) : IAsyncDisposab
     private readonly Guid _entityId = Guid.CreateVersion7();
 
     [Fact]
-    public async Task Request_stamps_source_api_anonymous_actor_and_its_correlation_id()
+    public async Task Request_stamps_source_api_the_signed_in_user_and_its_correlation_id()
     {
-        using var client = _factory.CreateClient();
+        var user = await TestMemberships.NewMemberAsync(postgres.AppConnectionString, _tenant);
+        using var client = await _factory.CreateAntiforgeryClientAsync(user, _tenant);
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"/api/test-audit/{_entityId:D}", UriKind.Relative));
-        request.Headers.Add(TenantHeader, _tenant.ToString("D"));
         request.Headers.Add(CorrelationHeader, "corr-api-1");
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
@@ -47,8 +45,8 @@ public sealed class AuditContextTests(PostgresFixture postgres) : IAsyncDisposab
 
         var row = Assert.Single(await ReadAuditAsync());
         Assert.Equal(AuditSources.Api, row.Source);
-        Assert.Equal(nameof(AuditActorType.Anonymous), row.ActorType);
-        Assert.Null(row.ActorId);
+        Assert.Equal(nameof(AuditActorType.User), row.ActorType);
+        Assert.Equal(user, row.ActorId);
         Assert.Equal("corr-api-1", row.CorrelationId);
         Assert.Equal("Probed", row.Action);
     }

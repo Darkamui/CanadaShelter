@@ -23,6 +23,111 @@ namespace Shelter.Migrations.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("claim_type")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("ClaimValue")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("claim_value")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_claim");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_claim_user_id");
+
+                    b.ToTable("user_claim", "platform");
+
+                    b.HasAnnotation("Shelter:AuditSubject", "UserId");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("login_provider")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("ProviderKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("provider_key")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("provider_display_name")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("LoginProvider", "ProviderKey")
+                        .HasName("pk_user_login");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_login_user_id");
+
+                    b.ToTable("user_login", "platform");
+
+                    b.HasAnnotation("Shelter:AuditSubject", "UserId");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("login_provider")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("value")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.HasKey("UserId", "LoginProvider", "Name")
+                        .HasName("pk_user_token");
+
+                    b.ToTable("user_token", "platform");
+
+                    b.HasAnnotation("Shelter:AuditSubject", "UserId");
+                });
+
             modelBuilder.Entity("Shelter.BuildingBlocks.Auditing.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -145,11 +250,13 @@ namespace Shelter.Migrations.Migrations
                     b.Property<string>("Code")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("code");
+                        .HasColumnName("code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
-                        .HasColumnName("sort_order");
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Label", "Shelter.Modules.Animals.Domain.Species.Label#LocalizedText", b1 =>
                         {
@@ -239,11 +346,13 @@ namespace Shelter.Migrations.Migrations
                     b.Property<string>("Code")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("code");
+                        .HasColumnName("code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
-                        .HasColumnName("sort_order");
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Label", "Shelter.Modules.Movements.Domain.IntakeReason.Label#LocalizedText", b1 =>
                         {
@@ -328,6 +437,39 @@ namespace Shelter.Migrations.Migrations
                     b.ToTable("intake_reason_override", "movements");
                 });
 
+            modelBuilder.Entity("Shelter.Modules.Platform.Domain.InvitationToken", b =>
+                {
+                    b.Property<byte[]>("TokenHash")
+                        .HasMaxLength(32)
+                        .HasColumnType("bytea")
+                        .HasColumnName("token_hash")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("InvitationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invitation_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("TokenHash")
+                        .HasName("pk_invitation_token");
+
+                    b.HasIndex("InvitationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invitation_token_invitation_id");
+
+                    b.ToTable("invitation_token", "platform");
+                });
+
             modelBuilder.Entity("Shelter.Modules.Platform.Domain.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -366,6 +508,167 @@ namespace Shelter.Migrations.Migrations
                     b.ToTable("organization", "platform");
                 });
 
+            modelBuilder.Entity("Shelter.Modules.Platform.Domain.SecurityEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("correlation_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("type")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_security_event");
+
+                    b.HasIndex("UserId", "OccurredAt")
+                        .HasDatabaseName("ix_security_event_user_id_occurred_at");
+
+                    b.ToTable("security_event", "platform");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Platform.Domain.StaffInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("InvitedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invited_by")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("language")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalized_email")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.PrimitiveCollection<string[]>("RoleKeys")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("role_keys")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_staff_invitation");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("ix_staff_invitation_tenant_id_created_at");
+
+                    b.HasIndex("TenantId", "NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("ix_staff_invitation_tenant_id_normalized_email")
+                        .HasFilter("accepted_at IS NULL AND revoked_at IS NULL");
+
+                    b.ToTable("staff_invitation", "platform");
+
+                    b.HasAnnotation("Shelter:AuditSubject", "Id");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Platform.Domain.StaffMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.PrimitiveCollection<string[]>("RoleKeys")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("role_keys")
+                        .HasDefaultValueSql("'{}'")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_staff_membership");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_staff_membership_tenant_id_user_id");
+
+                    b.ToTable("staff_membership", "platform");
+                });
+
             modelBuilder.Entity("Shelter.Modules.Platform.Domain.TenantSetting", b =>
                 {
                     b.Property<Guid>("Id")
@@ -398,6 +701,161 @@ namespace Shelter.Migrations.Migrations
                         .HasDatabaseName("ix_tenant_setting_tenant_id_key");
 
                     b.ToTable("tenant_setting", "platform");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Platform.Domain.UserAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("access_failed_count")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("concurrency_stamp")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("display_name")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_confirmed")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("IsPlatformOperator")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_platform_operator")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("lockout_enabled")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_end")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalized_email")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalized_user_name")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("password_hash")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone_number")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("phone_number_confirmed")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("preferred_language")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("security_stamp")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("two_factor_enabled")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("user_name")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_account");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_account_normalized_email");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_account_normalized_user_name");
+
+                    b.ToTable("user_account", "platform");
+
+                    b.HasAnnotation("Shelter:AuditSubject", "Id");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Shelter.Modules.Platform.Domain.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_claim_user_account_user_id");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("Shelter.Modules.Platform.Domain.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_login_user_account_user_id");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("Shelter.Modules.Platform.Domain.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_token_user_account_user_id");
                 });
 #pragma warning restore 612, 618
         }

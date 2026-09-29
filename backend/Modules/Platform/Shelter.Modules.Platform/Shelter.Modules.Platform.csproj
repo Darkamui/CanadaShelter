@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <!-- ADR 0018: accounts on ASP.NET Identity's EF stores (approved dependency). -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Shelter.Modules.Platform.Contracts\Shelter.Modules.Platform.Contracts.csproj" />
   </ItemGroup>

@@ -101,7 +101,8 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          changed=$(git diff --name-status --no-renames "origin/${BASE_REF}...HEAD" -- '**/Migrations/**' | grep -v '^A' || true)
+          # Migration files only: the model snapshot changes with every new migration, and helpers are not migrations.
+          changed=$(git diff --name-status --no-renames "origin/${BASE_REF}...HEAD" -- 'backend/Shelter.Migrations/Migrations/' ':!**/*ModelSnapshot.cs' | grep -v '^A' || true)
           if [ -n "$changed" ]; then
             echo "$changed"
             echo "::error::Existing migrations were modified or deleted. Add a new migration instead (CLAUDE.md hard rule 10)."

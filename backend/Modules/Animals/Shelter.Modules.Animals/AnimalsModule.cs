@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
+using Shelter.Modules.Animals.Authorization;
 using Shelter.Modules.Animals.Features.ReferenceData;
 using Shelter.Modules.Animals.Persistence;
 
@@ -18,6 +20,7 @@ public sealed class AnimalsModule : IModule
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IModelContributor, AnimalsModelContributor>();
+        services.AddPermissions(AnimalPermissions.All);
     }
 
     /// <inheritdoc />

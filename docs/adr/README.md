@@ -23,6 +23,9 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0015](0015-backend-project-and-test-layout.md) | Backend project and test layout | Accepted |
 | [0016](0016-audit-key-management.md) | Audit key management for crypto-shredding | Accepted |
 | [0017](0017-reference-data-overrides.md) | Reference data: global system tables plus per-tenant override tables | Accepted |
+| [0018](0018-identity-authorization-model.md) | Identity and authorization model (global accounts, membership self-read, permissions, MFA) | Accepted |
+| [0019](0019-admin-form-stack.md) | Admin form stack: React Hook Form + Zod, catalog-key messages, server errors on fields | Accepted |
+| [0020](0020-anonymous-endpoint-rate-limiting.md) | Rate limiting the anonymous auth endpoints (built-in, in-memory, per IP) | Accepted |
 
 ## Backlog
 

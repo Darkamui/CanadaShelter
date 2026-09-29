@@ -5,9 +5,10 @@ using Shelter.BuildingBlocks.Tenancy;
 namespace Shelter.BuildingBlocks.Persistence;
 
 /// <summary>
-/// Wraps every module endpoint of a tenant-scoped request in a <see cref="UnitOfWork"/>: commits on a success
-/// result, rolls back on an error status or exception. Requests without a tenant run without a transaction and
-/// see no tenant rows (RLS fails closed).
+/// Wraps every module endpoint of a tenant-scoped or signed-in request in a <see cref="UnitOfWork"/>: commits on a
+/// success result, rolls back on an error status or exception. The transaction carries <c>app.tenant_id</c> and
+/// <c>app.user_id</c>. Anonymous requests without a tenant run without a transaction and see no tenant rows (RLS
+/// fails closed).
 /// </summary>
 public sealed class UnitOfWorkEndpointFilter : IEndpointFilter
 {
@@ -18,7 +19,7 @@ public sealed class UnitOfWorkEndpointFilter : IEndpointFilter
         ArgumentNullException.ThrowIfNull(next);
 
         var services = context.HttpContext.RequestServices;
-        if (services.GetRequiredService<ITenantContext>().TenantId is null)
+        if (services.GetRequiredService<ITenantContext>().TenantId is null && services.GetRequiredService<IUserContext>().UserId is null)
         {
             return await next(context);
         }

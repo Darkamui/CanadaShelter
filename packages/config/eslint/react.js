@@ -20,6 +20,35 @@ export default tseslint.config(
         'error',
         {
           mode: 'jsx-only',
+          callees: {
+            // The plugin's defaults (replaced, not merged, by this option), then React Hook Form
+            // methods whose string argument is a field name, not UI text.
+            exclude: [
+              'i18n(ext)?',
+              't',
+              'require',
+              'addEventListener',
+              'removeEventListener',
+              'postMessage',
+              'getElementById',
+              'dispatch',
+              'commit',
+              'includes',
+              'indexOf',
+              'endsWith',
+              'startsWith',
+              'register',
+              'watch',
+              'setValue',
+              'getValues',
+              'setError',
+              'clearErrors',
+              'trigger',
+              'resetField',
+              'setFocus',
+              'getFieldState',
+            ],
+          },
           'jsx-attributes': {
             include: ['^(aria-label|aria-description|title|placeholder|alt|label)$'],
           },

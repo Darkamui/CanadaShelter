@@ -18,10 +18,9 @@ namespace Shelter.IntegrationTests.Host;
 /// </summary>
 public sealed class UnitOfWorkTests(PostgresFixture postgres) : IAsyncDisposable
 {
-    private const string TenantHeader = "X-Tenant-Id";
-
-    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString, new UnitOfWorkProbeModule()) { EnvironmentName = "Development" };
+    private readonly ShelterApiFactory _factory = new(postgres.AppConnectionString, new UnitOfWorkProbeModule());
     private readonly Guid _tenant = Guid.CreateVersion7();
+    private Guid? _member;
 
     [Fact]
     public async Task Request_runs_with_the_tenant_set_locally()
@@ -62,9 +61,9 @@ public sealed class UnitOfWorkTests(PostgresFixture postgres) : IAsyncDisposable
 
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path)
     {
-        using var client = _factory.CreateClient();
+        _member ??= await TestMemberships.NewMemberAsync(postgres.AppConnectionString, _tenant);
+        using var client = await _factory.CreateAntiforgeryClientAsync(_member, _tenant);
         using var request = new HttpRequestMessage(method, new Uri(path, UriKind.Relative));
-        request.Headers.Add(TenantHeader, _tenant.ToString("D"));
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 

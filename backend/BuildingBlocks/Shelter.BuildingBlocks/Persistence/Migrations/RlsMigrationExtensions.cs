@@ -12,6 +12,9 @@ public static class RlsMigrationExtensions
     /// <summary>Transaction-scoped setting carrying the current tenant (set with <c>SET LOCAL</c>).</summary>
     public const string TenantSetting = "app.tenant_id";
 
+    /// <summary>Transaction-scoped setting carrying the signed-in account (set with <c>SET LOCAL</c>, ADR 0018).</summary>
+    public const string UserSetting = "app.user_id";
+
     /// <summary>Policy restricting every role to the current tenant's rows.</summary>
     public const string TenantPolicy = "tenant_isolation";
 
@@ -23,6 +26,15 @@ public static class RlsMigrationExtensions
     /// connection reports <c>''</c> after a transaction that used <c>SET LOCAL</c>; that is <c>NULL</c> too.
     /// </summary>
     public const string CurrentTenantFunction = "platform.current_tenant_id()";
+
+    /// <summary>
+    /// Read-only policy letting the signed-in account see its own rows in every tenant (its memberships, before an
+    /// organization is chosen). Permissive, so it widens <see cref="TenantPolicy"/> for <c>SELECT</c> only.
+    /// </summary>
+    public const string SelfReadPolicy = "self_read";
+
+    /// <summary><c>platform.current_user_id()</c>: the account of the current transaction, or <c>NULL</c> when unset.</summary>
+    public const string CurrentUserFunction = "platform.current_user_id()";
 
     /// <summary>Creates <see cref="CurrentTenantFunction"/>; call once, before the first <see cref="EnableTenantRls"/>.</summary>
     public static MigrationBuilder CreateCurrentTenantFunction(this MigrationBuilder migrationBuilder)
@@ -37,6 +49,41 @@ public static class RlsMigrationExtensions
     {
         ArgumentNullException.ThrowIfNull(migrationBuilder);
         migrationBuilder.Sql($"DROP FUNCTION {CurrentTenantFunction};");
+        return migrationBuilder;
+    }
+
+    /// <summary>Creates <see cref="CurrentUserFunction"/>; call once, before the first <see cref="EnableSelfRead"/>.</summary>
+    public static MigrationBuilder CreateCurrentUserFunction(this MigrationBuilder migrationBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        migrationBuilder.Sql(CreateCurrentUserFunctionSql);
+        return migrationBuilder;
+    }
+
+    /// <summary>Reverses <see cref="CreateCurrentUserFunction"/>.</summary>
+    public static MigrationBuilder DropCurrentUserFunction(this MigrationBuilder migrationBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        migrationBuilder.Sql($"DROP FUNCTION {CurrentUserFunction};");
+        return migrationBuilder;
+    }
+
+    /// <summary>
+    /// Adds <see cref="SelfReadPolicy"/> to a table that already has <see cref="EnableTenantRls"/>: rows whose
+    /// <c>user_id</c> is the transaction's account are readable in any tenant. Writes still need the tenant.
+    /// </summary>
+    public static MigrationBuilder EnableSelfRead(this MigrationBuilder migrationBuilder, string schema, string table)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        migrationBuilder.Sql(EnableSelfReadSql(schema, table));
+        return migrationBuilder;
+    }
+
+    /// <summary>Reverses <see cref="EnableSelfRead"/>.</summary>
+    public static MigrationBuilder DisableSelfRead(this MigrationBuilder migrationBuilder, string schema, string table)
+    {
+        ArgumentNullException.ThrowIfNull(migrationBuilder);
+        migrationBuilder.Sql($"DROP POLICY {SelfReadPolicy} ON {SqlIdentifier.Qualified(schema, table)};");
         return migrationBuilder;
     }
 
@@ -71,6 +118,23 @@ public static class RlsMigrationExtensions
             AS $$ SELECT NULLIF(current_setting('{TenantSetting}', true), '')::uuid $$;
         REVOKE ALL ON FUNCTION {CurrentTenantFunction} FROM PUBLIC;
         GRANT EXECUTE ON FUNCTION {CurrentTenantFunction} TO {SqlIdentifier.Quote(DatabaseRoles.App)}, {SqlIdentifier.Quote(DatabaseRoles.PlatformAdmin)};
+        """;
+
+    /// <summary>The SQL emitted by <see cref="CreateCurrentUserFunction"/>.</summary>
+    public static string CreateCurrentUserFunctionSql =>
+        $"""
+        CREATE FUNCTION {CurrentUserFunction} RETURNS uuid
+            LANGUAGE sql STABLE PARALLEL SAFE
+            AS $$ SELECT NULLIF(current_setting('{UserSetting}', true), '')::uuid $$;
+        REVOKE ALL ON FUNCTION {CurrentUserFunction} FROM PUBLIC;
+        GRANT EXECUTE ON FUNCTION {CurrentUserFunction} TO {SqlIdentifier.Quote(DatabaseRoles.App)}, {SqlIdentifier.Quote(DatabaseRoles.PlatformAdmin)};
+        """;
+
+    /// <summary>The SQL emitted by <see cref="EnableSelfRead"/>.</summary>
+    public static string EnableSelfReadSql(string schema, string table) =>
+        $"""
+        CREATE POLICY {SelfReadPolicy} ON {SqlIdentifier.Qualified(schema, table)} AS PERMISSIVE FOR SELECT TO PUBLIC
+            USING (user_id = {CurrentUserFunction});
         """;
 
     /// <summary>The SQL emitted by <see cref="EnableTenantRls"/>.</summary>

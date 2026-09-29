@@ -32,6 +32,7 @@
   </Folder>
   <Folder Name="/Modules/People/">
     <Project Path="Modules/People/Shelter.Modules.People.Contracts/Shelter.Modules.People.Contracts.csproj" />
+    <Project Path="Modules/People/Shelter.Modules.People.Tests/Shelter.Modules.People.Tests.csproj" />
     <Project Path="Modules/People/Shelter.Modules.People/Shelter.Modules.People.csproj" />
   </Folder>
   <Folder Name="/Modules/Platform/">

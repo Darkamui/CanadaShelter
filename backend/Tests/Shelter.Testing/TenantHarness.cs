@@ -28,13 +28,16 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
         return await db.InUnitOfWorkAsync(() => work(db));
     }
 
-    /// <summary>Saves <paramref name="entity"/> for <paramref name="tenantId"/>; the tenant is stamped by the context.</summary>
+    /// <summary>
+    /// Saves <paramref name="entity"/> for <paramref name="tenantId"/> in a unit of work, as an endpoint does; the
+    /// tenant is stamped by the context. The unit of work lets an audited entity with a subject fetch its data key.
+    /// </summary>
     public async Task<TEntity> SeedAsync<TEntity>(Guid tenantId, TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : class, ITenantOwned
     {
         await using var db = CreateContext(tenantId);
         db.Add(entity);
-        await db.SaveChangesAsync(cancellationToken);
+        await db.InUnitOfWorkAsync(() => db.SaveChangesAsync(cancellationToken));
         return entity;
     }
 

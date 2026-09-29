@@ -19,7 +19,7 @@ import { Permissions } from '../lib/auth/permissions';
  */
 export const MODULES = [
   { key: 'animals', icon: PawPrint, permission: Permissions.animalRead },
-  { key: 'people', icon: Users, permission: null },
+  { key: 'people', icon: Users, permission: Permissions.personRead },
   { key: 'movements', icon: ArrowLeftRight, permission: Permissions.movementRead },
   { key: 'medical', icon: Stethoscope, permission: null },
   { key: 'operations', icon: ClipboardList, permission: null },

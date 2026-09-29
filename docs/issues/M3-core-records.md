@@ -38,14 +38,14 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] `PageRequest` / `PagedResult<T>` in `BuildingBlocks/Persistence/Paging`. Out-of-range values are clamped.
-- [ ] `SearchNormalizer` in BuildingBlocks: `Text()` (accents, ligatures, case, spaces), `Digits()` (phone numbers) and `Identifier()` (microchips and licences: alphanumerics only, upper case).
-- [ ] `TenantHarness.AssertIsolatedAsync` passes on tables that deny UPDATE or DELETE to the runtime role (`42501` counts as a denied write).
-- [ ] `packages/ui`:
+- [x] `PageRequest` / `PagedResult<T>` in `BuildingBlocks/Persistence/Paging`. Out-of-range values are clamped.
+- [x] `SearchNormalizer` in BuildingBlocks: `Text()` (accents, ligatures, case, spaces), `Digits()` (phone numbers) and `Identifier()` (microchips and licences: alphanumerics only, upper case).
+- [x] `TenantHarness.AssertIsolatedAsync` passes on tables that deny UPDATE or DELETE to the runtime role (`42501` counts as a denied write).
+- [x] `packages/ui`:
   - `DataTable` on `@tanstack/react-table`: server-side paging and sorting; loading, empty and error states; labels passed in for i18n.
   - `Dialog` and `Select` on the existing `radix-ui`.
-- [ ] `useListParams` in the admin app keeps page, size, sort and query in the URL.
-- [ ] Tests: normalizer and paging (unit); harness self-test on a SELECT/INSERT-only table; DataTable paging and accessible names (Vitest).
+- [x] `useListParams` in the admin app keeps page, size, sort and query in the URL.
+- [x] Tests: normalizer and paging (unit); harness self-test on a SELECT/INSERT-only table; DataTable paging and accessible names (Vitest).
 
 ---
 
@@ -55,24 +55,24 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] Tenant-owned `Person` (schema `people`):
+- [x] Tenant-owned `Person` (schema `people`):
   - Fields:
     - names and display name;
     - email, phone and secondary phone;
     - address (line, city, province, postal code);
-    - preferred language (`fr-CA` by default);
+    - preferred language (French by default; stored as `fr`/`en`, the same codes as Platform users);
     - role tags (owner, adopter, foster, volunteer, donor, finder, surrenderer);
     - notes and archived.
   - Audit: the audit subject is the person, and every field is personal, including the normalized search columns.
   - RLS and indexes starting with `tenant_id`. The name uses a trigram index; the reason it cannot lead with `tenant_id` is recorded in the migration.
-- [ ] Permissions `person.read` and `person.write`.
-- [ ] Endpoints:
+- [x] Permissions `person.read` and `person.write`.
+- [x] Endpoints:
   - a paged list, with search by name, email or phone and filters for role and archived;
   - get, create, update, archive and unarchive.
-- [ ] Create returns `possibleDuplicates` (same normalized email or phone) without blocking.
-- [ ] Contract `IPersonDirectory`: `GetSummariesAsync(ids)`, `ExistsActiveAsync(id)`.
-- [ ] Admin screens: list, detail and form (`useZodForm`), in fr-CA and en-CA.
-- [ ] Tests:
+- [x] Create returns `possibleDuplicates` (same normalized email or phone) without blocking.
+- [x] Contract `IPersonDirectory`: `GetSummariesAsync(ids)`, `ExistsActiveAsync(id)`.
+- [x] Admin screens: list, detail and form (`useZodForm`), in fr-CA and en-CA.
+- [x] Tests:
   - tenant isolation, and cross-tenant GET/PUT → 404;
   - 403 without the permission;
   - classification rule;

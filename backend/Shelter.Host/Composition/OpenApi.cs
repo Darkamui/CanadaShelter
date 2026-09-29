@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
 
 namespace Shelter.Host.Composition;
@@ -9,7 +10,8 @@ namespace Shelter.Host.Composition;
 internal static class OpenApi
 {
     public static IServiceCollection AddShelterOpenApi(this IServiceCollection services) =>
-        services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
+        services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict)
+        .AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
         {
             foreach (var schema in document.Components?.Schemas?.Values ?? [])
             {

@@ -2,6 +2,8 @@
 export const Permissions = {
   animalRead: 'animal.read',
   movementRead: 'movement.read',
+  personRead: 'person.read',
+  personWrite: 'person.write',
   staffRead: 'platform.staff.read',
   staffManage: 'platform.staff.manage',
 } as const;

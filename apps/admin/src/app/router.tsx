@@ -1,5 +1,8 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AnimalsPage } from '../features/animals/routes/AnimalsPage';
+import { PeopleListPage } from '../features/people/routes/PeopleListPage';
+import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
+import { PersonDetailPage } from '../features/people/routes/PersonDetailPage';
 import { AcceptInvitationPage } from '../features/platform/routes/AcceptInvitationPage';
 import { ForgotPasswordPage } from '../features/platform/routes/ForgotPasswordPage';
 import { LoginPage } from '../features/platform/routes/LoginPage';
@@ -55,6 +58,30 @@ export const routes: RouteObject[] = [
                 element: (
                   <RequirePermission permission={Permissions.animalRead}>
                     <AnimalsPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people',
+                element: (
+                  <RequirePermission permission={Permissions.personRead}>
+                    <PeopleListPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people/new',
+                element: (
+                  <RequirePermission permission={Permissions.personWrite}>
+                    <PersonCreatePage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people/:personId',
+                element: (
+                  <RequirePermission permission={Permissions.personRead}>
+                    <PersonDetailPage />
                   </RequirePermission>
                 ),
               },

@@ -45,5 +45,15 @@
   "forms": {
     "required": "This field is required.",
     "email": "Enter a valid email address."
+  },
+  "list": {
+    "loading": "Loading…",
+    "empty": "No results.",
+    "error": "The list could not be loaded.",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "sortBy": "Sort by {{column}}",
+    "search": "Search"
   }
 }

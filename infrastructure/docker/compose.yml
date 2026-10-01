@@ -39,7 +39,7 @@ services:
 
   # One-shot: creates the private local bucket. Retries until MinIO accepts connections.
   minio-init:
-    image: cgr.dev/chainguard/minio-client@sha256:b8b144ab34694ecea25aa352c4be9de4c26ee2a02701521dce02ee5593c57338
+    image: cgr.dev/chainguard/minio-client@sha256:3d1de4a3b4e62b733f24d2fc66bc75a36b3ed8e63bea6ab45af5519d74698f94
     depends_on: [minio]
     environment:
       MC_HOST_local: http://${MINIO_ROOT_USER:-shelter}:${MINIO_ROOT_PASSWORD:-shelter_minio_dev}@minio:9000

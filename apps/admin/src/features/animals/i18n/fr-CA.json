@@ -5,7 +5,9 @@
     "custodyStatuses.outcome",
     "identifierTypes.external",
     "fields.legalAlert",
-    "detail.inCareSince"
+    "detail.inCareSince",
+    "timeline.types.intake_recorded",
+    "create.startIntake"
   ],
   "title": "Animaux",
   "list": {
@@ -72,7 +74,8 @@
   },
   "create": {
     "title": "Nouvel animal",
-    "submit": "Créer"
+    "submit": "Créer",
+    "startIntake": "Enregistrer l'admission ensuite"
   },
   "detail": {
     "backToList": "Retour aux animaux",
@@ -100,8 +103,19 @@
     "title": "Historique",
     "loadFailed": "Impossible de charger l'historique.",
     "types": {
-      "animal_registered": "Animal inscrit"
+      "animal_registered": "Animal inscrit",
+      "intake_recorded": "Admission enregistrée",
+      "relocation_recorded": "Déplacement enregistré",
+      "outcome_recorded": "Sortie enregistrée",
+      "movement_voided": "Mouvement annulé"
     },
-    "parameters": {}
+    "parameters": {
+      "reasonCode": "Motif",
+      "outcomeCode": "Type de sortie",
+      "toLocationId": "Vers",
+      "fromLocationId": "De",
+      "personId": "Personne",
+      "movementType": "Mouvement annulé"
+    }
   }
 }

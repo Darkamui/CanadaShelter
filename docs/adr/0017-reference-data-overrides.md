@@ -60,3 +60,4 @@ Reference lists (species, intake and outcome reasons, later breeds) need bilingu
 - Alternatives considered:
   - Nullable attribute on the override, meaning "inherit": tenant values would need a separate NOT NULL rule, and every read would need coalescing.
   - Attributes only on the global table: a tenant value could never hold animals or count in a SAC category.
+- **Applied in M3-5** (migration `AddMovementLedger`): `sac_category` on intake reasons and outcome types, with the categories as code constants (`Movements/Domain/SacCategories.cs`, `TODO(pilot-review)`). Categories drive rules, not labels: adoption and return to owner require a person; died and euthanasia are terminal. Tenant intake reason overrides that existed before the migration got `other_intake`, because RLS hides them from the migrator; a tenant must recategorize them.

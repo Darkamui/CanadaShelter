@@ -152,26 +152,26 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] `outcome_type` reference list (global plus override): adoption, return to owner, transfer out, return to field, died, euthanized, other.
+- [x] `outcome_type` reference list (global plus override): adoption, return to owner, transfer out, return to field, died, euthanized, other.
   - Intake reasons and outcome types get a `sac_category` (Shelter Animals Count), added by a new migration, marked `TODO(pilot-review)`.
-- [ ] Append-only `movement`:
+- [x] Append-only `movement`:
   - Types: intake, relocation, outcome, void.
   - Fields: reason or outcome code, from and to location, person, notes, occurred at, recorded by, and the amended movement.
   - `notes` is personal, with the person as the audit subject.
-- [ ] Rules (owned by Movements):
+- [x] Rules (owned by Movements):
   - An intake needs an animal that is not in care. A relocation or outcome needs an animal in care.
   - The target location is active and holds animals.
   - The person exists and is active. A person is required for adoption and return to owner.
   - `occurred_at` is not before the latest movement still in effect, and not in the future (5 minute tolerance).
-- [ ] Every movement updates the animal summary and appends a timeline event **in the same transaction**. Two concurrent intakes on one animal → one succeeds, one gets 409.
-- [ ] Void:
+- [x] Every movement updates the animal summary and appends a timeline event **in the same transaction**. Two concurrent intakes on one animal → one succeeds, one gets 409.
+- [x] Void:
   - It applies only to the latest movement still in effect, and needs a reason and `movement.amend` (sensitive, administrator only).
   - It is a new row. The summary is rebuilt from the ledger.
-- [ ] Permissions `movement.write` and `movement.amend`.
-- [ ] Endpoints: record an intake, relocation or outcome; void; an animal's history; outcome types.
-- [ ] A location with animals cannot be archived (409).
-- [ ] Admin screens: an intake flow (pick or create the animal, then the intake), move and outcome dialogs, and history on the animal page.
-- [ ] Tests:
+- [x] Permissions `movement.write` and `movement.amend`.
+- [x] Endpoints: record an intake, relocation or outcome; void; an animal's history; outcome types.
+- [x] A location with animals cannot be archived (409).
+- [x] Admin screens: an intake flow (pick or create the animal, then the intake), move and outcome dialogs, and history on the animal page.
+- [x] Tests:
   - all-or-nothing when a failure is forced after staging;
   - the concurrent double intake;
   - a void restores the previous state;

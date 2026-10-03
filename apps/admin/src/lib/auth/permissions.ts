@@ -5,6 +5,8 @@ export const Permissions = {
   locationRead: 'location.read',
   locationWrite: 'location.write',
   movementRead: 'movement.read',
+  movementWrite: 'movement.write',
+  movementAmend: 'movement.amend',
   personRead: 'person.read',
   personWrite: 'person.write',
   staffRead: 'platform.staff.read',

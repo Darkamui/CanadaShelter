@@ -15,6 +15,7 @@
   "archiveNamed": "Archive {{name}}",
   "archived": "“{{name}}” was archived.",
   "archiveBlocked": "Archive or move the locations inside it first.",
+  "archiveHasAnimals": "Animals are at this location. Move them first.",
   "saved": "“{{name}}” was saved.",
   "createTitle": "New location",
   "editTitle": "Edit location",

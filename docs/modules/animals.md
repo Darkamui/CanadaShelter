@@ -34,7 +34,7 @@
 
 - Numbers are gapless per tenant: the counter upsert runs in the request transaction. Tested by `Concurrent_creations_get_sequential_numbers_without_gaps`.
 - An active microchip is unique per tenant: a partial unique index plus a 23505 catch. Licences and deactivated chips can repeat.
-- The animal endpoints never write the custody summary; only `IAnimalCustody` does.
+- The animal endpoints never write the custody summary; only `IAnimalCustody` does, called by Movements when it records or voids a movement (M3-5). The summary is a projection of the movement ledger.
 - Edits are optimistic (`xmin` as `version`). A stale edit gets 409 with `code: animal.versionConflict`.
 - The runtime role has SELECT/INSERT only on `timeline_event`. Other tables have no DELETE.
 - Species input is validated against the merged visible list. A hidden species is kept on an existing animal and displays as its code.
@@ -57,7 +57,7 @@
 - `Persistence/AnimalsModelContributor.cs`: tables, the trigram index on `search_text`, and the partial microchip index.
 - `Features/Animals/AnimalEndpoints.cs`: `/api/animals` (`ListAnimals`, `GetAnimal`, `CreateAnimal`, `UpdateAnimal`, `AddAnimalIdentifier`, `DeactivateAnimalIdentifier`, `GetAnimalTimeline`).
 - `Features/Animals/AnimalContracts.cs`: the contract implementations. `AnimalRequestValidator.cs`. `Features/ReferenceData/SpeciesCatalog.cs`.
-- Frontend: `apps/admin/src/features/animals/` (list, create and detail pages, `IdentifiersPanel`, `TimelinePanel`).
+- Frontend: `apps/admin/src/features/animals/` (list, create and detail pages, `IdentifiersPanel`, `TimelinePanel`). The detail page hosts Movements' `MovementsPanel`; the create page can open the intake dialog next (`startIntake`).
 
 ## Open questions / TODO
 

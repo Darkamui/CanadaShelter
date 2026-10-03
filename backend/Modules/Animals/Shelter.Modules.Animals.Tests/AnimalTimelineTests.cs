@@ -127,7 +127,7 @@ public sealed class AnimalTimelineTests(PostgresFixture fixture)
         public Task<IReadOnlyList<Guid>> GetSubtreeIdsAsync(Guid rootId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Guid>>([rootId]);
 
-        public Task<bool> IsActiveHoldingAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(true);
+        public Task<bool> LockForPlacementAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(true);
     }
 
     private sealed class FakePeople(Guid personId, string displayName) : IPersonDirectory

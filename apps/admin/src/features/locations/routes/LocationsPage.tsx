@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, statusOf, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
+import { problemCodeOf } from '../../../lib/forms/serverErrors';
 import { useLocalize } from '../../../lib/i18n/localized';
 import { LocationForm } from '../components/LocationForm';
 import {
@@ -60,7 +61,12 @@ export function LocationsPage() {
         onError: (error) =>
           setMessage({
             tone: 'error',
-            text: statusOf(error) === 409 ? t('archiveBlocked') : t('form.unexpectedError'),
+            text:
+              problemCodeOf(error) === 'location.hasAnimals'
+                ? t('archiveHasAnimals')
+                : statusOf(error) === 409
+                  ? t('archiveBlocked')
+                  : t('form.unexpectedError'),
           }),
       },
     );

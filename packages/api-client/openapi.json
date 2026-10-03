@@ -1261,6 +1261,237 @@
         }
       }
     },
+    "/api/movements/outcome-types": {
+      "get": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "ListMovementsOutcomeTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutcomeTypeItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements": {
+      "get": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "ListMovements",
+        "parameters": [
+          {
+            "name": "animalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MovementItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements/intakes": {
+      "post": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "RecordIntake",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordIntakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements/relocations": {
+      "post": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "RecordRelocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordRelocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements/outcomes": {
+      "post": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "RecordOutcome",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordOutcomeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movements/{movementId}/void": {
+      "post": {
+        "tags": [
+          "movements"
+        ],
+        "operationId": "VoidMovement",
+        "parameters": [
+          {
+            "name": "movementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidMovementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/operations/location-kinds": {
       "get": {
         "tags": [
@@ -2256,6 +2487,131 @@
           }
         }
       },
+      "MovementItem": {
+        "required": [
+          "id",
+          "type",
+          "animalId",
+          "reasonCode",
+          "fromLocationId",
+          "fromLocationName",
+          "toLocationId",
+          "toLocationName",
+          "personId",
+          "personName",
+          "notes",
+          "occurredAt",
+          "recordedAt",
+          "voidsMovementId",
+          "voidedByMovementId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fromLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fromLocationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "toLocationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "personId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "personName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "voidsMovementId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "voidedByMovementId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "OutcomeTypeItem": {
+        "required": [
+          "code",
+          "label",
+          "requiresPerson"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "requiresPerson": {
+            "type": "boolean"
+          }
+        }
+      },
       "PagedResultOfAnimalListItem": {
         "required": [
           "items",
@@ -2637,6 +2993,142 @@
           }
         }
       },
+      "RecordIntakeRequest": {
+        "required": [
+          "animalId",
+          "reasonCode",
+          "toLocationId",
+          "personId",
+          "notes",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "animalId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "personId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordOutcomeRequest": {
+        "required": [
+          "animalId",
+          "outcomeCode",
+          "personId",
+          "notes",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "animalId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "outcomeCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "personId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordRelocationRequest": {
+        "required": [
+          "animalId",
+          "toLocationId",
+          "notes",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "animalId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "toLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "ReferenceItem": {
         "required": [
           "code",
@@ -2954,6 +3446,20 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "VoidMovementRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }

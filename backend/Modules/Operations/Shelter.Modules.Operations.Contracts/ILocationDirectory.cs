@@ -14,8 +14,12 @@ public interface ILocationDirectory
     /// </summary>
     Task<IReadOnlyList<Guid>> GetSubtreeIdsAsync(Guid rootId, CancellationToken cancellationToken);
 
-    /// <summary>Whether the location exists, is not archived and is of a kind that holds animals.</summary>
-    Task<bool> IsActiveHoldingAsync(Guid id, CancellationToken cancellationToken);
+    /// <summary>
+    /// Whether the location exists, is not archived and is of a kind that holds animals. When it is, the location row
+    /// stays share-locked (<c>SELECT … FOR SHARE</c>) until the transaction ends, so it cannot be archived while the
+    /// caller places an animal there.
+    /// </summary>
+    Task<bool> LockForPlacementAsync(Guid id, CancellationToken cancellationToken);
 }
 
 /// <summary>What another module needs to show a location.</summary>

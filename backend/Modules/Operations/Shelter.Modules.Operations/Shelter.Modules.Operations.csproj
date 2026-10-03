@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Shelter.Modules.Operations.Contracts\Shelter.Modules.Operations.Contracts.csproj" />
+    <ProjectReference Include="..\..\Animals\Shelter.Modules.Animals.Contracts\Shelter.Modules.Animals.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Shelter.Modules.Operations.Tests" />

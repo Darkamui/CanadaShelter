@@ -6,7 +6,7 @@ using Shelter.Modules.Operations.Domain;
 
 namespace Shelter.Modules.Operations.Features.Locations;
 
-/// <summary><see cref="ILocationDirectory"/> over the caller's <see cref="ShelterDbContext"/> (ADR 0021). Read-only.</summary>
+/// <summary><see cref="ILocationDirectory"/> over the caller's <see cref="ShelterDbContext"/> (ADR 0021). Read-only, apart from the placement lock.</summary>
 internal sealed class LocationDirectory(ShelterDbContext db, ITenantContext tenant) : ILocationDirectory
 {
     public async Task<IReadOnlyDictionary<Guid, LocationSummary>> GetAsync(
@@ -29,12 +29,14 @@ internal sealed class LocationDirectory(ShelterDbContext db, ITenantContext tena
     public async Task<IReadOnlyList<Guid>> GetSubtreeIdsAsync(Guid rootId, CancellationToken cancellationToken) =>
         await LocationTree.SubtreeIdsAsync(db, rootId, cancellationToken);
 
-    public async Task<bool> IsActiveHoldingAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> LockForPlacementAsync(Guid id, CancellationToken cancellationToken)
     {
-        var kindCode = await db.Set<Location>()
-            .Where(l => l.Id == id && !l.IsArchived)
-            .Select(l => l.KindCode)
-            .SingleOrDefaultAsync(cancellationToken);
+        // The lock waits for a concurrent archive (FOR UPDATE in LocationEndpoints.Archive); the WHERE is then
+        // re-checked against the archived row, so a location archived meanwhile is not found.
+        var kindCode = (await db.Database
+            .SqlQuery<string>($"""SELECT kind_code AS "Value" FROM operations.location WHERE id = {id} AND NOT is_archived FOR SHARE""")
+            .ToListAsync(cancellationToken))
+            .SingleOrDefault();
         if (kindCode is null)
         {
             return false;

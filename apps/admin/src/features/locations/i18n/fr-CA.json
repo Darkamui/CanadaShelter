@@ -16,6 +16,7 @@
   "archiveNamed": "Archiver {{name}}",
   "archived": "« {{name}} » a été archivé.",
   "archiveBlocked": "Archivez ou déplacez d'abord les emplacements qu'il contient.",
+  "archiveHasAnimals": "Des animaux se trouvent à cet emplacement. Déplacez-les d'abord.",
   "saved": "« {{name}} » a été enregistré.",
   "createTitle": "Nouvel emplacement",
   "editTitle": "Modifier l'emplacement",

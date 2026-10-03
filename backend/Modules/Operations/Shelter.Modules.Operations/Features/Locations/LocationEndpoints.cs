@@ -9,6 +9,7 @@ using Shelter.BuildingBlocks.Localization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Search;
 using Shelter.BuildingBlocks.Tenancy;
+using Shelter.Modules.Animals.Contracts;
 using Shelter.Modules.Operations.Authorization;
 using Shelter.Modules.Operations.Domain;
 
@@ -24,6 +25,9 @@ internal static class LocationEndpoints
 {
     /// <summary>The <c>code</c> of the 409 returned when archiving a location that still contains active ones.</summary>
     public const string HasActiveChildren = "location.hasActiveChildren";
+
+    /// <summary>The <c>code</c> of the 409 returned when archiving a location where animals are in care.</summary>
+    public const string HasAnimals = "location.hasAnimals";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -118,11 +122,24 @@ internal static class LocationEndpoints
         return TypedResults.Ok(LocationItem.From(location));
     }
 
-    /// <summary>Archives a location. Its active children must be archived or moved first (409).</summary>
+    /// <summary>
+    /// Archives a location. Its active children must be archived or moved first, and its animals moved out (409).
+    /// </summary>
     internal static async Task<Results<NoContent, NotFound, ProblemHttpResult>> Archive(
-        Guid locationId, ShelterDbContext db, ITenantContext tenant, TimeProvider timeProvider, CancellationToken cancellationToken)
+        Guid locationId,
+        ShelterDbContext db,
+        ITenantContext tenant,
+        IAnimalPopulation population,
+        TimeProvider timeProvider,
+        CancellationToken cancellationToken)
     {
         await LocationTree.LockAsync(db, tenant.RequireTenantId(), cancellationToken);
+
+        // Waits for movements placing an animal here (ILocationDirectory.LockForPlacementAsync) to commit, so the count
+        // below sees them, and blocks new ones until the archive commits.
+        await db.Database
+            .SqlQuery<Guid>($"""SELECT id AS "Value" FROM operations.location WHERE id = {locationId} FOR UPDATE""")
+            .ToListAsync(cancellationToken);
 
         var location = await db.Set<Location>().SingleOrDefaultAsync(l => l.Id == locationId, cancellationToken);
         if (location is null)
@@ -141,6 +158,14 @@ internal static class LocationEndpoints
                 statusCode: StatusCodes.Status409Conflict,
                 title: "Archive or move the locations inside this one first.",
                 extensions: new Dictionary<string, object?> { ["code"] = HasActiveChildren });
+        }
+
+        if ((await population.CountAtAsync([locationId], cancellationToken)).Count > 0)
+        {
+            return TypedResults.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Move the animals at this location elsewhere first.",
+                extensions: new Dictionary<string, object?> { ["code"] = HasAnimals });
         }
 
         location.Archive(timeProvider.GetUtcNow());

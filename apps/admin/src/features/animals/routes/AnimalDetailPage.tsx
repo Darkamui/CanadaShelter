@@ -13,6 +13,8 @@ import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, statusOf, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
 import { formatDate, formatDay } from '../../../lib/format';
+import { MovementsPanel } from '../../movements/components/MovementsPanel';
+import { useTimelineValueFormatter } from '../../movements/useMovementReference';
 import { AnimalForm } from '../components/AnimalForm';
 import { IdentifiersPanel } from '../components/IdentifiersPanel';
 import { TimelinePanel } from '../components/TimelinePanel';
@@ -20,7 +22,7 @@ import { animalTitle, fromAnimal, toUpdateRequest } from '../model';
 import { useSpecies } from '../useSpecies';
 
 /** Navigation state from the create page. */
-export type AnimalPageState = { created?: boolean };
+export type AnimalPageState = { created?: boolean; startIntake?: boolean };
 
 /** One animal: custody summary, an edit form with `animal.write` (read-only details otherwise), identifiers, timeline. */
 export function AnimalDetailPage() {
@@ -53,6 +55,8 @@ function AnimalDetails({ animal, state }: { animal: AnimalResponse; state: Anima
   const canWrite = hasPermission(session, Permissions.animalWrite);
   const queryClient = useQueryClient();
   const update = useUpdateAnimal();
+  const canReadMovements = hasPermission(session, Permissions.movementRead);
+  const formatValue = useTimelineValueFormatter();
   const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string } | undefined>(
     state.created ? { tone: 'info', text: t('detail.created') } : undefined,
   );
@@ -87,8 +91,9 @@ function AnimalDetails({ animal, state }: { animal: AnimalResponse; state: Anima
       ) : (
         <ReadOnlyAnimal animal={animal} />
       )}
+      {canReadMovements && <MovementsPanel animal={animal} startIntake={state.startIntake} />}
       <IdentifiersPanel animalId={animal.id} identifiers={animal.identifiers} canWrite={canWrite} />
-      <TimelinePanel animalId={animal.id} />
+      <TimelinePanel animalId={animal.id} formatValue={formatValue} />
     </>
   );
 }

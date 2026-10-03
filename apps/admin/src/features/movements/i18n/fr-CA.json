@@ -1,0 +1,95 @@
+{
+  "_frReview": [
+    "actions.intake",
+    "types.intake",
+    "types.relocation",
+    "types.void",
+    "recorded.intake",
+    "dialog.intake.title",
+    "dialog.intake.submit",
+    "fields.reason",
+    "void.title"
+  ],
+  "title": "Mouvements",
+  "loadFailed": "Impossible de charger les mouvements.",
+  "none": "Aucun mouvement.",
+  "close": "Fermer",
+  "voided": "Le mouvement a été annulé.",
+  "voidedTag": "annulé",
+  "actions": {
+    "intake": "Enregistrer une admission",
+    "relocation": "Déplacer",
+    "outcome": "Enregistrer une sortie",
+    "void": "Annuler"
+  },
+  "types": {
+    "intake": "Admission",
+    "relocation": "Déplacement",
+    "outcome": "Sortie",
+    "void": "Annulation"
+  },
+  "recorded": {
+    "intake": "L'admission a été enregistrée.",
+    "relocation": "Le déplacement a été enregistré.",
+    "outcome": "La sortie a été enregistrée."
+  },
+  "dialog": {
+    "intake": {
+      "title": "Enregistrer une admission",
+      "description": "L'animal est pris en charge par l'organisme.",
+      "submit": "Enregistrer l'admission"
+    },
+    "relocation": {
+      "title": "Déplacer l'animal",
+      "description": "L'animal change d'emplacement au sein de l'organisme.",
+      "submit": "Enregistrer le déplacement"
+    },
+    "outcome": {
+      "title": "Enregistrer une sortie",
+      "description": "L'animal quitte la garde de l'organisme.",
+      "submit": "Enregistrer la sortie"
+    }
+  },
+  "fields": {
+    "reason": "Motif d'admission",
+    "outcome": "Type de sortie",
+    "toLocation": "Vers",
+    "fromLocation": "De",
+    "leavesFrom": "Quitte {{location}}.",
+    "person": "Personne (facultatif)",
+    "personRequired": "Personne",
+    "occurredAt": "Date et heure",
+    "occurredAtHint": "Laissez vide pour maintenant. Peut être antérieure, mais pas avant le dernier mouvement de l'animal.",
+    "notes": "Notes",
+    "notesHint": "Visibles seulement par le personnel de l'organisme.",
+    "notesHintNoPerson": "Décrivez le déplacement seulement. N'inscrivez aucun renseignement personnel (nom, adresse, téléphone d'une personne).",
+    "voidReason": "Motif d'annulation"
+  },
+  "form": {
+    "choose": "Choisir",
+    "noLocations": "Aucun autre emplacement actif n'accueille d'animaux.",
+    "custodyConflict": "La garde de l'animal a changé entre-temps. Il a été rechargé; vérifiez avant de réessayer.",
+    "unexpectedError": "Une erreur inattendue est survenue. Réessayez.",
+    "tooLong": "Ce champ est trop long.",
+    "reasonUnavailable": "Ce motif d'admission n'est pas offert.",
+    "outcomeUnavailable": "Ce type de sortie n'est pas offert.",
+    "locationUnavailable": "Choisissez un autre emplacement actif qui accueille des animaux.",
+    "personInvalid": "Choisissez une personne active.",
+    "occurredAtInvalid": "Entrez un moment entre le dernier mouvement de l'animal et maintenant."
+  },
+  "person": {
+    "search": "Rechercher par nom, courriel ou téléphone",
+    "choose": "Personnes trouvées",
+    "none": "Aucune",
+    "noMatch": "Aucun résultat"
+  },
+  "void": {
+    "title": "Annuler un mouvement",
+    "description": "Ce mouvement ({{type}}) est annulé et l'animal revient à son état précédent. Le mouvement reste dans l'historique.",
+    "reason": "Motif",
+    "reasonHint": "Visible seulement par le personnel de l'organisme. N'inscrivez aucun renseignement personnel (nom, adresse, téléphone d'une personne).",
+    "submit": "Annuler le mouvement",
+    "notLatest": "Seul le dernier mouvement peut être annulé. L'historique a été rechargé.",
+    "custodyConflict": "Ce mouvement ne peut pas être annulé : l'emplacement précédent de l'animal est archivé ou n'accueille plus d'animaux."
+  }
+}

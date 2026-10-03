@@ -676,6 +676,13 @@ namespace Shelter.Migrations.Migrations
                         .HasColumnName("code")
                         .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
+                    b.Property<string>("SacCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sac_category")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order")
@@ -725,6 +732,13 @@ namespace Shelter.Migrations.Migrations
                         .HasColumnName("is_hidden")
                         .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
 
+                    b.Property<string>("SacCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sac_category")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order")
@@ -762,6 +776,211 @@ namespace Shelter.Migrations.Migrations
                         .HasDatabaseName("ix_intake_reason_override_tenant_id_code");
 
                     b.ToTable("intake_reason_override", "movements");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Movements.Domain.Movement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("AnimalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("animal_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("FromLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_location_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes")
+                        .HasAnnotation("Shelter:FieldClassification", "Personal");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("PersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("ReasonCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reason_code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by_user_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("ToLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_location_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("VoidsMovementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voids_movement_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_movement");
+
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_movement_tenant_id_id");
+
+                    b.HasIndex("TenantId", "VoidsMovementId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_movement_tenant_id_voids_movement_id")
+                        .HasFilter("voids_movement_id IS NOT NULL");
+
+                    b.HasIndex("TenantId", "AnimalId", "OccurredAt", "Id")
+                        .HasDatabaseName("ix_movement_tenant_id_animal_id_occurred_at_id");
+
+                    b.ToTable("movement", "movements", t =>
+                        {
+                            t.HasCheckConstraint("ck_movement_shape", "(type = 'intake' AND reason_code IS NOT NULL AND to_location_id IS NOT NULL AND from_location_id IS NULL AND voids_movement_id IS NULL)\nOR (type = 'relocation' AND reason_code IS NULL AND from_location_id IS NOT NULL AND to_location_id IS NOT NULL AND from_location_id <> to_location_id AND person_id IS NULL AND voids_movement_id IS NULL)\nOR (type = 'outcome' AND reason_code IS NOT NULL AND from_location_id IS NOT NULL AND to_location_id IS NULL AND voids_movement_id IS NULL)\nOR (type = 'void' AND reason_code IS NULL AND from_location_id IS NULL AND to_location_id IS NULL AND voids_movement_id IS NOT NULL AND notes IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_movement_type", "type IN ('intake', 'relocation', 'outcome', 'void')");
+                        });
+
+                    b.HasAnnotation("Shelter:AuditSubject", "PersonId");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Movements.Domain.OutcomeType", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SacCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sac_category")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Label", "Shelter.Modules.Movements.Domain.OutcomeType.Label#LocalizedText", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("En")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("label_en")
+                                .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                            b1.Property<string>("Fr")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("label_fr")
+                                .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+                        });
+
+                    b.HasKey("Code")
+                        .HasName("pk_outcome_type");
+
+                    b.ToTable("outcome_type", "movements");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Movements.Domain.OutcomeTypeOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_hidden")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SacCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sac_category")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Label", "Shelter.Modules.Movements.Domain.OutcomeTypeOverride.Label#LocalizedText", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("En")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("label_en")
+                                .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                            b1.Property<string>("Fr")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("label_fr")
+                                .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_outcome_type_override");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_outcome_type_override_tenant_id_code");
+
+                    b.ToTable("outcome_type_override", "movements");
                 });
 
             modelBuilder.Entity("Shelter.Modules.Operations.Domain.Location", b =>
@@ -1551,6 +1770,16 @@ namespace Shelter.Migrations.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_timeline_event_animal_tenant_id_animal_id");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Movements.Domain.Movement", b =>
+                {
+                    b.HasOne("Shelter.Modules.Movements.Domain.Movement", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "VoidsMovementId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_movement_movement_tenant_id_voids_movement_id");
                 });
 
             modelBuilder.Entity("Shelter.Modules.Operations.Domain.Location", b =>

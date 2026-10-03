@@ -21,6 +21,7 @@
   </Folder>
   <Folder Name="/Modules/Movements/">
     <Project Path="Modules/Movements/Shelter.Modules.Movements.Contracts/Shelter.Modules.Movements.Contracts.csproj" />
+    <Project Path="Modules/Movements/Shelter.Modules.Movements.Tests/Shelter.Modules.Movements.Tests.csproj" />
     <Project Path="Modules/Movements/Shelter.Modules.Movements/Shelter.Modules.Movements.csproj" />
   </Folder>
   <Folder Name="/Modules/Municipal/">

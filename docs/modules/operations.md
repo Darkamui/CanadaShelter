@@ -10,7 +10,7 @@
 
 ## Does not own
 
-- Where an animal is (Movements records it; Animals keeps the custody summary). Archiving a location that holds animals is blocked from M3-5 on (`IAnimalPopulation`).
+- Where an animal is (Movements records it; Animals keeps the custody summary). Archiving a location with animals in care is blocked (`IAnimalPopulation`, M3-5).
 - Foster homes as locations (follow-up).
 - Tasks, schedules, kennel cards (later milestones).
 
@@ -19,7 +19,7 @@
 - `Shelter.Modules.Operations.Contracts/ILocationDirectory` (scoped, same `ShelterDbContext` as the caller):
   - `GetAsync(ids)` → `LocationSummary(Id, ParentId, Name, KindCode, IsArchived)` for display.
   - `GetSubtreeIdsAsync(rootId)` → the root and every location below it, archived included (filters "animals in this building").
-  - `IsActiveHoldingAsync(id)` → the location exists, is active and its kind holds animals (validates a movement's target).
+  - `LockForPlacementAsync(id)` → the location exists, is active and its kind holds animals; takes `FOR SHARE` on the row so a concurrent archive waits (validates a movement's target, M3-5).
 
 ## Events
 
@@ -32,7 +32,7 @@
 - Names are unique among active siblings, ignoring accents and case (`normalized_name`; partial unique index `NULLS NOT DISTINCT WHERE NOT is_archived`, so top-level locations are siblings).
 - The parent must exist in the organization and be active. The parent foreign key includes `tenant_id`, because a plain key check bypasses RLS (`LocationIsolationEndpointTests`).
 - A new kind must be a visible kind of the merged list. A hidden kind stays valid on locations that already have it, and keeps its `holds_animals` (`OperationsIsolationTests.Hidden_kind_keeps_its_holds_animals_attribute`).
-- Archive is blocked (409, `code = location.hasActiveChildren`) while active children remain. No unarchive yet; no hard delete (runtime role has SELECT/INSERT/UPDATE only).
+- Archive is blocked (409, `code = location.hasActiveChildren`) while active children remain, and (409, `code = location.hasAnimals`) while animals are in care there. Archive locks the row `FOR UPDATE` before counting, against `LockForPlacementAsync`'s `FOR SHARE` (`MovementEndpointTests.A_location_with_animals_in_care_cannot_be_archived`). No unarchive yet; no hard delete (runtime role has SELECT/INSERT/UPDATE only).
 - No personal data: names are places, all columns are classified non-personal.
 - Tenant isolation: `OperationsIsolationTests` (location, override, kind catalog, directory), `LocationIsolationEndpointTests` (cross-tenant 404/400, body `tenantId` ignored, `read_only` 403 on writes).
 
@@ -55,5 +55,6 @@
 
 - Location names are classified non-personal. Foster homes as locations (a name like a caregiver's) will need a personal classification and an audit subject first.
 - Unarchive, and endpoints to manage kind overrides (ADR 0017 follow-up).
+- Not guarded: changing a location's kind to one that does not hold animals while animals are there (M3 follow-up).
 - `shelter` kind holds animals so a small rescue can use a single location; revisit with pilots.
-- `TODO(fr-review)` in the migration: Enclos, Isolement, Clinique vétérinaire externe, Terrain. `_frReview`: `archiveBlocked`.
+- `TODO(fr-review)` in the migration: Enclos, Isolement, Clinique vétérinaire externe, Terrain. `_frReview`: `archiveBlocked`, `archiveHasAnimals`.

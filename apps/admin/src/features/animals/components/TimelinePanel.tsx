@@ -8,11 +8,20 @@ import { formatDateTime } from '../../../lib/format';
 
 const PAGE_SIZE = 20;
 
+/** Labels a code parameter (`reasonCode` → its reason's label); null hides it, undefined shows the value as sent. */
+export type TimelineValueFormatter = (key: string, value: string) => string | null | undefined;
+
 /**
  * The animal's timeline, newest first. Event types and parameter names are translated; location and person IDs show
- * the names the server resolved (person names only for staff who may read people).
+ * the names the server resolved (person names only for staff who may read people); `formatValue` labels codes.
  */
-export function TimelinePanel({ animalId }: { animalId: string }) {
+export function TimelinePanel({
+  animalId,
+  formatValue,
+}: {
+  animalId: string;
+  formatValue?: TimelineValueFormatter;
+}) {
   const { t } = useTranslation('animals');
   const [page, setPage] = useState(1);
   const timeline = useGetAnimalTimeline(
@@ -37,7 +46,7 @@ export function TimelinePanel({ animalId }: { animalId: string }) {
         <>
           <ol className="flex flex-col gap-3 border-l pl-4">
             {timeline.data.items.map((item) => (
-              <TimelineEntry key={item.id} item={item} />
+              <TimelineEntry key={item.id} item={item} formatValue={formatValue} />
             ))}
           </ol>
           {total > PAGE_SIZE && (
@@ -66,14 +75,27 @@ export function TimelinePanel({ animalId }: { animalId: string }) {
   );
 }
 
-function TimelineEntry({ item }: { item: TimelineItem }) {
+function TimelineEntry({
+  item,
+  formatValue,
+}: {
+  item: TimelineItem;
+  formatValue?: TimelineValueFormatter;
+}) {
   const { t, i18n } = useTranslation('animals');
-  // Resolved names first; other parameters (codes) as sent.
-  const details = Object.entries(item.parameters).map(([key, value]) => ({
-    key,
-    label: t(`timeline.parameters.${key}`, { defaultValue: key }),
-    value: item.names[key] ?? value,
-  }));
+  // Resolved names first, then labelled codes; other parameters as sent.
+  const details = Object.entries(item.parameters).flatMap(([key, value]) => {
+    const shown = item.names[key] ?? formatValue?.(key, value);
+    return shown === null
+      ? []
+      : [
+          {
+            key,
+            label: t(`timeline.parameters.${key}`, { defaultValue: key }),
+            value: shown ?? value,
+          },
+        ];
+  });
 
   return (
     <li className="flex flex-col gap-1">

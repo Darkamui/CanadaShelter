@@ -71,10 +71,10 @@ public sealed class OperationsIsolationTests(PostgresFixture fixture)
                 Summaries: await directory.GetAsync([room.Id, theirs.Id, room.Id], ct),
                 Subtree: await directory.GetSubtreeIdsAsync(building.Id, ct),
                 TheirSubtree: await directory.GetSubtreeIdsAsync(theirs.Id, ct),
-                RoomHolds: await directory.IsActiveHoldingAsync(room.Id, ct),
-                BuildingHolds: await directory.IsActiveHoldingAsync(building.Id, ct),
-                ArchivedHolds: await directory.IsActiveHoldingAsync(archived.Id, ct),
-                TheirsHolds: await directory.IsActiveHoldingAsync(theirs.Id, ct));
+                RoomHolds: await directory.LockForPlacementAsync(room.Id, ct),
+                BuildingHolds: await directory.LockForPlacementAsync(building.Id, ct),
+                ArchivedHolds: await directory.LockForPlacementAsync(archived.Id, ct),
+                TheirsHolds: await directory.LockForPlacementAsync(theirs.Id, ct));
         });
 
         Assert.Equal([room.Id], result.Summaries.Keys);
@@ -97,7 +97,7 @@ public sealed class OperationsIsolationTests(PostgresFixture fixture)
         var cage = await fixture.Tenants.SeedAsync(tenant, new Location(null, "cage", "Cage 1", 1, Now), ct);
         await fixture.Tenants.SeedAsync(tenant, new LocationKindOverride("cage", new LocalizedText("Cage", "Cage"), 50, isHidden: true, holdsAnimals: true), ct);
 
-        var holds = await fixture.InTenantAsync(tenant, db => new LocationDirectory(db, Tenant(tenant)).IsActiveHoldingAsync(cage.Id, ct));
+        var holds = await fixture.InTenantAsync(tenant, db => new LocationDirectory(db, Tenant(tenant)).LockForPlacementAsync(cage.Id, ct));
 
         Assert.True(holds);
     }

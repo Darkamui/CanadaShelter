@@ -64,7 +64,8 @@
   },
   "create": {
     "title": "New animal",
-    "submit": "Create"
+    "submit": "Create",
+    "startIntake": "Record the intake next"
   },
   "detail": {
     "backToList": "Back to animals",
@@ -92,8 +93,19 @@
     "title": "Timeline",
     "loadFailed": "Could not load the timeline.",
     "types": {
-      "animal_registered": "Animal registered"
+      "animal_registered": "Animal registered",
+      "intake_recorded": "Intake recorded",
+      "relocation_recorded": "Move recorded",
+      "outcome_recorded": "Outcome recorded",
+      "movement_voided": "Movement voided"
     },
-    "parameters": {}
+    "parameters": {
+      "reasonCode": "Reason",
+      "outcomeCode": "Outcome",
+      "toLocationId": "To",
+      "fromLocationId": "From",
+      "personId": "Person",
+      "movementType": "Voided movement"
+    }
   }
 }

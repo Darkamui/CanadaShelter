@@ -205,10 +205,10 @@ Cross-cutting rules:
 
 ## M3 exit criteria
 
-- [ ] Every new tenant-owned table has RLS, indexes starting with `tenant_id` (or a documented exception), and an isolation test.
-- [ ] The ledger, summary and timeline are proven atomic, and the ledger is append-only at the database level.
-- [ ] `tenancy-privacy-reviewer` reports no Critical/High findings on M3 code.
-- [ ] Every new personal field is classified. No personal data appears in logs, job arguments or timeline parameters.
+- [x] Every new tenant-owned table has RLS, indexes starting with `tenant_id` (or a documented exception), and an isolation test.
+- [x] The ledger, summary and timeline are proven atomic, and the ledger is append-only at the database level.
+- [x] `tenancy-privacy-reviewer` reports no Critical/High findings on M3 code.
+- [x] Every new personal field is classified. No personal data appears in logs, job arguments or timeline parameters.
 - [ ] Daniel has personally reviewed all M3 migrations.
 
 Follow-ups (not M3):

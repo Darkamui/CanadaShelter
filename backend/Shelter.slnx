@@ -8,6 +8,7 @@
   <Folder Name="/Modules/" />
   <Folder Name="/Modules/Animals/">
     <Project Path="Modules/Animals/Shelter.Modules.Animals.Contracts/Shelter.Modules.Animals.Contracts.csproj" />
+    <Project Path="Modules/Animals/Shelter.Modules.Animals.Tests/Shelter.Modules.Animals.Tests.csproj" />
     <Project Path="Modules/Animals/Shelter.Modules.Animals/Shelter.Modules.Animals.csproj" />
   </Folder>
   <Folder Name="/Modules/Engagement/">

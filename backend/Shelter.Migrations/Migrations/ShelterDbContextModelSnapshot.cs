@@ -245,6 +245,272 @@ namespace Shelter.Migrations.Migrations
                     b.ToTable("person_data_key", "audit");
                 });
 
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.Animal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("BehaviourAlert")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("behaviour_alert")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("BirthDateEstimated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("birth_date_estimated")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Breed")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("breed")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Colour")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("colour")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("CurrentIntakeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("current_intake_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("CurrentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("current_location_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("CustodyStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("custody_status")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset?>("InCareSince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("in_care_since")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("LastOutcomeCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("last_outcome_code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("LegalAlert")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("legal_alert")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Marks")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("marks")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("MedicalAlert")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("medical_alert")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer")
+                        .HasColumnName("number")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("ReproductiveStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("reproductive_status")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("search_text")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SecondaryBreed")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("secondary_breed")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("sex")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SpeciesCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("species_code")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_animal");
+
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_animal_tenant_id_id");
+
+                    b.HasIndex("SearchText")
+                        .HasDatabaseName("ix_animal_search_text");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SearchText"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("TenantId", "Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_animal_tenant_id_number");
+
+                    b.HasIndex("TenantId", "SpeciesCode")
+                        .HasDatabaseName("ix_animal_tenant_id_species_code");
+
+                    b.HasIndex("TenantId", "CustodyStatus", "CurrentLocationId")
+                        .HasDatabaseName("ix_animal_tenant_id_custody_status_current_location_id");
+
+                    b.ToTable("animal", "animals", t =>
+                        {
+                            t.HasCheckConstraint("ck_animal_custody", "(custody_status = 'in_care') = (current_location_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_animal_number", "number > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.AnimalIdentifier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("AnimalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("animal_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset?>("DeactivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deactivated_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("NormalizedValue")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("normalized_value")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("value")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_animal_identifier");
+
+                    b.HasIndex("TenantId", "AnimalId")
+                        .HasDatabaseName("ix_animal_identifier_tenant_id_animal_id");
+
+                    b.HasIndex(new[] { "TenantId", "NormalizedValue" }, "ix_animal_identifier_tenant_id_normalized_value")
+                        .HasDatabaseName("ix_animal_identifier_tenant_id_normalized_value");
+
+                    b.HasIndex(new[] { "TenantId", "NormalizedValue" }, "ux_animal_identifier_active_microchip")
+                        .IsUnique()
+                        .HasDatabaseName("ux_animal_identifier_active_microchip")
+                        .HasFilter("is_active AND type = 'microchip'");
+
+                    b.ToTable("animal_identifier", "animals");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.AnimalNumberCounter", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<int>("LastNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_number")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("TenantId")
+                        .HasName("pk_animal_number_counter");
+
+                    b.ToTable("animal_number_counter", "animals");
+                });
+
             modelBuilder.Entity("Shelter.Modules.Animals.Domain.Species", b =>
                 {
                     b.Property<string>("Code")
@@ -339,6 +605,67 @@ namespace Shelter.Migrations.Migrations
                         .HasDatabaseName("ix_species_override_tenant_id_code");
 
                     b.ToTable("species_override", "animals");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.TimelineEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("AnimalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("animal_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Parameters")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parameters")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("SourceModule")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("source_module")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid?>("SourceRecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_record_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type")
+                        .HasAnnotation("Shelter:FieldClassification", "NonPersonal");
+
+                    b.HasKey("Id")
+                        .HasName("pk_timeline_event");
+
+                    b.HasIndex("TenantId", "AnimalId", "OccurredAt", "Id")
+                        .HasDatabaseName("ix_timeline_event_tenant_id_animal_id_occurred_at_id");
+
+                    b.ToTable("timeline_event", "animals");
                 });
 
             modelBuilder.Entity("Shelter.Modules.Movements.Domain.IntakeReason", b =>
@@ -1202,6 +1529,28 @@ namespace Shelter.Migrations.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user_token_user_account_user_id");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.AnimalIdentifier", b =>
+                {
+                    b.HasOne("Shelter.Modules.Animals.Domain.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "AnimalId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_animal_identifier_animal_tenant_id_animal_id");
+                });
+
+            modelBuilder.Entity("Shelter.Modules.Animals.Domain.TimelineEvent", b =>
+                {
+                    b.HasOne("Shelter.Modules.Animals.Domain.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "AnimalId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_timeline_event_animal_tenant_id_animal_id");
                 });
 
             modelBuilder.Entity("Shelter.Modules.Operations.Domain.Location", b =>

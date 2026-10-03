@@ -20,3 +20,240 @@ export const ListAnimalsSpeciesResponseItem = zod
   })
   .describe('One value of a reference list as the API returns it: a stable code and both labels.');
 export const ListAnimalsSpeciesResponse = zod.array(ListAnimalsSpeciesResponseItem);
+
+export const ListAnimalsQueryParams = zod.object({
+  page: zod.int().optional(),
+  pageSize: zod.int().optional(),
+  q: zod.string().optional(),
+  status: zod.string().optional(),
+  species: zod.string().optional(),
+  locationId: zod.uuid().optional(),
+  sort: zod.string().optional(),
+});
+
+export const ListAnimalsResponse = zod
+  .object({
+    items: zod.array(
+      zod.object({
+        id: zod.uuid(),
+        number: zod.int(),
+        name: zod.string().nullable(),
+        speciesCode: zod.string(),
+        breed: zod.string().nullable(),
+        sex: zod.string(),
+        custodyStatus: zod.string(),
+        currentLocationId: zod.uuid().nullable(),
+        currentLocationName: zod.string().nullable(),
+        inCareSince: zod.iso.datetime({ offset: true }).nullable(),
+        hasAlerts: zod.boolean(),
+      }),
+    ),
+    page: zod.int(),
+    pageSize: zod.int(),
+    totalCount: zod.int(),
+  })
+  .describe('One page of T with the total row count, so clients can render page controls.');
+
+export const CreateAnimalBody = zod.object({
+  name: zod.string().nullable(),
+  speciesCode: zod.string().nullable(),
+  breed: zod.string().nullable(),
+  secondaryBreed: zod.string().nullable(),
+  colour: zod.string().nullable(),
+  sex: zod.string().nullable(),
+  reproductiveStatus: zod.string().nullable(),
+  birthDate: zod.iso.date().nullable(),
+  birthDateEstimated: zod.boolean().nullable(),
+  marks: zod.string().nullable(),
+  behaviourAlert: zod.string().nullable(),
+  medicalAlert: zod.string().nullable(),
+  legalAlert: zod.string().nullable(),
+  microchip: zod.string().nullable(),
+});
+
+export const CreateAnimalResponse = zod.object({
+  id: zod.uuid(),
+  number: zod.int(),
+  name: zod.string().nullable(),
+  speciesCode: zod.string(),
+  breed: zod.string().nullable(),
+  secondaryBreed: zod.string().nullable(),
+  colour: zod.string().nullable(),
+  sex: zod.string(),
+  reproductiveStatus: zod.string(),
+  birthDate: zod.iso.date().nullable(),
+  birthDateEstimated: zod.boolean(),
+  marks: zod.string().nullable(),
+  behaviourAlert: zod.string().nullable(),
+  medicalAlert: zod.string().nullable(),
+  legalAlert: zod.string().nullable(),
+  custodyStatus: zod.string(),
+  currentLocationId: zod.uuid().nullable(),
+  currentLocationName: zod.string().nullable(),
+  inCareSince: zod.iso.datetime({ offset: true }).nullable(),
+  lastOutcomeCode: zod.string().nullable(),
+  identifiers: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      type: zod.string(),
+      value: zod.string(),
+      isActive: zod.boolean(),
+      createdAt: zod.iso.datetime({ offset: true }),
+      deactivatedAt: zod.iso.datetime({ offset: true }).nullable(),
+    }),
+  ),
+  createdAt: zod.iso.datetime({ offset: true }),
+  updatedAt: zod.iso.datetime({ offset: true }),
+  version: zod.int(),
+});
+
+export const GetAnimalParams = zod.object({
+  animalId: zod.uuid(),
+});
+
+export const GetAnimalResponse = zod.object({
+  id: zod.uuid(),
+  number: zod.int(),
+  name: zod.string().nullable(),
+  speciesCode: zod.string(),
+  breed: zod.string().nullable(),
+  secondaryBreed: zod.string().nullable(),
+  colour: zod.string().nullable(),
+  sex: zod.string(),
+  reproductiveStatus: zod.string(),
+  birthDate: zod.iso.date().nullable(),
+  birthDateEstimated: zod.boolean(),
+  marks: zod.string().nullable(),
+  behaviourAlert: zod.string().nullable(),
+  medicalAlert: zod.string().nullable(),
+  legalAlert: zod.string().nullable(),
+  custodyStatus: zod.string(),
+  currentLocationId: zod.uuid().nullable(),
+  currentLocationName: zod.string().nullable(),
+  inCareSince: zod.iso.datetime({ offset: true }).nullable(),
+  lastOutcomeCode: zod.string().nullable(),
+  identifiers: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      type: zod.string(),
+      value: zod.string(),
+      isActive: zod.boolean(),
+      createdAt: zod.iso.datetime({ offset: true }),
+      deactivatedAt: zod.iso.datetime({ offset: true }).nullable(),
+    }),
+  ),
+  createdAt: zod.iso.datetime({ offset: true }),
+  updatedAt: zod.iso.datetime({ offset: true }),
+  version: zod.int(),
+});
+
+export const UpdateAnimalParams = zod.object({
+  animalId: zod.uuid(),
+});
+
+export const UpdateAnimalBody = zod.object({
+  name: zod.string().nullable(),
+  speciesCode: zod.string().nullable(),
+  breed: zod.string().nullable(),
+  secondaryBreed: zod.string().nullable(),
+  colour: zod.string().nullable(),
+  sex: zod.string().nullable(),
+  reproductiveStatus: zod.string().nullable(),
+  birthDate: zod.iso.date().nullable(),
+  birthDateEstimated: zod.boolean().nullable(),
+  marks: zod.string().nullable(),
+  behaviourAlert: zod.string().nullable(),
+  medicalAlert: zod.string().nullable(),
+  legalAlert: zod.string().nullable(),
+  version: zod.int(),
+});
+
+export const UpdateAnimalResponse = zod.object({
+  id: zod.uuid(),
+  number: zod.int(),
+  name: zod.string().nullable(),
+  speciesCode: zod.string(),
+  breed: zod.string().nullable(),
+  secondaryBreed: zod.string().nullable(),
+  colour: zod.string().nullable(),
+  sex: zod.string(),
+  reproductiveStatus: zod.string(),
+  birthDate: zod.iso.date().nullable(),
+  birthDateEstimated: zod.boolean(),
+  marks: zod.string().nullable(),
+  behaviourAlert: zod.string().nullable(),
+  medicalAlert: zod.string().nullable(),
+  legalAlert: zod.string().nullable(),
+  custodyStatus: zod.string(),
+  currentLocationId: zod.uuid().nullable(),
+  currentLocationName: zod.string().nullable(),
+  inCareSince: zod.iso.datetime({ offset: true }).nullable(),
+  lastOutcomeCode: zod.string().nullable(),
+  identifiers: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      type: zod.string(),
+      value: zod.string(),
+      isActive: zod.boolean(),
+      createdAt: zod.iso.datetime({ offset: true }),
+      deactivatedAt: zod.iso.datetime({ offset: true }).nullable(),
+    }),
+  ),
+  createdAt: zod.iso.datetime({ offset: true }),
+  updatedAt: zod.iso.datetime({ offset: true }),
+  version: zod.int(),
+});
+
+export const GetAnimalTimelineParams = zod.object({
+  animalId: zod.uuid(),
+});
+
+export const GetAnimalTimelineQueryParams = zod.object({
+  page: zod.int().optional(),
+  pageSize: zod.int().optional(),
+});
+
+export const GetAnimalTimelineResponse = zod
+  .object({
+    items: zod.array(
+      zod.object({
+        id: zod.uuid(),
+        type: zod.string(),
+        occurredAt: zod.iso.datetime({ offset: true }),
+        recordedAt: zod.iso.datetime({ offset: true }),
+        sourceModule: zod.string(),
+        sourceRecordId: zod.uuid().nullable(),
+        parameters: zod.record(zod.string(), zod.string()),
+        names: zod.record(zod.string(), zod.string()),
+      }),
+    ),
+    page: zod.int(),
+    pageSize: zod.int(),
+    totalCount: zod.int(),
+  })
+  .describe('One page of T with the total row count, so clients can render page controls.');
+
+export const AddAnimalIdentifierParams = zod.object({
+  animalId: zod.uuid(),
+});
+
+export const AddAnimalIdentifierBody = zod.object({
+  type: zod.string().nullable(),
+  value: zod.string().nullable(),
+});
+
+export const AddAnimalIdentifierResponse = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  value: zod.string(),
+  isActive: zod.boolean(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  deactivatedAt: zod.iso.datetime({ offset: true }).nullable(),
+});
+
+export const DeactivateAnimalIdentifierParams = zod.object({
+  animalId: zod.uuid(),
+  identifierId: zod.uuid(),
+});
+
+export const DeactivateAnimalIdentifierResponse = zod.void();

@@ -26,6 +26,7 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0018](0018-identity-authorization-model.md) | Identity and authorization model (global accounts, membership self-read, permissions, MFA) | Accepted |
 | [0019](0019-admin-form-stack.md) | Admin form stack: React Hook Form + Zod, catalog-key messages, server errors on fields | Accepted |
 | [0020](0020-anonymous-endpoint-rate-limiting.md) | Rate limiting the anonymous auth endpoints (built-in, in-memory, per IP) | Accepted |
+| [0021](0021-in-process-module-contracts.md) | In-process module contracts: shared DbContext and transaction, stage and never save, no event bus yet | Accepted |
 
 ## Backlog
 

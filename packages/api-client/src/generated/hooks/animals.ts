@@ -4,20 +4,35 @@
  * Shelter.Host | v1
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ReferenceItem } from '../model';
+import type {
+  AnimalIdentifierItem,
+  AnimalIdentifierRequest,
+  AnimalResponse,
+  CreateAnimalRequest,
+  GetAnimalTimelineParams,
+  HttpValidationProblemDetails,
+  ListAnimalsParams,
+  PagedResultOfAnimalListItem,
+  PagedResultOfTimelineItem,
+  ReferenceItem,
+  UpdateAnimalRequest,
+} from '../model';
 
 import { shelterFetch } from '../../http/fetcher.ts';
 import type { ErrorType } from '../../http/fetcher.ts';
@@ -149,3 +164,778 @@ export function useListAnimalsSpecies<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getListAnimalsUrl = (params?: ListAnimalsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/animals?${stringifiedParams}` : `/api/animals`;
+};
+
+export const listAnimals = async (
+  params?: ListAnimalsParams,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<PagedResultOfAnimalListItem> => {
+  return shelterFetch<PagedResultOfAnimalListItem>(getListAnimalsUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getListAnimalsQueryKey = (params?: ListAnimalsParams) => {
+  return [`/api/animals`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAnimalsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnimals>>,
+  TError = ErrorType<HttpValidationProblemDetails>,
+>(
+  params?: ListAnimalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnimals>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnimalsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnimals>>> = ({ signal }) =>
+    listAnimals(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAnimals>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAnimalsQueryResult = NonNullable<Awaited<ReturnType<typeof listAnimals>>>;
+export type ListAnimalsQueryError = ErrorType<HttpValidationProblemDetails>;
+
+export function useListAnimals<
+  TData = Awaited<ReturnType<typeof listAnimals>>,
+  TError = ErrorType<HttpValidationProblemDetails>,
+>(
+  params: undefined | ListAnimalsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnimals>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnimals>>,
+          TError,
+          Awaited<ReturnType<typeof listAnimals>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnimals<
+  TData = Awaited<ReturnType<typeof listAnimals>>,
+  TError = ErrorType<HttpValidationProblemDetails>,
+>(
+  params?: ListAnimalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnimals>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnimals>>,
+          TError,
+          Awaited<ReturnType<typeof listAnimals>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnimals<
+  TData = Awaited<ReturnType<typeof listAnimals>>,
+  TError = ErrorType<HttpValidationProblemDetails>,
+>(
+  params?: ListAnimalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnimals>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useListAnimals<
+  TData = Awaited<ReturnType<typeof listAnimals>>,
+  TError = ErrorType<HttpValidationProblemDetails>,
+>(
+  params?: ListAnimalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnimals>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAnimalsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCreateAnimalUrl = () => {
+  return `/api/animals`;
+};
+
+export const createAnimal = async (
+  createAnimalRequest: CreateAnimalRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<AnimalResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<AnimalResponse>(getCreateAnimalUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAnimalRequest),
+  });
+};
+
+export const getCreateAnimalMutationKey = () => ['createAnimal'] as const;
+
+export const getCreateAnimalMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAnimal>>,
+    TError,
+    CreateAnimalMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAnimal>>,
+  TError,
+  CreateAnimalMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateAnimalMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAnimal>>,
+    CreateAnimalMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAnimal(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAnimalMutationResult = NonNullable<Awaited<ReturnType<typeof createAnimal>>>;
+export type CreateAnimalMutationBody = CreateAnimalRequest;
+export type CreateAnimalMutationError = ErrorType<HttpValidationProblemDetails>;
+export type CreateAnimalMutationVariables = { data: CreateAnimalRequest };
+
+export const useCreateAnimal = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAnimal>>,
+      TError,
+      CreateAnimalMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAnimal>>,
+  TError,
+  CreateAnimalMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateAnimalMutationOptions(options), queryClient);
+};
+export const getGetAnimalUrl = (animalId: string) => {
+  return `/api/animals/${animalId}`;
+};
+
+export const getAnimal = async (
+  animalId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<AnimalResponse> => {
+  return shelterFetch<AnimalResponse>(getGetAnimalUrl(animalId), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetAnimalQueryKey = (animalId: string) => {
+  return [`/api/animals/${animalId}`] as const;
+};
+
+export const getGetAnimalQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnimal>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnimalQueryKey(animalId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnimal>>> = ({ signal }) =>
+    getAnimal(animalId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: animalId !== null && animalId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAnimalQueryResult = NonNullable<Awaited<ReturnType<typeof getAnimal>>>;
+export type GetAnimalQueryError = ErrorType<void>;
+
+export function useGetAnimal<
+  TData = Awaited<ReturnType<typeof getAnimal>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimal>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimal>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimal<
+  TData = Awaited<ReturnType<typeof getAnimal>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimal>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimal>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimal<
+  TData = Awaited<ReturnType<typeof getAnimal>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetAnimal<
+  TData = Awaited<ReturnType<typeof getAnimal>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimal>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAnimalQueryOptions(animalId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateAnimalUrl = (animalId: string) => {
+  return `/api/animals/${animalId}`;
+};
+
+export const updateAnimal = async (
+  animalId: string,
+  updateAnimalRequest: UpdateAnimalRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<AnimalResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<AnimalResponse>(getUpdateAnimalUrl(animalId), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateAnimalRequest),
+  });
+};
+
+export const getUpdateAnimalMutationKey = () => ['updateAnimal'] as const;
+
+export const getUpdateAnimalMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAnimal>>,
+    TError,
+    UpdateAnimalMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAnimal>>,
+  TError,
+  UpdateAnimalMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateAnimalMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAnimal>>,
+    UpdateAnimalMutationVariables
+  > = (props) => {
+    const { animalId, data } = props ?? {};
+
+    return updateAnimal(animalId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAnimalMutationResult = NonNullable<Awaited<ReturnType<typeof updateAnimal>>>;
+export type UpdateAnimalMutationBody = UpdateAnimalRequest;
+export type UpdateAnimalMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type UpdateAnimalMutationVariables = { animalId: string; data: UpdateAnimalRequest };
+
+export const useUpdateAnimal = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAnimal>>,
+      TError,
+      UpdateAnimalMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAnimal>>,
+  TError,
+  UpdateAnimalMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateAnimalMutationOptions(options), queryClient);
+};
+export const getGetAnimalTimelineUrl = (animalId: string, params?: GetAnimalTimelineParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/animals/${animalId}/timeline?${stringifiedParams}`
+    : `/api/animals/${animalId}/timeline`;
+};
+
+export const getAnimalTimeline = async (
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<PagedResultOfTimelineItem> => {
+  return shelterFetch<PagedResultOfTimelineItem>(getGetAnimalTimelineUrl(animalId, params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetAnimalTimelineQueryKey = (
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+) => {
+  return [`/api/animals/${animalId}/timeline`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAnimalTimelineQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnimalTimeline>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnimalTimelineQueryKey(animalId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnimalTimeline>>> = ({ signal }) =>
+    getAnimalTimeline(animalId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: animalId !== null && animalId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAnimalTimelineQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnimalTimeline>>
+>;
+export type GetAnimalTimelineQueryError = ErrorType<void>;
+
+export function useGetAnimalTimeline<
+  TData = Awaited<ReturnType<typeof getAnimalTimeline>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  params: undefined | GetAnimalTimelineParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimalTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimalTimeline>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimalTimeline<
+  TData = Awaited<ReturnType<typeof getAnimalTimeline>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimalTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimalTimeline>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimalTimeline<
+  TData = Awaited<ReturnType<typeof getAnimalTimeline>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetAnimalTimeline<
+  TData = Awaited<ReturnType<typeof getAnimalTimeline>>,
+  TError = ErrorType<void>,
+>(
+  animalId: string,
+  params?: GetAnimalTimelineParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalTimeline>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAnimalTimelineQueryOptions(animalId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAddAnimalIdentifierUrl = (animalId: string) => {
+  return `/api/animals/${animalId}/identifiers`;
+};
+
+export const addAnimalIdentifier = async (
+  animalId: string,
+  animalIdentifierRequest: AnimalIdentifierRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<AnimalIdentifierItem> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<AnimalIdentifierItem>(getAddAnimalIdentifierUrl(animalId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(animalIdentifierRequest),
+  });
+};
+
+export const getAddAnimalIdentifierMutationKey = () => ['addAnimalIdentifier'] as const;
+
+export const getAddAnimalIdentifierMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addAnimalIdentifier>>,
+    TError,
+    AddAnimalIdentifierMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addAnimalIdentifier>>,
+  TError,
+  AddAnimalIdentifierMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddAnimalIdentifierMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addAnimalIdentifier>>,
+    AddAnimalIdentifierMutationVariables
+  > = (props) => {
+    const { animalId, data } = props ?? {};
+
+    return addAnimalIdentifier(animalId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddAnimalIdentifierMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addAnimalIdentifier>>
+>;
+export type AddAnimalIdentifierMutationBody = AnimalIdentifierRequest;
+export type AddAnimalIdentifierMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type AddAnimalIdentifierMutationVariables = {
+  animalId: string;
+  data: AnimalIdentifierRequest;
+};
+
+export const useAddAnimalIdentifier = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addAnimalIdentifier>>,
+      TError,
+      AddAnimalIdentifierMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addAnimalIdentifier>>,
+  TError,
+  AddAnimalIdentifierMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddAnimalIdentifierMutationOptions(options), queryClient);
+};
+export const getDeactivateAnimalIdentifierUrl = (animalId: string, identifierId: string) => {
+  return `/api/animals/${animalId}/identifiers/${identifierId}/deactivate`;
+};
+
+export const deactivateAnimalIdentifier = async (
+  animalId: string,
+  identifierId: string,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<void> => {
+  return shelterFetch<void>(getDeactivateAnimalIdentifierUrl(animalId, identifierId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getDeactivateAnimalIdentifierMutationKey = () =>
+  ['deactivateAnimalIdentifier'] as const;
+
+export const getDeactivateAnimalIdentifierMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivateAnimalIdentifier>>,
+    TError,
+    DeactivateAnimalIdentifierMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deactivateAnimalIdentifier>>,
+  TError,
+  DeactivateAnimalIdentifierMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeactivateAnimalIdentifierMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deactivateAnimalIdentifier>>,
+    DeactivateAnimalIdentifierMutationVariables
+  > = (props) => {
+    const { animalId, identifierId } = props ?? {};
+
+    return deactivateAnimalIdentifier(animalId, identifierId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeactivateAnimalIdentifierMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deactivateAnimalIdentifier>>
+>;
+
+export type DeactivateAnimalIdentifierMutationError = ErrorType<void>;
+export type DeactivateAnimalIdentifierMutationVariables = {
+  animalId: string;
+  identifierId: string;
+};
+
+export const useDeactivateAnimalIdentifier = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deactivateAnimalIdentifier>>,
+      TError,
+      DeactivateAnimalIdentifierMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deactivateAnimalIdentifier>>,
+  TError,
+  DeactivateAnimalIdentifierMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeactivateAnimalIdentifierMutationOptions(options), queryClient);
+};

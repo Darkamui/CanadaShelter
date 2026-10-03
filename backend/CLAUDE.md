@@ -50,6 +50,7 @@ ArchitectureTests/       Enforces module boundaries (Rules/: pure rules + real s
 - **Bilingual data:** use the `LocalizedText` value object (`Fr`, `En`) mapped to two columns.
 - **Personal data:** mark personal fields via the audit classification (see `BuildingBlocks/Auditing`). Unclassified fields on a Person-linked entity fail the architecture test.
 - **Transactions:** a state change, its movement row, and its timeline event are written in one transaction (architecture §7.1).
+- **Cross-module calls (ADR 0021):** resolve the other module's `.Contracts` interface from the request scope; it shares your `ShelterDbContext` and transaction. Contract methods stage changes and never save; the caller saves once.
 - **Errors:** domain failures return results/ProblemDetails. Exceptions are for bugs.
 - **Logging:** structured (JSON console, scopes carry `CorrelationId`/`RequestId`/`TraceId`); never log personal field values. Use source-generated `[LoggerMessage]` and mark parameters `[PersonalData]` (erased) or `[NonPersonalData]` (`BuildingBlocks/Logging`).
 - **OpenAPI:** give every endpoint `.WithName("<Verb><Module><Thing>")` (becomes the Orval hook name). `dotnet build backend/Shelter.Host -p:ExportOpenApi=true` writes `packages/api-client/openapi.json` (also on Release/CI builds). Commit it.

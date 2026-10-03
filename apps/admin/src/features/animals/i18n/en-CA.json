@@ -1,7 +1,99 @@
 {
-  "species": {
-    "title": "Species",
-    "loading": "Loading species…",
-    "error": "Could not load species."
+  "title": "Animals",
+  "list": {
+    "caption": "Animal list",
+    "new": "New animal",
+    "searchLabel": "Name, number or microchip",
+    "allStatuses": "All statuses",
+    "allSpecies": "All species",
+    "unnamed": "(no name)",
+    "hasAlerts": "Yes"
+  },
+  "fields": {
+    "number": "Number",
+    "name": "Name",
+    "species": "Species",
+    "breed": "Breed",
+    "secondaryBreed": "Secondary breed",
+    "colour": "Colour",
+    "sex": "Sex",
+    "reproductiveStatus": "Spay/neuter",
+    "birthDate": "Birth date",
+    "birthDateEstimated": "Estimated",
+    "microchip": "Microchip",
+    "microchipHint": "Optional. Other identifiers can be added after creation.",
+    "custodyStatus": "Status",
+    "location": "Location",
+    "alerts": "Alerts",
+    "notesLegend": "Marks and alerts",
+    "noPersonalInformation": "Describe the animal only. Do not enter personal information (a person's name, address or phone).",
+    "marks": "Distinctive marks",
+    "behaviourAlert": "Behaviour alert",
+    "medicalAlert": "Medical alert",
+    "legalAlert": "Legal alert"
+  },
+  "sexes": {
+    "unknown": "Unknown",
+    "male": "Male",
+    "female": "Female"
+  },
+  "reproductiveStatuses": {
+    "unknown": "Unknown",
+    "intact": "Intact",
+    "sterilized": "Spayed/neutered"
+  },
+  "custodyStatuses": {
+    "not_in_care": "Not in care",
+    "in_care": "In care",
+    "outcome": "Out"
+  },
+  "identifierTypes": {
+    "microchip": "Microchip",
+    "licence": "Licence",
+    "external": "External number"
+  },
+  "form": {
+    "chooseSpecies": "Choose a species",
+    "speciesRequired": "Choose a species.",
+    "speciesUnavailable": "This species is not offered in your organization.",
+    "birthDateRange": "Enter a date between 1950 and today.",
+    "microchipInvalid": "This microchip number is invalid or already belongs to another animal.",
+    "tooLong": "This field is too long.",
+    "invalid": "This value is not valid.",
+    "unexpectedError": "Something went wrong. Try again."
+  },
+  "create": {
+    "title": "New animal",
+    "submit": "Create"
+  },
+  "detail": {
+    "backToList": "Back to animals",
+    "notFound": "This animal cannot be found.",
+    "loadFailed": "Could not load this animal. Try again.",
+    "created": "The animal was created.",
+    "saved": "Your changes were saved.",
+    "save": "Save",
+    "versionConflict": "Someone else changed this animal in the meantime. Their version is shown; make your changes again.",
+    "inCareSince": "in care since {{date}}",
+    "estimated": "estimated"
+  },
+  "identifiers": {
+    "title": "Identifiers",
+    "none": "No identifiers.",
+    "type": "Type",
+    "value": "Number",
+    "add": "Add",
+    "deactivate": "Deactivate",
+    "deactivateLabel": "Deactivate {{value}}",
+    "deactivatedOn": "deactivated on {{date}}",
+    "valueRejected": "This number is invalid or already belongs to another animal."
+  },
+  "timeline": {
+    "title": "Timeline",
+    "loadFailed": "Could not load the timeline.",
+    "types": {
+      "animal_registered": "Animal registered"
+    },
+    "parameters": {}
   }
 }

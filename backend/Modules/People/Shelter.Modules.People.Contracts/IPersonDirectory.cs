@@ -18,3 +18,10 @@ public interface IPersonDirectory
 /// <param name="DisplayName">Name shown in the app.</param>
 /// <param name="IsArchived">Whether the record is archived.</param>
 public sealed record PersonSummary(Guid Id, string DisplayName, bool IsArchived);
+
+/// <summary>People permission names other modules may check with <c>IPermissionContext</c> (ADR 0018).</summary>
+public static class PeoplePermissionNames
+{
+    /// <summary>Read people: names, contact details, addresses, notes.</summary>
+    public const string Read = "person.read";
+}

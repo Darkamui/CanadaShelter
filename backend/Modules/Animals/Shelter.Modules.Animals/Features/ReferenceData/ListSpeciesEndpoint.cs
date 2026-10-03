@@ -2,13 +2,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Shelter.BuildingBlocks.Authorization;
 using Shelter.BuildingBlocks.Localization;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.BuildingBlocks.Tenancy;
 using Shelter.Modules.Animals.Authorization;
-using Shelter.Modules.Animals.Domain;
 
 namespace Shelter.Modules.Animals.Features.ReferenceData;
 
@@ -25,13 +23,7 @@ internal static class ListSpeciesEndpoint
     internal static async Task<Ok<IReadOnlyList<ReferenceItem>>> Handle(
         ShelterDbContext db, ITenantContext tenant, CancellationToken cancellationToken)
     {
-        var globals = await db.Set<Species>().AsNoTracking().ToListAsync(cancellationToken);
-        var overrides = tenant.TenantId is null
-            ? []
-            : await db.Set<SpeciesOverride>().AsNoTracking().ToListAsync(cancellationToken);
-
-        return TypedResults.Ok(ReferenceList.Merge(
-            globals.Select(s => new ReferenceEntry(s.Code, s.Label, s.SortOrder)),
-            overrides.Select(o => new ReferenceEntry(o.Code, o.Label, o.SortOrder, o.IsHidden))));
+        var species = await SpeciesCatalog.LoadAsync(db, tenant, cancellationToken);
+        return TypedResults.Ok(ReferenceList.Merge(species.Values, []));
     }
 }

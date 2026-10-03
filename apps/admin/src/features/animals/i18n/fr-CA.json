@@ -1,7 +1,107 @@
 {
-  "species": {
-    "title": "Espèces",
-    "loading": "Chargement des espèces…",
-    "error": "Impossible de charger les espèces."
+  "_frReview": [
+    "custodyStatuses.not_in_care",
+    "custodyStatuses.in_care",
+    "custodyStatuses.outcome",
+    "identifierTypes.external",
+    "fields.legalAlert",
+    "detail.inCareSince"
+  ],
+  "title": "Animaux",
+  "list": {
+    "caption": "Liste des animaux",
+    "new": "Nouvel animal",
+    "searchLabel": "Nom, numéro ou micropuce",
+    "allStatuses": "Tous les statuts",
+    "allSpecies": "Toutes les espèces",
+    "unnamed": "(sans nom)",
+    "hasAlerts": "Oui"
+  },
+  "fields": {
+    "number": "Numéro",
+    "name": "Nom",
+    "species": "Espèce",
+    "breed": "Race",
+    "secondaryBreed": "Race secondaire",
+    "colour": "Couleur",
+    "sex": "Sexe",
+    "reproductiveStatus": "Stérilisation",
+    "birthDate": "Date de naissance",
+    "birthDateEstimated": "Date estimée",
+    "microchip": "Micropuce",
+    "microchipHint": "Facultatif. D'autres identifiants peuvent être ajoutés après la création.",
+    "custodyStatus": "Statut",
+    "location": "Emplacement",
+    "alerts": "Alertes",
+    "notesLegend": "Signes distinctifs et alertes",
+    "noPersonalInformation": "Décrivez l'animal seulement. N'inscrivez aucun renseignement personnel (nom, adresse, téléphone d'une personne).",
+    "marks": "Signes distinctifs",
+    "behaviourAlert": "Alerte comportementale",
+    "medicalAlert": "Alerte médicale",
+    "legalAlert": "Alerte juridique"
+  },
+  "sexes": {
+    "unknown": "Inconnu",
+    "male": "Mâle",
+    "female": "Femelle"
+  },
+  "reproductiveStatuses": {
+    "unknown": "Inconnue",
+    "intact": "Non stérilisé",
+    "sterilized": "Stérilisé"
+  },
+  "custodyStatuses": {
+    "not_in_care": "Pas au refuge",
+    "in_care": "Au refuge",
+    "outcome": "Sorti"
+  },
+  "identifierTypes": {
+    "microchip": "Micropuce",
+    "licence": "Médaille",
+    "external": "Numéro externe"
+  },
+  "form": {
+    "chooseSpecies": "Choisir une espèce",
+    "speciesRequired": "Choisissez une espèce.",
+    "speciesUnavailable": "Cette espèce n'est pas offerte dans votre organisme.",
+    "birthDateRange": "Entrez une date entre 1950 et aujourd'hui.",
+    "microchipInvalid": "Ce numéro de micropuce n'est pas valide ou est déjà attribué à un autre animal.",
+    "tooLong": "Ce champ est trop long.",
+    "invalid": "Cette valeur n'est pas valide.",
+    "unexpectedError": "Une erreur inattendue est survenue. Réessayez."
+  },
+  "create": {
+    "title": "Nouvel animal",
+    "submit": "Créer"
+  },
+  "detail": {
+    "backToList": "Retour aux animaux",
+    "notFound": "Cet animal est introuvable.",
+    "loadFailed": "Impossible de charger cet animal. Réessayez.",
+    "created": "L'animal a été créé.",
+    "saved": "Les modifications ont été enregistrées.",
+    "save": "Enregistrer",
+    "versionConflict": "Quelqu'un d'autre a modifié cet animal entre-temps. Sa version est affichée; refaites vos modifications.",
+    "inCareSince": "au refuge depuis le {{date}}",
+    "estimated": "estimée"
+  },
+  "identifiers": {
+    "title": "Identifiants",
+    "none": "Aucun identifiant.",
+    "type": "Type",
+    "value": "Numéro",
+    "add": "Ajouter",
+    "deactivate": "Désactiver",
+    "deactivateLabel": "Désactiver {{value}}",
+    "deactivatedOn": "désactivé le {{date}}",
+    "valueRejected": "Ce numéro n'est pas valide ou est déjà attribué à un autre animal."
+  },
+  "timeline": {
+    "title": "Historique",
+    "loadFailed": "Impossible de charger l'historique.",
+    "types": {
+      "animal_registered": "Animal inscrit"
+    },
+    "parameters": {}
   }
 }

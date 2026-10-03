@@ -1,4 +1,5 @@
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.Modules.People.Contracts;
 
 namespace Shelter.Modules.People.Authorization;
 
@@ -6,7 +7,7 @@ namespace Shelter.Modules.People.Authorization;
 internal static class PeoplePermissions
 {
     /// <summary>Read people: names, contact details, addresses, notes.</summary>
-    public const string Read = "person.read";
+    public const string Read = PeoplePermissionNames.Read;
 
     /// <summary>Create, update, archive and unarchive people.</summary>
     public const string Write = "person.write";

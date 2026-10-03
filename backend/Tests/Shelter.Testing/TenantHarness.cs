@@ -9,7 +9,7 @@ namespace Shelter.Testing;
 
 /// <summary>
 /// Tenant-scoped access to the test database as the runtime role (<c>shelter_app</c>), composed from a module's
-/// model contributors. <see cref="AssertIsolatedAsync{TEntity}"/> gives every tenant-owned entity the standard
+/// model contributors. <see cref="AssertIsolatedAsync{TEntity}(Func{TEntity}, CancellationToken)"/> gives every tenant-owned entity the standard
 /// isolation checks in one line:
 /// <code>[Fact] public Task Widget_is_isolated() => fixture.Tenants.AssertIsolatedAsync(() => new Widget("x"));</code>
 /// </summary>
@@ -51,14 +51,26 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
     /// Covers one table: child tables of an aggregate each need their own call.
     /// Throws <see cref="TenantIsolationAssertionException"/> on the first failed check.
     /// </summary>
-    public async Task AssertIsolatedAsync<TEntity>(Func<TEntity> create, CancellationToken cancellationToken = default)
+    public Task AssertIsolatedAsync<TEntity>(Func<TEntity> create, CancellationToken cancellationToken = default)
         where TEntity : class, ITenantOwned
     {
         ArgumentNullException.ThrowIfNull(create);
+        return AssertIsolatedAsync(_ => Task.FromResult(create()), cancellationToken);
+    }
+
+    /// <summary>
+    /// <see cref="AssertIsolatedAsync{TEntity}(Func{TEntity}, CancellationToken)"/> for a child row whose parent must
+    /// exist in the same tenant (a composite <c>(tenant_id, parent_id)</c> foreign key): <paramref name="createFor"/>
+    /// receives the owning tenant, seeds the parent with <see cref="SeedAsync{TEntity}"/>, and returns the unsaved child.
+    /// </summary>
+    public async Task AssertIsolatedAsync<TEntity>(Func<Guid, Task<TEntity>> createFor, CancellationToken cancellationToken = default)
+        where TEntity : class, ITenantOwned
+    {
+        ArgumentNullException.ThrowIfNull(createFor);
 
         var tenantA = NewTenantId();
         var tenantB = NewTenantId();
-        var seeded = await SeedAsync(tenantA, create(), cancellationToken);
+        var seeded = await SeedAsync(tenantA, await createFor(tenantA), cancellationToken);
         var table = TableOf<TEntity>();
 
         // Sanity: the owner sees its row, so the checks below cannot pass vacuously.

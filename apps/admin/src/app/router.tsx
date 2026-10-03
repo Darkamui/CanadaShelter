@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
-import { AnimalsPage } from '../features/animals/routes/AnimalsPage';
+import { AnimalCreatePage } from '../features/animals/routes/AnimalCreatePage';
+import { AnimalDetailPage } from '../features/animals/routes/AnimalDetailPage';
+import { AnimalsListPage } from '../features/animals/routes/AnimalsListPage';
 import { LocationsPage } from '../features/locations/routes/LocationsPage';
 import { PeopleListPage } from '../features/people/routes/PeopleListPage';
 import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
@@ -58,7 +60,23 @@ export const routes: RouteObject[] = [
                 path: 'animals',
                 element: (
                   <RequirePermission permission={Permissions.animalRead}>
-                    <AnimalsPage />
+                    <AnimalsListPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'animals/new',
+                element: (
+                  <RequirePermission permission={Permissions.animalWrite}>
+                    <AnimalCreatePage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'animals/:animalId',
+                element: (
+                  <RequirePermission permission={Permissions.animalRead}>
+                    <AnimalDetailPage />
                   </RequirePermission>
                 ),
               },

@@ -114,7 +114,7 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] Tenant-owned `Animal`:
+- [x] Tenant-owned `Animal`:
   - Fields:
     - a per-tenant sequential number, name, species (reference list);
     - breed, secondary breed and colour (plain text);
@@ -123,20 +123,20 @@ Cross-cutting rules:
   - Alert texts are non-personal, and the UI says not to enter personal information.
   - Custody summary: status `not_in_care | in_care | outcome`, location, in care since, current intake and last outcome. Only the Movements contract writes it.
   - Edits use optimistic concurrency (`xmin`): a stale edit → 409.
-- [ ] `AnimalIdentifier` (microchip, licence, external). An active microchip is unique per tenant.
-- [ ] Append-only `timeline_event`:
+- [x] `AnimalIdentifier` (microchip, licence, external). An active microchip is unique per tenant.
+- [x] Append-only `timeline_event`:
   - Fields: animal, type, time, source module and record, and parameters made of codes and IDs only (no personal data).
   - Creating an animal records `animal_registered`.
-  - Names are resolved when the timeline is read. Person names are shown only with `person.read`.
-- [ ] Permission `animal.write`, which joins `animal.read`.
-- [ ] Endpoints:
+  - Names are resolved when the timeline is read. Person names (and person IDs) are shown only with `person.read`.
+- [x] Permission `animal.write`, which joins `animal.read`.
+- [x] Endpoints:
   - a paged search by name, number or microchip, with filters for status, species and location;
   - get, create, update;
   - add and deactivate identifiers;
   - timeline.
-- [ ] Contracts `IAnimalCustody` (lock and compare-and-set of the summary), `IAnimalTimeline` and `IAnimalPopulation`. ADR 0021 written.
-- [ ] Admin screens: list, create, and a detail page with identifiers and the timeline.
-- [ ] Tests:
+- [x] Contracts `IAnimalCustody` (lock and compare-and-set of the summary), `IAnimalTimeline` and `IAnimalPopulation`. ADR 0021 written.
+- [x] Admin screens: list, create, and a detail page with identifiers and the timeline.
+- [x] Tests:
   - tenant isolation for every table;
   - concurrent creates get distinct sequential numbers;
   - a duplicate active microchip → 400, while the same chip in another tenant is accepted;

@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AnimalsPage } from '../features/animals/routes/AnimalsPage';
+import { LocationsPage } from '../features/locations/routes/LocationsPage';
 import { PeopleListPage } from '../features/people/routes/PeopleListPage';
 import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
 import { PersonDetailPage } from '../features/people/routes/PersonDetailPage';
@@ -82,6 +83,14 @@ export const routes: RouteObject[] = [
                 element: (
                   <RequirePermission permission={Permissions.personRead}>
                     <PersonDetailPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'operations',
+                element: (
+                  <RequirePermission permission={Permissions.locationRead}>
+                    <LocationsPage />
                   </RequirePermission>
                 ),
               },

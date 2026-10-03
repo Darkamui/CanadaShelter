@@ -28,6 +28,7 @@
   </Folder>
   <Folder Name="/Modules/Operations/">
     <Project Path="Modules/Operations/Shelter.Modules.Operations.Contracts/Shelter.Modules.Operations.Contracts.csproj" />
+    <Project Path="Modules/Operations/Shelter.Modules.Operations.Tests/Shelter.Modules.Operations.Tests.csproj" />
     <Project Path="Modules/Operations/Shelter.Modules.Operations/Shelter.Modules.Operations.csproj" />
   </Folder>
   <Folder Name="/Modules/People/">

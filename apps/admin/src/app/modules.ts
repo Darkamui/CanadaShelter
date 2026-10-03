@@ -22,7 +22,7 @@ export const MODULES = [
   { key: 'people', icon: Users, permission: Permissions.personRead },
   { key: 'movements', icon: ArrowLeftRight, permission: Permissions.movementRead },
   { key: 'medical', icon: Stethoscope, permission: null },
-  { key: 'operations', icon: ClipboardList, permission: null },
+  { key: 'operations', icon: ClipboardList, permission: Permissions.locationRead },
   { key: 'engagement', icon: HeartHandshake, permission: null },
   { key: 'municipal', icon: Landmark, permission: null },
   { key: 'reporting', icon: ChartColumn, permission: null },

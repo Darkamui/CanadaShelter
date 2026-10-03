@@ -3,4 +3,7 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Shelter.Modules.Operations.Contracts\Shelter.Modules.Operations.Contracts.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Shelter.Modules.Operations.Tests" />
+  </ItemGroup>
 </Project>

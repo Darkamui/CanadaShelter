@@ -87,19 +87,19 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] `location_kind` reference list:
+- [x] `location_kind` reference list:
   - A global bilingual list plus a tenant override, with a `holds_animals` attribute.
   - Seeded kinds: shelter, building, room, kennel, cage, clinic, isolation, external clinic, partner shelter, field.
   - ADR 0017 amendment: lists can carry attributes, and a code added by an override must give them.
-- [ ] Tenant-owned `Location` (Operations, schema `operations`):
+- [x] Tenant-owned `Location` (Operations, schema `operations`):
   - Fields: parent, kind, name (plain text), optional capacity, archived.
   - Names are unique among active siblings.
   - The tree never forms a cycle (a per-tenant advisory lock, then a recursive check).
-- [ ] Permissions `location.read` and `location.write`.
-- [ ] Endpoints: tree, kinds, create, update (including moving under another parent), archive.
-- [ ] Contract `ILocationDirectory`: `GetAsync(ids)`, `GetSubtreeIdsAsync(root)`, `IsActiveHoldingAsync(id)`.
-- [ ] Admin screen: a location tree with create and edit dialogs.
-- [ ] Tests:
+- [x] Permissions `location.read` and `location.write`.
+- [x] Endpoints: tree, kinds, create, update (including moving under another parent), archive.
+- [x] Contract `ILocationDirectory`: `GetAsync(ids)`, `GetSubtreeIdsAsync(root)`, `IsActiveHoldingAsync(id)`.
+- [x] Admin screen: a location tree with create and edit dialogs.
+- [x] Tests:
   - tenant isolation (location and override);
   - a cycle is rejected;
   - an unknown or hidden kind is rejected;

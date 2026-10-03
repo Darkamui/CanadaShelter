@@ -32,7 +32,7 @@
 - Void: only the latest movement in effect, reason required, `movement.amend`. It is a new row (`voids_movement_id`, tenant-scoped FK); the summary is rebuilt from the ledger (`Ledger.Project`). If that puts the animal back at a location since archived, 409.
 - The runtime role has SELECT/INSERT only on `movement` (`MovementsIsolationTests.Runtime_role_cannot_update_or_delete_a_movement`).
 - Reason and outcome input is validated against the visible merged list; hidden codes keep their category.
-- Tenant isolation: `MovementsIsolationTests`, `MovementIsolationEndpointTests`.
+- Tenant isolation: `MovementsIsolationTests`, `MovementIsolationEndpointTests` (including another organization's person).
 
 ## Privacy notes
 
@@ -41,6 +41,7 @@
 - Timeline parameters are codes and IDs only.
 - **Accepted gap:** relocations have no person, and neither does a void of one, so their notes have no audit subject and cannot be shredded by person. The UI asks for no personal information there; nothing enforces it.
 - **Follow-up (privacy milestone):** notes cannot be corrected (no UPDATE grant); anonymizing will need a grant or a job.
+- `person_id` (here and in timeline parameters) is classified non-personal: it is an opaque ID, gated behind `person.read` on every read (`MovementPersonPrivacyTests`). When a person is erased the ID stays and resolves to nothing; readers already tolerate a missing person.
 
 ## Permissions
 

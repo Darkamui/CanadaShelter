@@ -6,8 +6,9 @@ using Shelter.IntegrationTests.Infrastructure;
 namespace Shelter.IntegrationTests.Movements;
 
 /// <summary>
-/// M3-5: the movement ledger never crosses a tenant boundary through the HTTP surface (an animal or location of another
-/// organization is unknown to the caller), and voiding needs the administrator-only <c>movement.amend</c> permission.
+/// M3-5: the movement ledger never crosses a tenant boundary through the HTTP surface (an animal, location or person
+/// of another organization is unknown to the caller), and voiding needs the administrator-only <c>movement.amend</c>
+/// permission.
 /// </summary>
 public sealed class MovementIsolationEndpointTests(PostgresFixture postgres) : IAsyncDisposable
 {
@@ -80,6 +81,37 @@ public sealed class MovementIsolationEndpointTests(PostgresFixture postgres) : I
     }
 
     [Fact]
+    public async Task Record_intake_with_other_tenants_person_is_rejected_on_personId_and_records_nothing()
+    {
+        using var staffA = await ClientAsync(_organizationA, "staff");
+        using var staffB = await ClientAsync(_organizationB, "staff");
+        var personInA = await CreatePersonAsync(staffA);
+        var animalInB = await CreateAnimalAsync(staffB);
+        var locationInB = await CreateLocationAsync(staffB);
+
+        var problem = await PostInvalidAsync(
+            staffB, "intakes", new { animalId = animalInB, reasonCode = "stray", toLocationId = locationInB, personId = personInA });
+
+        Assert.Contains("personId", problem.Errors.Keys);
+        Assert.Empty(await ListAsync(staffB, animalInB));
+    }
+
+    [Fact]
+    public async Task Record_adoption_by_other_tenants_person_is_rejected_on_personId_and_leaves_the_animal_in_care()
+    {
+        using var staffA = await ClientAsync(_organizationA, "staff");
+        using var staffB = await ClientAsync(_organizationB, "staff");
+        var personInA = await CreatePersonAsync(staffA);
+        var (animalInB, _) = await TakeInAsync(staffB);
+
+        var problem = await PostInvalidAsync(
+            staffB, "outcomes", new { animalId = animalInB, outcomeCode = "adoption", personId = personInA });
+
+        Assert.Contains("personId", problem.Errors.Keys);
+        Assert.Equal("intake", Assert.Single(await ListAsync(staffB, animalInB)).Type);
+    }
+
+    [Fact]
     public async Task Void_movement_as_staff_returns_403_and_leaves_the_ledger_unchanged()
     {
         using var staffA = await ClientAsync(_organizationA, "staff");
@@ -130,6 +162,14 @@ public sealed class MovementIsolationEndpointTests(PostgresFixture postgres) : I
         return (await response.Content.ReadFromJsonAsync<IdDto>(TestContext.Current.CancellationToken))!.Id;
     }
 
+    private static async Task<Guid> CreatePersonAsync(HttpClient client)
+    {
+        using var response = await client.PostAsJsonAsync(
+            new Uri("/api/people", UriKind.Relative), new { displayName = "Marie Tremblay" }, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<CreatedPersonDto>(TestContext.Current.CancellationToken))!.Person.Id;
+    }
+
     private static async Task<List<MovementDto>> ListAsync(HttpClient client, Guid animalId) =>
         (await client.GetFromJsonAsync<List<MovementDto>>(
             new Uri($"{MovementsPath}?animalId={animalId}", UriKind.Relative), TestContext.Current.CancellationToken))!;
@@ -143,6 +183,8 @@ public sealed class MovementIsolationEndpointTests(PostgresFixture postgres) : I
     }
 
     private sealed record IdDto(Guid Id);
+
+    private sealed record CreatedPersonDto(IdDto Person);
 
     private sealed record MovementDto(Guid Id, string Type, Guid? VoidedByMovementId);
 

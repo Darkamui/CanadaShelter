@@ -242,6 +242,43 @@ public sealed class AnimalIsolationEndpointTests(PostgresFixture postgres) : IAs
         Assert.Equal(HttpStatusCode.Forbidden, add.StatusCode);
     }
 
+    [Fact]
+    public async Task Population_never_includes_other_tenants_animals_or_locations()
+    {
+        using var clientA = await StaffClientAsync(_organizationA);
+        using var clientB = await StaffClientAsync(_organizationB);
+        var locationInB = await CreateLocationAsync(clientB, "Enclos B", "kennel");
+        await TakeInAsync(clientB, locationInB);
+
+        var seenByB = await PopulationAsync(clientB);
+        var seenByA = await PopulationAsync(clientA);
+
+        var own = Assert.Single(seenByB, p => p.LocationId == locationInB);
+        Assert.Equal(1, own.Count);
+        Assert.Equal(1, own.SubtreeCount);
+        Assert.DoesNotContain(locationInB, seenByA.Select(p => p.LocationId));
+        Assert.DoesNotContain(seenByA, p => p.Count > 0 || p.SubtreeCount > 0);
+    }
+
+    [Fact]
+    public async Task Population_counts_only_the_callers_animals_when_both_tenants_have_animals_in_care()
+    {
+        using var clientA = await StaffClientAsync(_organizationA);
+        using var clientB = await StaffClientAsync(_organizationB);
+        var locationInA = await CreateLocationAsync(clientA, "Enclos A", "kennel");
+        var locationInB = await CreateLocationAsync(clientB, "Enclos B", "kennel");
+        await TakeInAsync(clientA, locationInA);
+        await TakeInAsync(clientB, locationInB);
+        await TakeInAsync(clientB, locationInB);
+
+        var seenByA = await PopulationAsync(clientA);
+
+        var item = Assert.Single(seenByA, p => p.Count > 0);
+        Assert.Equal(locationInA, item.LocationId);
+        Assert.Equal(1, item.Count);
+        Assert.DoesNotContain(locationInB, seenByA.Select(p => p.LocationId));
+    }
+
     /// <inheritdoc />
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
 
@@ -274,15 +311,30 @@ public sealed class AnimalIsolationEndpointTests(PostgresFixture postgres) : IAs
         return response.StatusCode;
     }
 
-    private static async Task<Guid> CreateLocationAsync(HttpClient client, string name)
+    private static async Task<Guid> CreateLocationAsync(HttpClient client, string name, string kindCode = "building")
     {
         using var response = await client.PostAsJsonAsync(
             new Uri("/api/operations/locations", UriKind.Relative),
-            new { kindCode = "building", name },
+            new { kindCode, name },
             TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<LocationDto>(TestContext.Current.CancellationToken))!.Id;
     }
+
+    private static async Task TakeInAsync(HttpClient client, Guid locationId)
+    {
+        var animal = await CreateAsync(client, new { name = "Pistache", speciesCode = "dog" });
+        using var response = await client.PostAsJsonAsync(
+            new Uri("/api/movements/intakes", UriKind.Relative),
+            new { animalId = animal.Id, reasonCode = "stray", toLocationId = locationId },
+            TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    private static async Task<List<PopulationDto>> PopulationAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync<List<PopulationDto>>(Url("population"), TestContext.Current.CancellationToken))!;
+
+    private sealed record PopulationDto(Guid LocationId, int Count, int SubtreeCount);
 
     private sealed record IdentifierDto(Guid Id, string Type, string Value, bool IsActive);
 

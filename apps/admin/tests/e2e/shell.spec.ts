@@ -40,13 +40,14 @@ for (const c of cases) {
       await expect(page.locator('html')).toHaveAttribute('lang', c.locale);
       await expect(page.getByRole('heading', { level: 1, name: c.home })).toBeVisible();
       const nav = page.getByRole('navigation', { name: c.nav });
-      await expect(nav.getByRole('link')).toHaveCount(9);
+      // The four placeholder modules, plus animals, movements and platform: the ones the session may read.
+      await expect(nav.getByRole('link')).toHaveCount(7);
       await expect(page.getByRole('status')).toHaveText(c.pingUp);
 
       await nav.getByRole('link', { name: c.animals }).click();
       await expect(page).toHaveURL(/\/animals$/);
       await expect(page.getByRole('heading', { level: 1, name: c.animals })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: c.dog })).toBeVisible();
+      await expect(page.getByRole('cell', { name: c.dog })).toBeVisible();
     });
 
     test('language switch changes and persists the locale', async ({ page }) => {

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AnimalCreatePage } from '../features/animals/routes/AnimalCreatePage';
 import { AnimalDetailPage } from '../features/animals/routes/AnimalDetailPage';
 import { AnimalsListPage } from '../features/animals/routes/AnimalsListPage';
+import { LocationDetailPage } from '../features/locations/routes/LocationDetailPage';
 import { LocationsPage } from '../features/locations/routes/LocationsPage';
 import { PeopleListPage } from '../features/people/routes/PeopleListPage';
 import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
@@ -109,6 +110,14 @@ export const routes: RouteObject[] = [
                 element: (
                   <RequirePermission permission={Permissions.locationRead}>
                     <LocationsPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'operations/locations/:locationId',
+                element: (
+                  <RequirePermission permission={Permissions.locationRead}>
+                    <LocationDetailPage />
                   </RequirePermission>
                 ),
               },

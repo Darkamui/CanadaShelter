@@ -49,7 +49,10 @@
 - `Features/Locations/LocationTree.cs` — advisory lock and recursive CTEs.
 - `Features/Locations/LocationKindCatalog.cs` — merged kind list (hidden included).
 - `Features/Locations/LocationDirectory.cs` — `ILocationDirectory` implementation.
-- UI: `apps/admin/src/features/locations/` (tree page at `/operations`, create/edit dialog; catalog `locations` namespace).
+- UI: `apps/admin/src/features/locations/` (catalog `locations` namespace):
+  - `LocationsPage`: the tree at `/operations`, with the create/edit dialog. Each name links to its page; with `animal.read` each active location shows its animals in care, the locations below included.
+  - `LocationDetailPage` (`/operations/locations/:locationId`, M3-6): breadcrumb, kind and capacity, counts here and below, the active locations inside, and a paged table of the animals in care in the subtree.
+  - `usePopulation`: reads Animals' `GET /api/animals/population` only when the user has `animal.read`.
 
 ## Open questions / TODO
 
@@ -57,4 +60,4 @@
 - Unarchive, and endpoints to manage kind overrides (ADR 0017 follow-up).
 - Not guarded: changing a location's kind to one that does not hold animals while animals are there (M3 follow-up).
 - `shelter` kind holds animals so a small rescue can use a single location; revisit with pilots.
-- `TODO(fr-review)` in the migration: Enclos, Isolement, Clinique vétérinaire externe, Terrain. `_frReview`: `archiveBlocked`, `archiveHasAnimals`.
+- `TODO(fr-review)` in the migration: Enclos, Isolement, Clinique vétérinaire externe, Terrain. `_frReview`: `archiveBlocked`.

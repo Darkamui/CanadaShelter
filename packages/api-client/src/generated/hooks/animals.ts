@@ -28,6 +28,7 @@ import type {
   GetAnimalTimelineParams,
   HttpValidationProblemDetails,
   ListAnimalsParams,
+  LocationPopulationItem,
   PagedResultOfAnimalListItem,
   PagedResultOfTimelineItem,
   ReferenceItem,
@@ -390,6 +391,123 @@ export const useCreateAnimal = <
 > => {
   return useMutation(getCreateAnimalMutationOptions(options), queryClient);
 };
+export const getGetAnimalPopulationUrl = () => {
+  return `/api/animals/population`;
+};
+
+export const getAnimalPopulation = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<LocationPopulationItem[]> => {
+  return shelterFetch<LocationPopulationItem[]>(getGetAnimalPopulationUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetAnimalPopulationQueryKey = () => {
+  return [`/api/animals/population`] as const;
+};
+
+export const getGetAnimalPopulationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnimalPopulation>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnimalPopulation>>, TError, TData>>;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnimalPopulationQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnimalPopulation>>> = ({ signal }) =>
+    getAnimalPopulation({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnimalPopulation>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAnimalPopulationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnimalPopulation>>
+>;
+export type GetAnimalPopulationQueryError = ErrorType<unknown>;
+
+export function useGetAnimalPopulation<
+  TData = Awaited<ReturnType<typeof getAnimalPopulation>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnimalPopulation>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimalPopulation>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimalPopulation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimalPopulation<
+  TData = Awaited<ReturnType<typeof getAnimalPopulation>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnimalPopulation>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnimalPopulation>>,
+          TError,
+          Awaited<ReturnType<typeof getAnimalPopulation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnimalPopulation<
+  TData = Awaited<ReturnType<typeof getAnimalPopulation>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnimalPopulation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetAnimalPopulation<
+  TData = Awaited<ReturnType<typeof getAnimalPopulation>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnimalPopulation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAnimalPopulationQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getGetAnimalUrl = (animalId: string) => {
   return `/api/animals/${animalId}`;
 };

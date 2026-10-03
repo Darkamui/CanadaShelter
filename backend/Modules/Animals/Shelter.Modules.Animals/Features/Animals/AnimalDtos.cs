@@ -199,3 +199,9 @@ internal sealed record TimelineItem(
     Guid? SourceRecordId,
     IReadOnlyDictionary<string, string> Parameters,
     IReadOnlyDictionary<string, string> Names);
+
+/// <summary>Animals in care at a location.</summary>
+/// <param name="LocationId">Location ID.</param>
+/// <param name="Count">Animals at this location itself.</param>
+/// <param name="SubtreeCount">Animals at this location or anywhere below it.</param>
+internal sealed record LocationPopulationItem(Guid LocationId, int Count, int SubtreeCount);

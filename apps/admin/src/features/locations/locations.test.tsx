@@ -219,3 +219,109 @@ describe('locations page', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('location population and page', () => {
+  const population = [
+    { locationId: BUILDING, count: 0, subtreeCount: 3 },
+    { locationId: ROOM, count: 1, subtreeCount: 3 },
+    { locationId: KENNEL, count: 2, subtreeCount: 2 },
+  ];
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('shows the animals at or below each location in the tree, with animal.read', async () => {
+    await i18n.changeLanguage('fr-CA');
+    mockApi({
+      'GET /api/platform/session': () =>
+        Response.json(sessionWith(['location.read', 'animal.read'])),
+      'GET /api/operations/locations': () => Response.json(locations),
+      'GET /api/operations/location-kinds': () => Response.json(kinds),
+      'GET /api/animals/population': () => Response.json(population),
+    });
+    renderAt('/operations');
+
+    const tree = await screen.findByRole('list', { name: 'Arborescence des emplacements' });
+    expect(await within(tree).findAllByText('3 animaux')).toHaveLength(2);
+    expect(within(tree).getByText('2 animaux')).toBeInTheDocument();
+    expect(within(tree).getByRole('link', { name: 'Enclos 1' })).toHaveAttribute(
+      'href',
+      `/operations/locations/${KENNEL}`,
+    );
+  });
+
+  it('does not ask for the population without animal.read', async () => {
+    await i18n.changeLanguage('fr-CA');
+    const fetchMock = mockApi({
+      'GET /api/platform/session': () => Response.json(sessionWith(['location.read'])),
+      'GET /api/operations/locations': () => Response.json(locations),
+      'GET /api/operations/location-kinds': () => Response.json(kinds),
+    });
+    renderAt(`/operations/locations/${ROOM}`);
+
+    expect(await screen.findByRole('heading', { name: 'Salle des chats' })).toBeInTheDocument();
+    expect(screen.queryByText('Animaux présents')).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContainEqual(
+      expect.stringContaining('/api/animals'),
+    );
+  });
+
+  it('shows a location with its path, counts, the locations inside and the animals in care there', async () => {
+    await i18n.changeLanguage('en-CA');
+    const fetchMock = mockApi({
+      'GET /api/platform/session': () =>
+        Response.json(sessionWith(['location.read', 'animal.read'])),
+      'GET /api/operations/locations': () => Response.json(locations),
+      'GET /api/operations/location-kinds': () => Response.json(kinds),
+      'GET /api/animals/population': () => Response.json(population),
+      'GET /api/animals/species': () =>
+        Response.json([{ code: 'cat', label: { fr: 'Chat', en: 'Cat' } }]),
+      'GET /api/animals': () =>
+        Response.json({
+          items: [
+            {
+              id: 'a1',
+              number: 7,
+              name: 'Éclair',
+              speciesCode: 'cat',
+              breed: null,
+              sex: 'female',
+              custodyStatus: 'in_care',
+              currentLocationId: KENNEL,
+              currentLocationName: 'Enclos 1',
+              inCareSince: '2026-09-01T12:00:00Z',
+              hasAlerts: false,
+            },
+          ],
+          page: 1,
+          pageSize: 25,
+          totalCount: 1,
+        }),
+    });
+    renderAt(`/operations/locations/${ROOM}`);
+
+    expect(await screen.findByRole('heading', { name: 'Salle des chats' })).toBeInTheDocument();
+    const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(within(breadcrumb).getByRole('link', { name: 'Pavillon A' })).toHaveAttribute(
+      'href',
+      `/operations/locations/${BUILDING}`,
+    );
+    expect(await screen.findByText('Animals at this location')).toBeInTheDocument();
+    expect(
+      screen.getByText('Animals here and in the locations inside').nextSibling,
+    ).toHaveTextContent('3');
+    expect(screen.getByText('2 animals')).toBeInTheDocument();
+
+    expect(await screen.findByRole('link', { name: 'Éclair' })).toHaveAttribute(
+      'href',
+      '/animals/a1',
+    );
+    expect(screen.getByRole('cell', { name: 'Cat' })).toBeInTheDocument();
+    const listCall = fetchMock.mock.calls
+      .map(([input]) => new URL(String(input), 'http://localhost'))
+      .find((url) => url.pathname === '/api/animals');
+    expect(listCall?.searchParams.get('locationId')).toBe(ROOM);
+    expect(listCall?.searchParams.get('status')).toBe('in_care');
+  });
+});

@@ -28,6 +28,7 @@ export * from './listPeopleParams.ts';
 export * from './localizedText.ts';
 export * from './locationItem.ts';
 export * from './locationKindItem.ts';
+export * from './locationPopulationItem.ts';
 export * from './locationRequest.ts';
 export * from './loginMfaRequest.ts';
 export * from './loginRequest.ts';

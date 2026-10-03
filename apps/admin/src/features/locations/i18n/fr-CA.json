@@ -40,5 +40,16 @@
     "parentInvalid": "Cet emplacement ne peut pas être placé ici.",
     "capacityRange": "Entrez un nombre entier de 0 à 10 000.",
     "unexpectedError": "Une erreur inattendue s'est produite. Réessayez."
+  },
+  "animalCount_one": "{{count}} animal",
+  "animalCount_other": "{{count}} animaux",
+  "detail": {
+    "breadcrumb": "Fil d'Ariane",
+    "notFound": "Emplacement introuvable.",
+    "here": "Animaux à cet emplacement",
+    "subtree": "Animaux ici et dans les emplacements inclus",
+    "children": "Emplacements inclus",
+    "animals": "Animaux présents",
+    "animalsCaption": "Animaux présents à cet emplacement et dans ceux qu'il contient"
   }
 }

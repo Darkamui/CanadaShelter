@@ -758,6 +758,29 @@
         }
       }
     },
+    "/api/animals/population": {
+      "get": {
+        "tags": [
+          "animals"
+        ],
+        "operationId": "GetAnimalPopulation",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationPopulationItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/animals/{animalId}": {
       "get": {
         "tags": [
@@ -2357,6 +2380,28 @@
           },
           "holdsAnimals": {
             "type": "boolean"
+          }
+        }
+      },
+      "LocationPopulationItem": {
+        "required": [
+          "locationId",
+          "count",
+          "subtreeCount"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subtreeCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

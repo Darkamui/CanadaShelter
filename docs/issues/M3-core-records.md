@@ -188,10 +188,18 @@ Cross-cutting rules:
 
 **Acceptance criteria**
 
-- [ ] Population by location: a count per location plus subtree totals.
-- [ ] The animals in a location subtree, shown on a location page.
-- [ ] Playwright, in fr-CA and en-CA with the API mocked: location → person → animal → intake → move → outcome → timeline.
-- [ ] Module docs: `people.md` and `operations.md` are new; `animals.md`, `movements.md` and `platform.md` are updated. French terms to review are listed.
+- [x] Population by location: a count per location plus subtree totals.
+- [x] The animals in a location subtree, shown on a location page.
+- [x] Playwright, in fr-CA and en-CA with the API mocked: location → person → animal → intake → move → outcome → timeline.
+- [x] Module docs: `people.md` and `operations.md` are new; `animals.md`, `movements.md` and `platform.md` are updated. French terms to review are listed.
+
+**French terms to review** (the `_frReview` keys in each catalog, and `TODO(fr-review)` in migrations):
+
+- `locations`: `archiveBlocked`. Migration `AddLocations`: Enclos, Isolement, Clinique vétérinaire externe, Terrain.
+- `people`: `roles.finder`, `roles.surrenderer`, `detail.duplicatesBody`.
+- `animals`: `custodyStatuses.not_in_care`, `custodyStatuses.in_care`, `custodyStatuses.outcome`, `identifierTypes.external`, `fields.legalAlert`, `detail.inCareSince`, `timeline.types.intake_recorded`, `create.startIntake`.
+- `movements`: `actions.intake`, `types.intake`, `types.relocation`, `types.void`, `recorded.intake`, `dialog.intake.title`, `dialog.intake.submit`, `fields.reason`, `void.title`. Migration `AddMovementLedger`: Retour au propriétaire, Transfert vers un autre organisme, Retour sur le terrain.
+- `shell`: `nav.movements`, `nav.operations`.
 
 ---
 

@@ -18,6 +18,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, statusOf, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
@@ -32,10 +33,15 @@ import {
   type LocationFormValues,
   type LocationNode,
 } from '../model';
+import { locationPath } from '../paths';
+import { usePopulation } from '../usePopulation';
 
 type Editing = { mode: 'create'; parentId: string | null } | { mode: 'edit'; node: LocationNode };
 
-/** The organization's location tree: browse with `location.read`; create, edit, move and archive with `location.write`. */
+/**
+ * The organization's location tree: browse with `location.read` (with `animal.read`, each location shows the animals
+ * in care at or below it); create, edit, move and archive with `location.write`.
+ */
 export function LocationsPage() {
   const { t } = useTranslation('locations');
   const { data: session } = useSession();
@@ -145,6 +151,7 @@ function LocationTree({
 }) {
   const { t } = useTranslation('locations');
   const localize = useLocalize();
+  const population = usePopulation();
   const kindLabel = (code: string) => {
     const kind = kinds.find((k) => k.code === code);
     return kind ? localize(kind.label) : code;
@@ -157,11 +164,21 @@ function LocationTree({
         return (
           <li key={location.id} className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2">
-              <span className="font-medium">{location.name}</span>
+              <Link
+                to={locationPath(location.id)}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {location.name}
+              </Link>
               <span className="text-sm text-muted-foreground">{kindLabel(location.kindCode)}</span>
               {location.capacity !== null && (
                 <span className="text-sm text-muted-foreground">
                   {t('capacity', { count: location.capacity })}
+                </span>
+              )}
+              {population.ready && !location.isArchived && (
+                <span className="text-sm text-muted-foreground">
+                  {t('animalCount', { count: population.of(location.id).subtreeCount })}
                 </span>
               )}
               {location.isArchived && (

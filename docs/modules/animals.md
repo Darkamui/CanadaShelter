@@ -26,6 +26,12 @@
 - `IAnimalTimeline.Append(TimelineEntry)`: parameter keys are identifiers, and values are GUIDs or short lowercase codes. Anything else throws.
 - `IAnimalPopulation.CountAtAsync(locationIds)`: animals in care per location.
 
+## Operational views (M3-6)
+
+- `GET /api/animals/population` (`GetAnimalPopulation`): animals in care per location, with `count` (at the location) and `subtreeCount` (at it or below). Only locations with a non-zero subtree count are returned. Ancestors come from `ILocationDirectory.GetAsync`, walked upward with a cycle guard.
+- `GET /api/animals?locationId=…&status=in_care`: the animals at a location subtree (the existing list filter).
+- Both feed the location page in Operations' UI.
+
 ## Events
 
 - None (no bus yet, ADR 0021).
@@ -48,14 +54,14 @@
 
 ## Permissions
 
-- `animal.read`: list, get, timeline, species.
+- `animal.read`: list, get, timeline, species, population.
 - `animal.write`: create, update, add and deactivate identifiers.
 
 ## Key files
 
 - `Domain/Animal.cs`, `AnimalIdentifier.cs`, `TimelineEvent.cs` (plus the counter), `Species.cs`.
 - `Persistence/AnimalsModelContributor.cs`: tables, the trigram index on `search_text`, and the partial microchip index.
-- `Features/Animals/AnimalEndpoints.cs`: `/api/animals` (`ListAnimals`, `GetAnimal`, `CreateAnimal`, `UpdateAnimal`, `AddAnimalIdentifier`, `DeactivateAnimalIdentifier`, `GetAnimalTimeline`).
+- `Features/Animals/AnimalEndpoints.cs`: `/api/animals` (`ListAnimals`, `GetAnimal`, `CreateAnimal`, `UpdateAnimal`, `AddAnimalIdentifier`, `DeactivateAnimalIdentifier`, `GetAnimalTimeline`, `GetAnimalPopulation`).
 - `Features/Animals/AnimalContracts.cs`: the contract implementations. `AnimalRequestValidator.cs`. `Features/ReferenceData/SpeciesCatalog.cs`.
 - Frontend: `apps/admin/src/features/animals/` (list, create and detail pages, `IdentifiersPanel`, `TimelinePanel`). The detail page hosts Movements' `MovementsPanel`; the create page can open the intake dialog next (`startIntake`).
 

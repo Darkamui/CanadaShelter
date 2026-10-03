@@ -41,6 +41,10 @@ internal static class AnimalEndpoints
             .WithName("ListAnimals")
             .RequirePermission(AnimalPermissions.Read);
 
+        endpoints.MapGet("/population", Population)
+            .WithName("GetAnimalPopulation")
+            .RequirePermission(AnimalPermissions.Read);
+
         endpoints.MapGet("/{animalId:guid}", Get)
             .WithName("GetAnimal")
             .RequirePermission(AnimalPermissions.Read);
@@ -117,6 +121,55 @@ internal static class AnimalEndpoints
         {
             Items = [.. page.Items.Select(a => a with { CurrentLocationName = NameOf(names, a.CurrentLocationId) })],
         });
+    }
+
+    /// <summary>
+    /// How many animals are in care at each location (<c>count</c>) and at it or anywhere below it
+    /// (<c>subtreeCount</c>). Locations without animals at or below them are left out; clients join the rows to the
+    /// location tree.
+    /// </summary>
+    internal static async Task<Ok<IReadOnlyList<LocationPopulationItem>>> Population(
+        ShelterDbContext db, ILocationDirectory locations, CancellationToken cancellationToken)
+    {
+        var counts = await db.Set<Animal>()
+            .AsNoTracking()
+            .Where(a => a.CustodyStatus == CustodyStatuses.InCare && a.CurrentLocationId != null)
+            .GroupBy(a => a.CurrentLocationId!.Value)
+            .Select(g => new { LocationId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.LocationId, g => g.Count, cancellationToken);
+
+        // Walk up from the occupied locations, one level per round trip (trees are a few levels deep).
+        var parents = new Dictionary<Guid, Guid?>();
+        var pending = counts.Keys.ToList();
+        while (pending.Count > 0)
+        {
+            var found = await locations.GetAsync(pending, cancellationToken);
+            foreach (var id in pending)
+            {
+                parents[id] = found.TryGetValue(id, out var location) ? location.ParentId : null;
+            }
+
+            pending = [.. found.Values
+                .Select(l => l.ParentId)
+                .OfType<Guid>()
+                .Where(id => !parents.ContainsKey(id))
+                .Distinct()];
+        }
+
+        var subtree = new Dictionary<Guid, int>();
+        foreach (var (locationId, count) in counts)
+        {
+            // The visited set guards against a cycle, which the location rules prevent.
+            var visited = new HashSet<Guid>();
+            for (Guid? id = locationId; id is { } current && visited.Add(current); id = parents.GetValueOrDefault(current))
+            {
+                subtree[current] = subtree.GetValueOrDefault(current) + count;
+            }
+        }
+
+        return TypedResults.Ok<IReadOnlyList<LocationPopulationItem>>(
+            [.. subtree.Select(s => new LocationPopulationItem(s.Key, counts.GetValueOrDefault(s.Key), s.Value))
+                .OrderBy(p => p.LocationId)]);
     }
 
     internal static async Task<Results<Ok<AnimalResponse>, NotFound>> Get(

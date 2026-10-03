@@ -43,3 +43,5 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
 
 - Vitest for logic/components.
 - Playwright E2E for critical workflows, run in **both** `fr-CA` and `en-CA`. Specs live in `tests/e2e/`, run against `vite preview`, and mock `/api/**` with `page.route` (service workers are blocked so mocks apply).
+  - `tests/e2e/api.ts` (`mockBaseApi`) holds the session and catch-all mocks. A workflow that writes and reads back uses a small in-memory fake registered after it (e.g. `fakeCoreRecords.ts`), which calls `route.fallback()` for paths it does not handle. Playwright matches the most recently added route first.
+  - Run from the repo root (`pnpm test:e2e`).

@@ -107,6 +107,13 @@ export const CreateAnimalResponse = zod.object({
   version: zod.int(),
 });
 
+export const GetAnimalPopulationResponseItem = zod.object({
+  locationId: zod.uuid(),
+  count: zod.int(),
+  subtreeCount: zod.int(),
+});
+export const GetAnimalPopulationResponse = zod.array(GetAnimalPopulationResponseItem);
+
 export const GetAnimalParams = zod.object({
   animalId: zod.uuid(),
 });

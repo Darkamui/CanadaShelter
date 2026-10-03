@@ -224,6 +224,31 @@ public sealed class MovementEndpointTests(PostgresFixture postgres) : IAsyncDisp
     }
 
     [Fact]
+    public async Task Population_counts_animals_in_care_per_location_and_per_subtree()
+    {
+        using var client = await ClientAsync("staff");
+        var building = await CreateLocationAsync(client, "Pavillon A", kind: "building");
+        var room = await CreateLocationAsync(client, "Salle des chiens", kind: "room", parentId: building);
+        var kennelA = await CreateLocationAsync(client, "Enclos A", parentId: room);
+        await CreateLocationAsync(client, "Enclos B", parentId: room);
+        foreach (var target in new[] { kennelA, kennelA, room })
+        {
+            await PostCreatedAsync(client, "/intakes", new { animalId = await CreateAnimalAsync(client), reasonCode = "stray", toLocationId = target });
+        }
+
+        var gone = await CreateAnimalAsync(client);
+        await PostCreatedAsync(client, "/intakes", new { animalId = gone, reasonCode = "stray", toLocationId = kennelA });
+        await PostCreatedAsync(client, "/outcomes", new { animalId = gone, outcomeCode = "died" });
+
+        var population = await client.GetFromJsonAsync<List<PopulationDto>>(
+            new Uri("/api/animals/population", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            new[] { new PopulationDto(building, 0, 3), new PopulationDto(room, 1, 3), new PopulationDto(kennelA, 2, 2) }.OrderBy(p => p.LocationId),
+            population!);
+    }
+
+    [Fact]
     public async Task Movement_summary_and_timeline_commit_together_or_not_at_all()
     {
         using var client = await ClientAsync("staff");
@@ -284,8 +309,8 @@ public sealed class MovementEndpointTests(PostgresFixture postgres) : IAsyncDisp
     private static async Task<Guid> CreateAnimalAsync(HttpClient client) =>
         (await PostJsonAsync<IdDto>(client, "/api/animals", new { name = "Rex", speciesCode = "dog" })).Id;
 
-    private static async Task<Guid> CreateLocationAsync(HttpClient client, string name, string kind = "kennel") =>
-        (await PostJsonAsync<IdDto>(client, "/api/operations/locations", new { kindCode = kind, name })).Id;
+    private static async Task<Guid> CreateLocationAsync(HttpClient client, string name, string kind = "kennel", Guid? parentId = null) =>
+        (await PostJsonAsync<IdDto>(client, "/api/operations/locations", new { kindCode = kind, name, parentId })).Id;
 
     private static async Task<Guid> CreatePersonAsync(HttpClient client, string displayName) =>
         (await PostJsonAsync<CreatedPersonDto>(client, "/api/people", new { displayName })).Person.Id;
@@ -330,6 +355,8 @@ public sealed class MovementEndpointTests(PostgresFixture postgres) : IAsyncDisp
         (await client.GetFromJsonAsync<PageDto<TimelineItemDto>>(new Uri($"/api/animals/{id}/timeline", UriKind.Relative), TestContext.Current.CancellationToken))!;
 
     private sealed record IdDto(Guid Id);
+
+    private sealed record PopulationDto(Guid LocationId, int Count, int SubtreeCount);
 
     private sealed record CreatedPersonDto(IdDto Person);
 

@@ -20,6 +20,7 @@
   - `GetAsync(ids)` → `LocationSummary(Id, ParentId, Name, KindCode, IsArchived)` for display.
   - `GetSubtreeIdsAsync(rootId)` → the root and every location below it, archived included (filters "animals in this building").
   - `LockForPlacementAsync(id)` → the location exists, is active and its kind holds animals; takes `FOR SHARE` on the row so a concurrent archive waits (validates a movement's target, M3-5).
+- `OperationsPermissionNames.LocationRead`: for modules that check `location.read` in a handler (Animals' population, M3-6).
 
 ## Events
 

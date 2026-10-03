@@ -29,3 +29,10 @@ public interface ILocationDirectory
 /// <param name="KindCode">Code of the location kind list.</param>
 /// <param name="IsArchived">Whether the location is archived.</param>
 public sealed record LocationSummary(Guid Id, Guid? ParentId, string Name, string KindCode, bool IsArchived);
+
+/// <summary>Operations permission names other modules may check with <c>IPermissionContext</c> (ADR 0018).</summary>
+public static class OperationsPermissionNames
+{
+    /// <summary>Read the location tree.</summary>
+    public const string LocationRead = "location.read";
+}

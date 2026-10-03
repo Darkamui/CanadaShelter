@@ -1,4 +1,5 @@
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.Modules.Operations.Contracts;
 
 namespace Shelter.Modules.Operations.Authorization;
 
@@ -6,7 +7,7 @@ namespace Shelter.Modules.Operations.Authorization;
 internal static class OperationsPermissions
 {
     /// <summary>Read the location tree and the location kind list.</summary>
-    public const string LocationRead = "location.read";
+    public const string LocationRead = OperationsPermissionNames.LocationRead;
 
     /// <summary>Create, rename, move and archive locations.</summary>
     public const string LocationWrite = "location.write";

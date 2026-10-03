@@ -28,7 +28,7 @@
 
 ## Operational views (M3-6)
 
-- `GET /api/animals/population` (`GetAnimalPopulation`): animals in care per location, with `count` (at the location) and `subtreeCount` (at it or below). Only locations with a non-zero subtree count are returned. Ancestors come from `ILocationDirectory.GetAsync`, walked upward with a cycle guard.
+- `GET /api/animals/population` (`GetAnimalPopulation`): animals in care per location, with `count` (at the location) and `subtreeCount` (at it or below). Only locations with a non-zero subtree count are returned. Ancestors come from `ILocationDirectory.GetAsync`, walked upward with a cycle guard. The rows reveal the tree's shape, so the handler also checks `location.read` (`OperationsPermissionNames.LocationRead`, 403 otherwise; `AnimalPopulationTests`).
 - `GET /api/animals?locationId=…&status=in_care`: the animals at a location subtree (the existing list filter).
 - Both feed the location page in Operations' UI.
 
@@ -54,7 +54,7 @@
 
 ## Permissions
 
-- `animal.read`: list, get, timeline, species, population.
+- `animal.read`: list, get, timeline, species, population (which also needs `location.read`).
 - `animal.write`: create, update, add and deactivate identifiers.
 
 ## Key files

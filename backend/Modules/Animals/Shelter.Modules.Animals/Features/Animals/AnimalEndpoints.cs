@@ -126,11 +126,17 @@ internal static class AnimalEndpoints
     /// <summary>
     /// How many animals are in care at each location (<c>count</c>) and at it or anywhere below it
     /// (<c>subtreeCount</c>). Locations without animals at or below them are left out; clients join the rows to the
-    /// location tree.
+    /// location tree. The rows reveal the tree's shape, so they also need <c>location.read</c>.
     /// </summary>
-    internal static async Task<Ok<IReadOnlyList<LocationPopulationItem>>> Population(
-        ShelterDbContext db, ILocationDirectory locations, CancellationToken cancellationToken)
+    internal static async Task<Results<Ok<IReadOnlyList<LocationPopulationItem>>, ProblemHttpResult>> Population(
+        ShelterDbContext db, ILocationDirectory locations, IPermissionContext permissions, CancellationToken cancellationToken)
     {
+        if (!permissions.Has(OperationsPermissionNames.LocationRead))
+        {
+            // Not Forbid(), which the cookie scheme would turn into a redirect.
+            return TypedResults.Problem(statusCode: StatusCodes.Status403Forbidden, title: "Population requires location.read.");
+        }
+
         var counts = await db.Set<Animal>()
             .AsNoTracking()
             .Where(a => a.CustodyStatus == CustodyStatuses.InCare && a.CurrentLocationId != null)

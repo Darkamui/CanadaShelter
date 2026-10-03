@@ -64,7 +64,7 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
     {
         var tenantA = Guid.CreateVersion7();
         var tenantB = Guid.CreateVersion7();
-        await InsertOverrideAsync(tenantA, "movements.intake_reason_override", "seizure", "Saisie", "Seizure", 30, isHidden: true);
+        await InsertOverrideAsync(tenantA, "movements.intake_reason_override", "seizure", "Saisie", "Seizure", 30, isHidden: true, sacCategory: "seized");
 
         var a = await GetAsync("/api/movements/intake-reasons", tenantA);
         var b = await GetAsync("/api/movements/intake-reasons", tenantB);
@@ -118,8 +118,9 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
         return (await response.Content.ReadFromJsonAsync<List<ItemDto>>(TestContext.Current.CancellationToken))!;
     }
 
-    // Table names are test constants, never input.
-    private async Task InsertOverrideAsync(Guid tenantId, string table, string code, string fr, string en, int sortOrder, bool isHidden)
+    // Table names are test constants, never input. Intake reasons and outcome types also need a SAC category.
+    private async Task InsertOverrideAsync(
+        Guid tenantId, string table, string code, string fr, string en, int sortOrder, bool isHidden, string? sacCategory = null)
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var connection = new NpgsqlConnection(postgres.AppConnectionString);
@@ -133,8 +134,8 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
 
         await using (var insert = new NpgsqlCommand(
             $"""
-            INSERT INTO {table} (id, tenant_id, code, label_fr, label_en, sort_order, is_hidden)
-            VALUES (@id, @tenant, @code, @fr, @en, @sort, @hidden)
+            INSERT INTO {table} (id, tenant_id, code, label_fr, label_en, sort_order, is_hidden{(sacCategory is null ? "" : ", sac_category")})
+            VALUES (@id, @tenant, @code, @fr, @en, @sort, @hidden{(sacCategory is null ? "" : ", @sac")})
             """,
             connection,
             transaction))
@@ -146,6 +147,11 @@ public sealed class ReferenceDataEndpointTests(PostgresFixture postgres) : IAsyn
             insert.Parameters.AddWithValue("en", en);
             insert.Parameters.AddWithValue("sort", sortOrder);
             insert.Parameters.AddWithValue("hidden", isHidden);
+            if (sacCategory is not null)
+            {
+                insert.Parameters.AddWithValue("sac", sacCategory);
+            }
+
             await insert.ExecuteNonQueryAsync(cancellationToken);
         }
 

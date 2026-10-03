@@ -1,5 +1,12 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
-import { AnimalsPage } from '../features/animals/routes/AnimalsPage';
+import { AnimalCreatePage } from '../features/animals/routes/AnimalCreatePage';
+import { AnimalDetailPage } from '../features/animals/routes/AnimalDetailPage';
+import { AnimalsListPage } from '../features/animals/routes/AnimalsListPage';
+import { LocationDetailPage } from '../features/locations/routes/LocationDetailPage';
+import { LocationsPage } from '../features/locations/routes/LocationsPage';
+import { PeopleListPage } from '../features/people/routes/PeopleListPage';
+import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
+import { PersonDetailPage } from '../features/people/routes/PersonDetailPage';
 import { AcceptInvitationPage } from '../features/platform/routes/AcceptInvitationPage';
 import { ForgotPasswordPage } from '../features/platform/routes/ForgotPasswordPage';
 import { LoginPage } from '../features/platform/routes/LoginPage';
@@ -54,7 +61,63 @@ export const routes: RouteObject[] = [
                 path: 'animals',
                 element: (
                   <RequirePermission permission={Permissions.animalRead}>
-                    <AnimalsPage />
+                    <AnimalsListPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'animals/new',
+                element: (
+                  <RequirePermission permission={Permissions.animalWrite}>
+                    <AnimalCreatePage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'animals/:animalId',
+                element: (
+                  <RequirePermission permission={Permissions.animalRead}>
+                    <AnimalDetailPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people',
+                element: (
+                  <RequirePermission permission={Permissions.personRead}>
+                    <PeopleListPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people/new',
+                element: (
+                  <RequirePermission permission={Permissions.personWrite}>
+                    <PersonCreatePage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people/:personId',
+                element: (
+                  <RequirePermission permission={Permissions.personRead}>
+                    <PersonDetailPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'operations',
+                element: (
+                  <RequirePermission permission={Permissions.locationRead}>
+                    <LocationsPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'operations/locations/:locationId',
+                element: (
+                  <RequirePermission permission={Permissions.locationRead}>
+                    <LocationDetailPage />
                   </RequirePermission>
                 ),
               },

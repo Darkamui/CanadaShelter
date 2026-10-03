@@ -102,7 +102,7 @@ for (const c of cases) {
 
       await expect(page).toHaveURL(/\/animals$/);
       await expect(page.getByRole('heading', { level: 1, name: c.animals })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: c.dog })).toBeVisible();
+      await expect(page.getByRole('cell', { name: c.dog })).toBeVisible();
       await expect(page.getByRole('banner')).toContainText('Refuge B');
       // Unsafe requests echo the antiforgery cookie.
       expect(antiforgeryHeaders).toEqual(['e2e-token', 'e2e-token']);

@@ -1,0 +1,84 @@
+{
+  "_frReview": ["roles.finder", "roles.surrenderer", "detail.duplicatesBody"],
+  "title": "Personnes",
+  "list": {
+    "caption": "Liste des personnes",
+    "new": "Nouvelle personne",
+    "searchLabel": "Nom, courriel ou téléphone",
+    "roleFilter": "Rôle",
+    "allRoles": "Tous les rôles",
+    "showArchived": "Afficher les personnes archivées",
+    "archived": "archivée"
+  },
+  "fields": {
+    "name": "Nom",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "displayName": "Nom affiché",
+    "displayNameHint": "Facultatif. Par défaut : prénom et nom de famille. Utile pour un organisme ou un surnom.",
+    "email": "Courriel",
+    "phone": "Téléphone",
+    "secondaryPhone": "Autre téléphone",
+    "address": "Adresse",
+    "addressLine": "Adresse",
+    "city": "Ville",
+    "province": "Province",
+    "postalCode": "Code postal",
+    "preferredLanguage": "Langue de correspondance",
+    "roleTags": "Rôles",
+    "notes": "Notes",
+    "notesHint": "Visibles par le personnel de l'organisme seulement."
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "adopter": "Adoptant",
+    "foster": "Famille d'accueil",
+    "volunteer": "Bénévole",
+    "donor": "Donateur",
+    "finder": "Personne ayant trouvé l'animal",
+    "surrenderer": "Personne cédant l'animal"
+  },
+  "provinces": {
+    "QC": "Québec",
+    "ON": "Ontario",
+    "NB": "Nouveau-Brunswick",
+    "NS": "Nouvelle-Écosse",
+    "PE": "Île-du-Prince-Édouard",
+    "NL": "Terre-Neuve-et-Labrador",
+    "MB": "Manitoba",
+    "SK": "Saskatchewan",
+    "AB": "Alberta",
+    "BC": "Colombie-Britannique",
+    "YT": "Yukon",
+    "NT": "Territoires du Nord-Ouest",
+    "NU": "Nunavut"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "Anglais"
+  },
+  "form": {
+    "nameRequired": "Entrez un prénom, un nom de famille ou un nom affiché.",
+    "tooLong": "Ce champ est trop long.",
+    "invalid": "Cette valeur n'est pas valide.",
+    "noProvince": "—",
+    "unexpectedError": "Une erreur inattendue est survenue. Réessayez."
+  },
+  "create": {
+    "title": "Nouvelle personne",
+    "submit": "Créer"
+  },
+  "detail": {
+    "backToList": "Retour aux personnes",
+    "notFound": "Cette personne est introuvable.",
+    "loadFailed": "Impossible de charger cette personne. Réessayez.",
+    "created": "La personne a été créée.",
+    "saved": "Les modifications ont été enregistrées.",
+    "save": "Enregistrer",
+    "archive": "Archiver",
+    "unarchive": "Désarchiver",
+    "archivedNotice": "Cette personne est archivée. Elle n'apparaît plus dans les listes ni dans les recherches.",
+    "duplicatesTitle": "Doublons possibles",
+    "duplicatesBody": "Ces personnes ont le même courriel ou le même numéro de téléphone. Vérifiez qu'il ne s'agit pas de la même personne."
+  }
+}

@@ -2,5 +2,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Shelter.BuildingBlocks\Shelter.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Shelter.Modules.Movements.Contracts\Shelter.Modules.Movements.Contracts.csproj" />
+    <ProjectReference Include="..\..\Animals\Shelter.Modules.Animals.Contracts\Shelter.Modules.Animals.Contracts.csproj" />
+    <ProjectReference Include="..\..\Operations\Shelter.Modules.Operations.Contracts\Shelter.Modules.Operations.Contracts.csproj" />
+    <ProjectReference Include="..\..\People\Shelter.Modules.People.Contracts\Shelter.Modules.People.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Shelter.Modules.Movements.Tests" />
   </ItemGroup>
 </Project>

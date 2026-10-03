@@ -98,15 +98,11 @@ describe('permissions in the UI', () => {
   it('visibleModules hides gated modules without their permission', () => {
     const keys = (permissions: string[]) => visibleModules(permissions).map((m) => m.key);
 
-    expect(keys([])).toEqual([
-      'people',
-      'medical',
-      'operations',
-      'engagement',
-      'municipal',
-      'reporting',
-    ]);
-    expect(keys(['animal.read', 'movement.read', 'platform.staff.read'])).toHaveLength(9);
+    expect(keys([])).toEqual(['medical', 'engagement', 'municipal', 'reporting']);
+    expect(
+      keys(['animal.read', 'location.read', 'movement.read', 'person.read', 'platform.staff.read']),
+    ).toHaveLength(9);
+    expect(keys(['person.read'])).toContain('people');
     expect(keys(['platform.staff.read'])).toContain('platform');
   });
 });

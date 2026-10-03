@@ -1,0 +1,83 @@
+{
+  "title": "People",
+  "list": {
+    "caption": "People list",
+    "new": "New person",
+    "searchLabel": "Name, email or phone",
+    "roleFilter": "Role",
+    "allRoles": "All roles",
+    "showArchived": "Show archived people",
+    "archived": "archived"
+  },
+  "fields": {
+    "name": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "displayName": "Display name",
+    "displayNameHint": "Optional. Defaults to first and last name. Useful for an organization or a nickname.",
+    "email": "Email",
+    "phone": "Phone",
+    "secondaryPhone": "Other phone",
+    "address": "Address",
+    "addressLine": "Address",
+    "city": "City",
+    "province": "Province",
+    "postalCode": "Postal code",
+    "preferredLanguage": "Correspondence language",
+    "roleTags": "Roles",
+    "notes": "Notes",
+    "notesHint": "Visible to the organization's staff only."
+  },
+  "roles": {
+    "owner": "Owner",
+    "adopter": "Adopter",
+    "foster": "Foster",
+    "volunteer": "Volunteer",
+    "donor": "Donor",
+    "finder": "Finder",
+    "surrenderer": "Surrenderer"
+  },
+  "provinces": {
+    "QC": "Quebec",
+    "ON": "Ontario",
+    "NB": "New Brunswick",
+    "NS": "Nova Scotia",
+    "PE": "Prince Edward Island",
+    "NL": "Newfoundland and Labrador",
+    "MB": "Manitoba",
+    "SK": "Saskatchewan",
+    "AB": "Alberta",
+    "BC": "British Columbia",
+    "YT": "Yukon",
+    "NT": "Northwest Territories",
+    "NU": "Nunavut"
+  },
+  "languages": {
+    "fr": "French",
+    "en": "English"
+  },
+  "form": {
+    "nameRequired": "Enter a first name, last name or display name.",
+    "tooLong": "This field is too long.",
+    "invalid": "This value is not valid.",
+    "noProvince": "—",
+    "unexpectedError": "Something went wrong. Try again."
+  },
+  "create": {
+    "title": "New person",
+    "submit": "Create"
+  },
+  "detail": {
+    "backToList": "Back to people",
+    "notFound": "This person can't be found.",
+    "loadFailed": "This person couldn't be loaded. Try again.",
+    "created": "The person was created.",
+    "saved": "Your changes were saved.",
+    "save": "Save",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "archivedNotice": "This person is archived. They no longer appear in lists or searches.",
+    "duplicatesTitle": "Possible duplicates",
+    "duplicatesBody": "These people have the same email or phone number. Check that they aren't the same person."
+  }
+}

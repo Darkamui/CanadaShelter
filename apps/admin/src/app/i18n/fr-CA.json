@@ -54,5 +54,15 @@
   "forms": {
     "required": "Ce champ est obligatoire.",
     "email": "Entrez une adresse courriel valide."
+  },
+  "list": {
+    "loading": "Chargement…",
+    "empty": "Aucun résultat.",
+    "error": "Impossible de charger la liste.",
+    "previousPage": "Précédent",
+    "nextPage": "Suivant",
+    "range": "{{from}}–{{to}} sur {{total}}",
+    "sortBy": "Trier par {{column}}",
+    "search": "Rechercher"
   }
 }

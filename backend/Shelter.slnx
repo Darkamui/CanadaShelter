@@ -8,6 +8,7 @@
   <Folder Name="/Modules/" />
   <Folder Name="/Modules/Animals/">
     <Project Path="Modules/Animals/Shelter.Modules.Animals.Contracts/Shelter.Modules.Animals.Contracts.csproj" />
+    <Project Path="Modules/Animals/Shelter.Modules.Animals.Tests/Shelter.Modules.Animals.Tests.csproj" />
     <Project Path="Modules/Animals/Shelter.Modules.Animals/Shelter.Modules.Animals.csproj" />
   </Folder>
   <Folder Name="/Modules/Engagement/">
@@ -20,6 +21,7 @@
   </Folder>
   <Folder Name="/Modules/Movements/">
     <Project Path="Modules/Movements/Shelter.Modules.Movements.Contracts/Shelter.Modules.Movements.Contracts.csproj" />
+    <Project Path="Modules/Movements/Shelter.Modules.Movements.Tests/Shelter.Modules.Movements.Tests.csproj" />
     <Project Path="Modules/Movements/Shelter.Modules.Movements/Shelter.Modules.Movements.csproj" />
   </Folder>
   <Folder Name="/Modules/Municipal/">
@@ -28,10 +30,12 @@
   </Folder>
   <Folder Name="/Modules/Operations/">
     <Project Path="Modules/Operations/Shelter.Modules.Operations.Contracts/Shelter.Modules.Operations.Contracts.csproj" />
+    <Project Path="Modules/Operations/Shelter.Modules.Operations.Tests/Shelter.Modules.Operations.Tests.csproj" />
     <Project Path="Modules/Operations/Shelter.Modules.Operations/Shelter.Modules.Operations.csproj" />
   </Folder>
   <Folder Name="/Modules/People/">
     <Project Path="Modules/People/Shelter.Modules.People.Contracts/Shelter.Modules.People.Contracts.csproj" />
+    <Project Path="Modules/People/Shelter.Modules.People.Tests/Shelter.Modules.People.Tests.csproj" />
     <Project Path="Modules/People/Shelter.Modules.People/Shelter.Modules.People.csproj" />
   </Folder>
   <Folder Name="/Modules/Platform/">

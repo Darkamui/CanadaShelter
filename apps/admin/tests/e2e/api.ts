@@ -10,6 +10,28 @@ export const species = [
   { code: 'cat', label: { fr: 'Chat', en: 'Cat' } },
 ];
 
+/** One dog in care, for pages that only need the animal list to render. */
+export const animalsPage = {
+  items: [
+    {
+      id: '33333333-3333-3333-3333-333333333333',
+      number: 1,
+      name: 'Rex',
+      speciesCode: 'dog',
+      breed: null,
+      sex: 'male',
+      custodyStatus: 'in_care',
+      currentLocationId: null,
+      currentLocationName: null,
+      inCareSince: '2026-09-01T12:00:00Z',
+      hasAlerts: false,
+    },
+  ],
+  page: 1,
+  pageSize: 25,
+  totalCount: 1,
+};
+
 export interface SessionOptions {
   activeOrganizationId?: string | null;
   permissions?: string[];
@@ -41,6 +63,10 @@ export function sessionBody(options: SessionOptions = {}) {
 export async function mockBaseApi(page: Page) {
   await page.route('**/api/**', (route) => route.fulfill({ json: { status: 'ok' } }));
   await page.route('**/api/animals/species', (route) => route.fulfill({ json: species }));
+  await page.route(
+    (url) => url.pathname === '/api/animals',
+    (route) => route.fulfill({ json: animalsPage }),
+  );
   await page.route('**/api/platform/session/antiforgery', (route) =>
     route.fulfill({ status: 204, headers: { 'Set-Cookie': 'XSRF-TOKEN=e2e-token; Path=/' } }),
   );

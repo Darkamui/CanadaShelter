@@ -104,6 +104,11 @@
   - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
   - `platform.staff.manage` (sensitive): change roles, suspend, reactivate. Sensitive so that no non-admin role can grant itself anything.
   - `audit.read` (sensitive): checked by `AuditReader` itself (`AuditReadDeniedException`).
+- Module permissions (M3; each module declares its own in `Authorization/*Permissions.cs`, mirrored in `apps/admin/src/lib/auth/permissions.ts`):
+  - People: `person.read`, `person.write`.
+  - Operations: `location.read`, `location.write`.
+  - Animals: `animal.read`, `animal.write`.
+  - Movements: `movement.read`, `movement.write`, `movement.amend` (sensitive: voids a movement, administrator only).
 
 ## MFA
 

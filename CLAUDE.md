@@ -47,6 +47,7 @@ Specs are long. Grep for the heading and read only the named section.
 | Uploads, public surface                 | architecture §18, §18A                                           |
 | Pilot scope                             | product-spec §41                                                 |
 | A specific module                       | `docs/modules/<module>.md` — **read this before exploring code** |
+| UI templates, tokens, components        | `docs/design-system.md` (ADR 0022)                               |
 | Past decisions                          | `docs/adr/`                                                      |
 
 ## Hard rules

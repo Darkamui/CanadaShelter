@@ -10,6 +10,7 @@ Input: module name, feature name, and the issue (acceptance criteria).
 ## 1. Read (only these)
 
 - `backend/CLAUDE.md`, `apps/admin/CLAUDE.md`
+- `docs/design-system.md` (if the slice has UI)
 - `docs/modules/<module>.md`
 - Doc sections cited by the issue
 - One existing feature in the same module as a pattern reference (if any)
@@ -21,6 +22,7 @@ Do not explore other modules. If you need another module's data, use its `Contra
 List:
 
 - Files to create/change (backend + frontend)
+- For each screen: which template (list, record + tab, edit page, dialog, auth card) and which `packages/ui` primitives. A pattern the templates don't cover is a new primitive, listed here
 - Permission(s) used or added
 - Migration needed? New tables → `/tenancy-check` applies
 - Tests to write (names + what they prove)
@@ -48,6 +50,8 @@ List:
 - Route/components under `src/features/<module>/`.
 - Strings in `i18n/fr-CA.json` first, then `en-CA.json`. Uncertain French → `TODO(fr-review)`.
 - Use generated hooks; RHF + Zod for forms.
+- Build screens from the templates in `docs/design-system.md` (ADR 0022). Use `PageHeader`/`RecordHeader`, `DataTable` with an `EmptyState`, `FormSection` or a `Dialog`, `IconAction` for row actions, a toast for success, `FormAlert` for errors, and skeletons for loading. No raw colors, no text buttons in table rows.
+- Check fr-CA and en-CA at 1280 and 820 px.
 
 ## 6. Verify
 

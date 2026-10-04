@@ -202,7 +202,9 @@ describe('animals', () => {
     fireEvent.click(submit);
 
     expect(await screen.findByText("L'animal a été créé.")).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: '#12 Éclair' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: '#12 Éclair' }),
+    ).toBeInTheDocument();
     expect(sent).toMatchObject({
       name: 'Éclair',
       speciesCode: 'cat',
@@ -216,7 +218,7 @@ describe('animals', () => {
     });
   });
 
-  it('shows the custody summary, identifiers and timeline on the detail page', async () => {
+  it('shows the custody status, alerts, identifiers and recent activity on the overview', async () => {
     mockApi(writer, {});
     renderAt(`/animals/${ANIMAL}`);
 
@@ -226,7 +228,29 @@ describe('animals', () => {
     expect(screen.getByText('Au refuge')).toBeInTheDocument();
     expect(screen.getByText('900 123 456 789 012')).toBeInTheDocument();
     expect(await screen.findByText('Animal inscrit')).toBeInTheDocument();
-    expect(screen.getByLabelText('Alerte médicale')).toHaveValue('Diabétique');
+    expect(screen.getByText('Diabétique')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Modifier' })).toHaveAttribute(
+      'href',
+      `/animals/${ANIMAL}/edit`,
+    );
+  });
+
+  it('saves the edit form and returns to the record', async () => {
+    let sent: unknown;
+    mockApi(writer, {
+      [`PUT /api/animals/${ANIMAL}`]: (init) => {
+        sent = JSON.parse(String(init?.body));
+        return Response.json({ ...animal, version: 8 });
+      },
+    });
+    renderAt(`/animals/${ANIMAL}/edit`);
+
+    expect(await screen.findByLabelText('Alerte médicale')).toHaveValue('Diabétique');
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByText('Les modifications ont été enregistrées.')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Modifier' })).toBeInTheDocument();
+    expect(sent).toMatchObject({ version: 7, medicalAlert: 'Diabétique' });
   });
 
   it('sends the version and reloads when someone else saved first', async () => {
@@ -237,7 +261,7 @@ describe('animals', () => {
         return problem(409, { code: 'animal.versionConflict' });
       },
     });
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/edit`);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Enregistrer' }));
 
@@ -250,7 +274,7 @@ describe('animals', () => {
       [`POST /api/animals/${ANIMAL}/identifiers`]: () =>
         problem(400, { errors: { value: ['This microchip is already in use.'] } }),
     });
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/identifiers`);
 
     fireEvent.change(await screen.findByLabelText('Numéro'), {
       target: { value: '900123456789012' },
@@ -268,7 +292,9 @@ describe('animals', () => {
 
     expect(await screen.findByText('Diabétique')).toBeInTheDocument();
     expect(screen.getByText('1 mai 2024 (estimée)')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Enregistrer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Modifier' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Identifiants/ }));
+    expect(await screen.findByRole('region', { name: 'Identifiants' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ajouter' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Désactiver 900 123 456 789 012' }),

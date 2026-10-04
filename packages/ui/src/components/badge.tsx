@@ -42,7 +42,10 @@ function Badge({
   return (
     <span data-slot="badge" className={cn(badgeVariants({ tone }), className)} {...props}>
       {dot && (
-        <span aria-hidden="true" className={cn('size-1.5 rounded-full', dotClass[tone ?? 'neutral'])} />
+        <span
+          aria-hidden="true"
+          className={cn('size-1.5 rounded-full', dotClass[tone ?? 'neutral'])}
+        />
       )}
       {children}
     </span>

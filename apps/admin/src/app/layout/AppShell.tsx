@@ -39,14 +39,17 @@ export function AppShell() {
       >
         {t('skipToContent')}
       </a>
-      <Sidebar
-        permissions={session.permissions}
-        collapsed={collapsed}
-        onToggle={() => {
-          setCollapsed(!collapsed);
-          storeCollapsed(!collapsed);
-        }}
-      />
+      {/* The column paints the sidebar colour down long pages; the sidebar itself stays in view. */}
+      <div className="hidden shrink-0 bg-sidebar lg:block">
+        <Sidebar
+          permissions={session.permissions}
+          collapsed={collapsed}
+          onToggle={() => {
+            setCollapsed(!collapsed);
+            storeCollapsed(!collapsed);
+          }}
+        />
+      </div>
       <div className="flex min-w-0 flex-1 flex-col">
         <Header session={session} />
         <main

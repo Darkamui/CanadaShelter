@@ -250,7 +250,7 @@ describe('movements', () => {
         return Response.json(movement({}), { status: 201 });
       },
     });
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/movements`);
 
     expect(await screen.findByText('Aucun mouvement.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer une admission' }));
@@ -359,7 +359,7 @@ describe('movements', () => {
 
   it('shows the history, with void only on the latest movement and only with movement.amend', async () => {
     mockApi(staff, inCare);
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/movements`);
 
     const history = await screen.findByRole('region', { name: 'Mouvements' });
     expect(await within(history).findByText('Déplacement')).toBeInTheDocument();
@@ -379,7 +379,7 @@ describe('movements', () => {
         });
       },
     });
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/movements`);
 
     const history = await screen.findByRole('region', { name: 'Mouvements' });
     const voidButtons = await within(history).findAllByRole('button', { name: 'Annuler' });
@@ -399,7 +399,7 @@ describe('movements', () => {
 
   it('labels movement events on the timeline', async () => {
     mockApi(reads, inCare);
-    renderAt(`/animals/${ANIMAL}`);
+    renderAt(`/animals/${ANIMAL}/history`);
 
     const panel = await screen.findByRole('region', { name: 'Historique' });
     expect(await within(panel).findByText('Admission enregistrée')).toBeInTheDocument();

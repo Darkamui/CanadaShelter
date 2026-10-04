@@ -1,8 +1,12 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '../lib/utils';
 
-/** Nothing to show yet: say what would be here and offer the action that fills it. */
+/**
+ * Nothing to show yet: say what would be here and offer the action that fills it. `inCard` drops the dashed frame
+ * when the card around it already draws one.
+ */
 function EmptyState({
+  inCard = false,
   icon,
   title,
   description,
@@ -14,12 +18,14 @@ function EmptyState({
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  inCard?: boolean;
 }) {
   return (
     <div
       data-slot="empty-state"
       className={cn(
-        'flex flex-col items-center gap-3 rounded-xl border border-dashed border-border-strong bg-subtle px-6 py-10 text-center',
+        'flex flex-col items-center gap-3 px-6 text-center',
+        inCard ? 'py-6' : 'rounded-xl border border-dashed border-border-strong bg-subtle py-10',
         className,
       )}
       {...props}

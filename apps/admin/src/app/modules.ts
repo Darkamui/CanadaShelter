@@ -22,15 +22,45 @@ export type ModuleGroup = (typeof MODULE_GROUPS)[number];
  * placeholder module with no read permission yet, always listed. `ready` = the module has its own routes.
  */
 export const MODULES = [
-  { key: 'animals', group: 'shelter', icon: PawPrint, permission: Permissions.animalRead, ready: true },
-  { key: 'people', group: 'community', icon: Users, permission: Permissions.personRead, ready: true },
-  { key: 'movements', group: 'shelter', icon: ArrowLeftRight, permission: Permissions.movementRead, ready: false },
+  {
+    key: 'animals',
+    group: 'shelter',
+    icon: PawPrint,
+    permission: Permissions.animalRead,
+    ready: true,
+  },
+  {
+    key: 'people',
+    group: 'community',
+    icon: Users,
+    permission: Permissions.personRead,
+    ready: true,
+  },
+  {
+    key: 'movements',
+    group: 'shelter',
+    icon: ArrowLeftRight,
+    permission: Permissions.movementRead,
+    ready: false,
+  },
   { key: 'medical', group: 'shelter', icon: Stethoscope, permission: null, ready: false },
-  { key: 'operations', group: 'shelter', icon: ClipboardList, permission: Permissions.locationRead, ready: true },
+  {
+    key: 'operations',
+    group: 'shelter',
+    icon: ClipboardList,
+    permission: Permissions.locationRead,
+    ready: true,
+  },
   { key: 'engagement', group: 'community', icon: HeartHandshake, permission: null, ready: false },
   { key: 'municipal', group: 'community', icon: Landmark, permission: null, ready: false },
   { key: 'reporting', group: 'management', icon: ChartColumn, permission: null, ready: false },
-  { key: 'platform', group: 'management', icon: Settings, permission: Permissions.staffRead, ready: true },
+  {
+    key: 'platform',
+    group: 'management',
+    icon: Settings,
+    permission: Permissions.staffRead,
+    ready: true,
+  },
 ] as const satisfies readonly {
   key: string;
   group: ModuleGroup;

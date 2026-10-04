@@ -7,7 +7,10 @@
     "allStatuses": "All statuses",
     "allSpecies": "All species",
     "unnamed": "(no name)",
-    "hasAlerts": "Yes"
+    "hasAlerts": "Yes",
+    "description": "Your organization's animals, in care or not.",
+    "empty": "No animals yet",
+    "emptyBody": "Register a first animal to track its movements and history."
   },
   "fields": {
     "number": "Number",
@@ -76,7 +79,10 @@
     "save": "Save",
     "versionConflict": "Someone else changed this animal in the meantime. Their version is shown; make your changes again.",
     "inCareSince": "in care since {{date}}",
-    "estimated": "estimated"
+    "estimated": "estimated",
+    "edit": "Edit",
+    "inCareSinceLabel": "In care since",
+    "noLocation": "No location"
   },
   "identifiers": {
     "title": "Identifiers",
@@ -107,5 +113,31 @@
       "personId": "Person",
       "movementType": "Voided movement"
     }
+  },
+  "sections": {
+    "identity": "Identity",
+    "identityHint": "What lets you recognize the animal.",
+    "biology": "Sex and age"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "medical": "Medical",
+    "behaviour": "Behaviour",
+    "legal": "Legal"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "movements": "Movements",
+    "identifiers": "Identifiers",
+    "history": "History"
+  },
+  "edit": {
+    "title": "Edit {{name}}"
+  },
+  "overview": {
+    "profile": "Profile",
+    "recent": "Recent activity",
+    "allHistory": "See full history",
+    "manageIdentifiers": "Manage"
   }
 }

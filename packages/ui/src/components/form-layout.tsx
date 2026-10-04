@@ -16,7 +16,7 @@ function FormSection({
     <section
       data-slot="form-section"
       className={cn(
-        'grid gap-x-10 gap-y-4 border-b py-7 first:pt-0 last:border-0 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]',
+        'grid gap-x-10 gap-y-4 border-b py-7 first-of-type:pt-0 last-of-type:border-0 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]',
         className,
       )}
       {...props}

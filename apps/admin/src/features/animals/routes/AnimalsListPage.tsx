@@ -1,23 +1,27 @@
 import { useListAnimals } from '@shelter/api-client/hooks/animals';
 import type { AnimalListItem } from '@shelter/api-client/model';
 import { Button } from '@shelter/ui/components/button';
-import { DataTable, type DataTableFeatures } from '@shelter/ui/components/data-table';
-import { Input } from '@shelter/ui/components/input';
-import { Label } from '@shelter/ui/components/label';
+import { Avatar } from '@shelter/ui/components/avatar';
+import { DataTable, hideBelow, type DataTableFeatures } from '@shelter/ui/components/data-table';
+import { EmptyState } from '@shelter/ui/components/empty-state';
+import { FilterBar } from '@shelter/ui/components/filter-bar';
+import { PageHeader } from '@shelter/ui/components/page-header';
 import { keepPreviousData } from '@tanstack/react-query';
 import { createColumnHelper } from '@tanstack/react-table';
-import { useId, useMemo } from 'react';
+import { PawPrint, Plus, Search, TriangleAlert } from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, useSession } from '../../../lib/auth/session';
+import { FormField, SelectField } from '../../../lib/forms/FormField';
 import { useDataTableLabels } from '../../../lib/list/useDataTableLabels';
 import { useListParams } from '../../../lib/list/useListParams';
+import { CustodyBadge, SpeciesIcon } from '../components/AnimalBadges';
 import { CUSTODY_STATUSES } from '../model';
 import { useSpecies } from '../useSpecies';
 
 const helper = createColumnHelper<DataTableFeatures, AnimalListItem>();
-const selectClass = 'h-9 rounded-md border bg-transparent px-3 text-sm';
 
 /** The organization's animals: search by name, number or identifier; filter by custody status and species. */
 export function AnimalsListPage() {
@@ -48,17 +52,22 @@ export function AnimalsListPage() {
       helper.columns([
         helper.accessor('number', {
           header: t('fields.number'),
-          cell: (info) => `#${info.getValue()}`,
+          cell: (info) => <span className="text-muted-foreground">#{info.getValue()}</span>,
         }),
         helper.accessor('name', {
           header: t('fields.name'),
           cell: (info) => (
-            <Link
-              to={info.row.original.id}
-              className="font-medium underline-offset-4 hover:underline"
-            >
-              {info.getValue() ?? t('list.unnamed')}
-            </Link>
+            <div className="flex items-center gap-3">
+              <Avatar size="sm">
+                <SpeciesIcon code={info.row.original.speciesCode} />
+              </Avatar>
+              <Link
+                to={info.row.original.id}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {info.getValue() ?? t('list.unnamed')}
+              </Link>
+            </div>
           ),
         }),
         helper.accessor('speciesCode', {
@@ -70,8 +79,7 @@ export function AnimalsListPage() {
         helper.accessor('custodyStatus', {
           header: t('fields.custodyStatus'),
           enableSorting: false,
-          cell: (info) =>
-            t(`custodyStatuses.${info.getValue()}`, { defaultValue: info.getValue() }),
+          cell: (info) => <CustodyBadge status={info.getValue()} />,
         }),
         helper.accessor('currentLocationName', {
           header: t('fields.location'),
@@ -80,22 +88,35 @@ export function AnimalsListPage() {
         helper.accessor('hasAlerts', {
           header: t('fields.alerts'),
           enableSorting: false,
-          cell: (info) => (info.getValue() ? t('list.hasAlerts') : ''),
+          cell: (info) =>
+            info.getValue() && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-danger">
+                <TriangleAlert aria-hidden="true" className="size-4" />
+                {t('list.hasAlerts')}
+              </span>
+            ),
         }),
       ]),
     [t, labelOf],
   );
+  const filtered = Boolean(list.q || status || speciesCode);
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        {canWrite && (
-          <Button asChild>
-            <Link to="new">{t('list.new')}</Link>
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={t('title')}
+        description={t('list.description')}
+        actions={
+          canWrite && (
+            <Button asChild>
+              <Link to="new">
+                <Plus aria-hidden="true" />
+                {t('list.new')}
+              </Link>
+            </Button>
+          )
+        }
+      />
       <DataTable
         columns={columns}
         data={animals.data?.items ?? []}
@@ -108,91 +129,76 @@ export function AnimalsListPage() {
         sorting={list.sorting}
         onSortingChange={list.setSorting}
         labels={labels}
+        columnClassNames={{
+          number: 'w-20 tabular',
+          speciesCode: hideBelow.lg,
+          breed: hideBelow.xl,
+          currentLocationName: hideBelow.md,
+        }}
+        emptyState={
+          !filtered && (
+            <EmptyState
+              icon={<PawPrint />}
+              title={t('list.empty')}
+              description={t('list.emptyBody')}
+              action={
+                canWrite && (
+                  <Button asChild>
+                    <Link to="new">
+                      <Plus aria-hidden="true" />
+                      {t('list.new')}
+                    </Link>
+                  </Button>
+                )
+              }
+            />
+          )
+        }
         toolbar={
-          <Filters
-            q={list.q}
-            status={status}
-            speciesCode={speciesCode}
-            speciesOptions={species.options}
-            onSearch={list.setQuery}
-            onFilter={list.setFilter}
-          />
+          <FilterBar
+            onSubmit={(event) => {
+              event.preventDefault();
+              list.setQuery(String(new FormData(event.currentTarget).get('q') ?? '').trim());
+            }}
+          >
+            <FormField
+              label={t('list.searchLabel')}
+              name="q"
+              type="search"
+              defaultValue={list.q}
+              key={list.q}
+            />
+            <Button type="submit" variant="outline">
+              <Search aria-hidden="true" />
+              {t('shell:list.search')}
+            </Button>
+            <SelectField
+              label={t('fields.custodyStatus')}
+              value={status}
+              onChange={(event) => list.setFilter('status', event.target.value)}
+            >
+              <option value="">{t('list.allStatuses')}</option>
+              {CUSTODY_STATUSES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`custodyStatuses.${code}`)}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t('fields.species')}
+              value={speciesCode}
+              onChange={(event) => list.setFilter('species', event.target.value)}
+            >
+              <option value="">{t('list.allSpecies')}</option>
+              {species.options.map((s) => (
+                <option key={s.code} value={s.code}>
+                  {s.label}
+                </option>
+              ))}
+            </SelectField>
+          </FilterBar>
         }
       />
-    </section>
-  );
-}
-
-function Filters({
-  q,
-  status,
-  speciesCode,
-  speciesOptions,
-  onSearch,
-  onFilter,
-}: {
-  q: string;
-  status: string;
-  speciesCode: string;
-  speciesOptions: { code: string; label: string }[];
-  onSearch: (q: string) => void;
-  onFilter: (key: string, value: string) => void;
-}) {
-  const { t } = useTranslation('animals');
-  const searchId = useId();
-  const statusId = useId();
-  const speciesId = useId();
-
-  return (
-    <div className="flex flex-wrap items-end gap-4">
-      <form
-        role="search"
-        className="flex items-end gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSearch(String(new FormData(event.currentTarget).get('q') ?? '').trim());
-        }}
-      >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={searchId}>{t('list.searchLabel')}</Label>
-          <Input id={searchId} name="q" type="search" defaultValue={q} key={q} className="w-72" />
-        </div>
-        <Button type="submit" variant="outline">
-          {t('shell:list.search')}
-        </Button>
-      </form>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={statusId}>{t('fields.custodyStatus')}</Label>
-        <select
-          id={statusId}
-          className={selectClass}
-          value={status}
-          onChange={(event) => onFilter('status', event.target.value)}
-        >
-          <option value="">{t('list.allStatuses')}</option>
-          {CUSTODY_STATUSES.map((code) => (
-            <option key={code} value={code}>
-              {t(`custodyStatuses.${code}`)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={speciesId}>{t('fields.species')}</Label>
-        <select
-          id={speciesId}
-          className={selectClass}
-          value={speciesCode}
-          onChange={(event) => onFilter('species', event.target.value)}
-        >
-          <option value="">{t('list.allSpecies')}</option>
-          {speciesOptions.map((s) => (
-            <option key={s.code} value={s.code}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </div>
     </div>
   );
 }

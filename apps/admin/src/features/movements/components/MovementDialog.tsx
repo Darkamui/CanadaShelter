@@ -7,19 +7,21 @@ import type { AnimalResponse } from '@shelter/api-client/model';
 import { Button } from '@shelter/ui/components/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@shelter/ui/components/dialog';
-import { Label } from '@shelter/ui/components/label';
-import { useId, useMemo, useState } from 'react';
-import { Controller, type FieldError } from 'react-hook-form';
+import { MapPin } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
-import { FormField } from '../../../lib/forms/FormField';
+import { FormField, SelectField, TextareaField } from '../../../lib/forms/FormField';
 import { applyValidationErrors, problemCodeOf } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
 import {
@@ -43,8 +45,6 @@ const serverFields = {
   occurredAt: ['occurredAt', 'movements:form.occurredAtInvalid'],
   notes: ['notes', 'movements:form.tooLong'],
 } as const;
-
-const selectClass = 'h-9 rounded-md border bg-transparent px-3 text-sm';
 
 /** Records an intake, a relocation or an outcome for the animal. Closed when `kind` is undefined. */
 export function MovementDialog({
@@ -109,9 +109,6 @@ function MovementForm({
   const form = useZodForm(schema, { defaultValues: emptyMovement });
   const { errors, isSubmitting } = form.formState;
   const [alert, setAlert] = useState<string | undefined>();
-  const codeId = useId();
-  const locationId = useId();
-  const notesId = useId();
 
   const intake = useRecordIntake();
   const relocation = useRecordRelocation();
@@ -160,53 +157,44 @@ function MovementForm({
     <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
       {alert && <FormAlert tone="error">{alert}</FormAlert>}
       {kind !== 'relocation' && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={codeId}>
-            {t(kind === 'intake' ? 'fields.reason' : 'fields.outcome')}
-          </Label>
-          <select
-            id={codeId}
-            className={selectClass}
-            aria-invalid={errors.code ? true : undefined}
-            {...form.register('code')}
-          >
-            <option value="">{t('form.choose')}</option>
-            {codes.map((o) => (
-              <option key={o.code} value={o.code}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <FieldMessage error={errors.code} />
-        </div>
+        <SelectField
+          label={t(kind === 'intake' ? 'fields.reason' : 'fields.outcome')}
+          error={errors.code}
+          {...form.register('code')}
+        >
+          <option value="">{t('form.choose')}</option>
+          {codes.map((o) => (
+            <option key={o.code} value={o.code}>
+              {o.label}
+            </option>
+          ))}
+        </SelectField>
       )}
       {kind === 'outcome' ? (
         animal.currentLocationName && (
-          <p className="text-sm text-muted-foreground">
+          <p className="flex items-center gap-2 rounded-lg bg-subtle px-3 py-2 text-sm text-muted-foreground">
+            <MapPin aria-hidden="true" className="size-4 shrink-0" />
             {t('fields.leavesFrom', { location: animal.currentLocationName })}
           </p>
         )
       ) : (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={locationId}>{t('fields.toLocation')}</Label>
-          <select
-            id={locationId}
-            className={selectClass}
-            aria-invalid={errors.toLocationId ? true : undefined}
-            {...form.register('toLocationId')}
-          >
-            <option value="">{t('form.choose')}</option>
-            {targets.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-          {locations.status === 'success' && targets.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t('form.noLocations')}</p>
-          )}
-          <FieldMessage error={errors.toLocationId} />
-        </div>
+        <SelectField
+          label={t('fields.toLocation')}
+          hint={
+            locations.status === 'success' && targets.length === 0
+              ? t('form.noLocations')
+              : undefined
+          }
+          error={errors.toLocationId}
+          {...form.register('toLocationId')}
+        >
+          <option value="">{t('form.choose')}</option>
+          {targets.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.label}
+            </option>
+          ))}
+        </SelectField>
       )}
       {kind !== 'relocation' && canPickPerson && (
         <Controller
@@ -229,29 +217,22 @@ function MovementForm({
         error={errors.occurredAt}
         {...form.register('occurredAt')}
       />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={notesId}>{t('fields.notes')}</Label>
-        <textarea
-          id={notesId}
-          rows={3}
-          className="rounded-md border bg-transparent px-3 py-2 text-sm"
-          aria-describedby={`${notesId}-hint`}
-          aria-invalid={errors.notes ? true : undefined}
-          {...form.register('notes')}
-        />
-        <p id={`${notesId}-hint`} className="text-xs text-muted-foreground">
-          {t(kind === 'relocation' ? 'fields.notesHintNoPerson' : 'fields.notesHint')}
-        </p>
-        <FieldMessage error={errors.notes} />
-      </div>
-      <Button type="submit" className="self-start" disabled={isSubmitting}>
-        {t(`dialog.${kind}.submit`)}
-      </Button>
+      <TextareaField
+        label={t('fields.notes')}
+        hint={t(kind === 'relocation' ? 'fields.notesHintNoPerson' : 'fields.notesHint')}
+        error={errors.notes}
+        {...form.register('notes')}
+      />
+      <DialogFooter className="mt-1">
+        <DialogClose asChild>
+          <Button type="button" variant="ghost">
+            {t('shell:forms.cancel')}
+          </Button>
+        </DialogClose>
+        <Button type="submit" disabled={isSubmitting}>
+          {t(`dialog.${kind}.submit`)}
+        </Button>
+      </DialogFooter>
     </form>
   );
-}
-
-function FieldMessage({ error }: { error?: Pick<FieldError, 'message'> }) {
-  const { t } = useTranslation();
-  return error?.message ? <p className="text-sm text-destructive">{t(error.message)}</p> : null;
 }

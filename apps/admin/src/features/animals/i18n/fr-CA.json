@@ -7,7 +7,8 @@
     "fields.legalAlert",
     "detail.inCareSince",
     "timeline.types.intake_recorded",
-    "create.startIntake"
+    "create.startIntake",
+    "detail.inCareSinceLabel"
   ],
   "title": "Animaux",
   "list": {
@@ -17,7 +18,10 @@
     "allStatuses": "Tous les statuts",
     "allSpecies": "Toutes les espèces",
     "unnamed": "(sans nom)",
-    "hasAlerts": "Oui"
+    "hasAlerts": "Oui",
+    "description": "Les animaux de votre organisme, au refuge ou non.",
+    "empty": "Aucun animal pour l'instant",
+    "emptyBody": "Inscrivez un premier animal pour suivre ses mouvements et son historique."
   },
   "fields": {
     "number": "Numéro",
@@ -86,7 +90,10 @@
     "save": "Enregistrer",
     "versionConflict": "Quelqu'un d'autre a modifié cet animal entre-temps. Sa version est affichée; refaites vos modifications.",
     "inCareSince": "au refuge depuis le {{date}}",
-    "estimated": "estimée"
+    "estimated": "estimée",
+    "edit": "Modifier",
+    "inCareSinceLabel": "Au refuge depuis",
+    "noLocation": "Aucun emplacement"
   },
   "identifiers": {
     "title": "Identifiants",
@@ -117,5 +124,31 @@
       "personId": "Personne",
       "movementType": "Mouvement annulé"
     }
+  },
+  "sections": {
+    "identity": "Identité",
+    "identityHint": "Ce qui permet de reconnaître l'animal.",
+    "biology": "Sexe et âge"
+  },
+  "alerts": {
+    "title": "Alertes",
+    "medical": "Médical",
+    "behaviour": "Comportement",
+    "legal": "Juridique"
+  },
+  "tabs": {
+    "overview": "Aperçu",
+    "movements": "Mouvements",
+    "identifiers": "Identifiants",
+    "history": "Historique"
+  },
+  "edit": {
+    "title": "Modifier {{name}}"
+  },
+  "overview": {
+    "profile": "Profil",
+    "recent": "Activité récente",
+    "allHistory": "Voir tout l'historique",
+    "manageIdentifiers": "Gérer"
   }
 }

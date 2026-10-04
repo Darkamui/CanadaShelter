@@ -1,17 +1,19 @@
-import { cn } from '@shelter/ui/lib/utils';
+import { Alert } from '@shelter/ui/components/alert';
 import type { ReactNode } from 'react';
 
-/** A form-level message: `error` is announced as an alert, `info` as a status. */
-export function FormAlert({ tone, children }: { tone: 'error' | 'info'; children: ReactNode }) {
+/** A form-level message that stays until fixed: `error` is announced as an alert, `info` as a status. */
+export function FormAlert({
+  tone,
+  title,
+  children,
+}: {
+  tone: 'error' | 'info';
+  title?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
-    <div
-      role={tone === 'error' ? 'alert' : 'status'}
-      className={cn(
-        'rounded-md border px-3 py-2 text-sm',
-        tone === 'error' ? 'border-destructive/50 text-destructive' : 'bg-muted',
-      )}
-    >
+    <Alert tone={tone === 'error' ? 'danger' : 'info'} title={title}>
       {children}
-    </div>
+    </Alert>
   );
 }

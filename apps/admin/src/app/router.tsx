@@ -1,6 +1,13 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AnimalCreatePage } from '../features/animals/routes/AnimalCreatePage';
-import { AnimalDetailPage } from '../features/animals/routes/AnimalDetailPage';
+import { AnimalEditPage } from '../features/animals/routes/AnimalEditPage';
+import { AnimalRecordLayout } from '../features/animals/routes/AnimalRecordLayout';
+import {
+  AnimalHistoryTab,
+  AnimalIdentifiersTab,
+  AnimalMovementsTab,
+  AnimalOverviewTab,
+} from '../features/animals/routes/AnimalRecordTabs';
 import { AnimalsListPage } from '../features/animals/routes/AnimalsListPage';
 import { LocationDetailPage } from '../features/locations/routes/LocationDetailPage';
 import { LocationsPage } from '../features/locations/routes/LocationsPage';
@@ -77,7 +84,28 @@ export const routes: RouteObject[] = [
                 path: 'animals/:animalId',
                 element: (
                   <RequirePermission permission={Permissions.animalRead}>
-                    <AnimalDetailPage />
+                    <AnimalRecordLayout />
+                  </RequirePermission>
+                ),
+                children: [
+                  { index: true, element: <AnimalOverviewTab /> },
+                  {
+                    path: 'movements',
+                    element: (
+                      <RequirePermission permission={Permissions.movementRead}>
+                        <AnimalMovementsTab />
+                      </RequirePermission>
+                    ),
+                  },
+                  { path: 'identifiers', element: <AnimalIdentifiersTab /> },
+                  { path: 'history', element: <AnimalHistoryTab /> },
+                ],
+              },
+              {
+                path: 'animals/:animalId/edit',
+                element: (
+                  <RequirePermission permission={Permissions.animalWrite}>
+                    <AnimalEditPage />
                   </RequirePermission>
                 ),
               },

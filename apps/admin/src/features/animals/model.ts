@@ -3,6 +3,7 @@ import type {
   CreateAnimalRequest,
   UpdateAnimalRequest,
 } from '@shelter/api-client/model';
+import type { Tone } from '@shelter/ui/components/badge';
 import { z } from 'zod';
 import { requiredText } from '../../lib/forms/schemas';
 
@@ -14,6 +15,20 @@ export const REPRODUCTIVE_STATUSES = ['unknown', 'intact', 'sterilized'] as cons
 
 /** Custody status codes (`CustodyStatuses`). Label key: `animals:custodyStatuses.<code>`. */
 export const CUSTODY_STATUSES = ['not_in_care', 'in_care', 'outcome'] as const;
+
+/** How each custody status reads at a glance: in care is the normal state, not in care needs an intake. */
+export const custodyTone: Record<string, Tone> = {
+  in_care: 'success',
+  not_in_care: 'warning',
+  outcome: 'neutral',
+};
+
+/** The three alert fields, in the order staff need them. Label key: `animals:alerts.<key>`. */
+export const ALERTS = [
+  { key: 'medical', field: 'medicalAlert', tone: 'danger' },
+  { key: 'behaviour', field: 'behaviourAlert', tone: 'warning' },
+  { key: 'legal', field: 'legalAlert', tone: 'info' },
+] as const satisfies readonly { key: string; field: keyof AnimalResponse; tone: Tone }[];
 
 /** Identifier type codes (`AnimalIdentifierTypes`). Label key: `animals:identifierTypes.<code>`. */
 export const IDENTIFIER_TYPES = ['microchip', 'licence', 'external'] as const;
@@ -130,3 +145,6 @@ export function fromAnimal(animal: AnimalResponse): AnimalFormValues {
 export function animalTitle(animal: { number: number; name: string | null }): string {
   return animal.name ? `#${animal.number} ${animal.name}` : `#${animal.number}`;
 }
+
+/** Navigation state from the create page to the new animal's record. */
+export type AnimalPageState = { startIntake?: boolean };

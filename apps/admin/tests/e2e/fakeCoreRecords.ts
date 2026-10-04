@@ -215,7 +215,10 @@ export async function mockCoreRecordsApi(page: Page) {
           animals
             .filter((a) => !status || a.custodyStatus === status)
             .filter((a) => !ids || (a.currentLocationId && ids.has(a.currentLocationId)))
-            .map((a) => ({ ...withLocation(a), hasAlerts: false })),
+            .map((a) => ({
+              ...withLocation(a),
+              hasAlerts: Boolean(a.medicalAlert || a.behaviourAlert || a.legalAlert),
+            })),
         ),
       );
     }

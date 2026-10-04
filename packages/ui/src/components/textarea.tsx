@@ -7,7 +7,11 @@ function Textarea({ className, rows = 3, ...props }: ComponentProps<'textarea'>)
     <textarea
       data-slot="textarea"
       rows={rows}
-      className={cn(controlClass, 'field-sizing-content min-h-16 px-3 py-2 leading-relaxed', className)}
+      className={cn(
+        controlClass,
+        'field-sizing-content min-h-16 px-3 py-2 leading-relaxed',
+        className,
+      )}
       {...props}
     />
   );

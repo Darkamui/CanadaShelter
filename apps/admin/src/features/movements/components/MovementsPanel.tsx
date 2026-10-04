@@ -1,148 +1,103 @@
-import {
-  getGetAnimalQueryKey,
-  getGetAnimalTimelineQueryKey,
-  getListAnimalsQueryKey,
-} from '@shelter/api-client/hooks/animals';
-import {
-  getListMovementsQueryKey,
-  useListMovements,
-  useVoidMovement,
-} from '@shelter/api-client/hooks/movements';
+import { useListMovements, useVoidMovement } from '@shelter/api-client/hooks/movements';
 import type { AnimalResponse, MovementItem } from '@shelter/api-client/model';
+import { Badge } from '@shelter/ui/components/badge';
 import { Button } from '@shelter/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@shelter/ui/components/card';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@shelter/ui/components/dialog';
-import { Label } from '@shelter/ui/components/label';
-import { useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { EmptyState } from '@shelter/ui/components/empty-state';
+import { Skeleton } from '@shelter/ui/components/skeleton';
+import { toast } from '@shelter/ui/components/toaster';
+import { cn } from '@shelter/ui/lib/utils';
+import { ArrowRightLeft, LogIn, LogOut, Undo2 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
+import { TextareaField } from '../../../lib/forms/FormField';
 import { applyValidationErrors, problemCodeOf } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
 import { formatDateTime } from '../../../lib/format';
-import {
-  CUSTODY_CONFLICT,
-  latestInEffect,
-  NOT_LATEST,
-  voidSchema,
-  type MovementKind,
-} from '../model';
+import { CUSTODY_CONFLICT, latestInEffect, NOT_LATEST, voidSchema } from '../model';
 import { useIntakeReasons, useOutcomeTypes } from '../useMovementReference';
-import { MovementDialog } from './MovementDialog';
+import { useRefreshCustody } from '../useRefreshCustody';
+
+const typeIcons: Record<string, typeof LogIn> = {
+  intake: LogIn,
+  relocation: ArrowRightLeft,
+  outcome: LogOut,
+  void: Undo2,
+};
 
 /**
- * Custody actions and the movement history of one animal. Intake when not in care (or after an outcome), move and
- * outcome while in care, all with `movement.write`; with `movement.amend`, the latest movement in effect can be
- * voided.
+ * The movement history of one animal, newest first. With `movement.amend`, the latest movement in effect can be
+ * voided. The custody buttons are on the record's header (`CustodyActions`).
  */
-export function MovementsPanel({
-  animal,
-  startIntake = false,
-}: {
-  animal: AnimalResponse;
-  /** Opens the intake dialog at once (from the create page). */
-  startIntake?: boolean;
-}) {
+export function MovementsPanel({ animal }: { animal: AnimalResponse }) {
   const { t } = useTranslation('movements');
   const { data: session } = useSession();
-  const canWrite = hasPermission(session, Permissions.movementWrite);
   const canAmend = hasPermission(session, Permissions.movementAmend);
-  const queryClient = useQueryClient();
   const movements = useListMovements({ animalId: animal.id });
-  const inCare = animal.custodyStatus === 'in_care';
-  const [kind, setKind] = useState<MovementKind | undefined>(
-    startIntake && canWrite && !inCare ? 'intake' : undefined,
-  );
+  const refresh = useRefreshCustody(animal.id);
   const [voiding, setVoiding] = useState<MovementItem | undefined>();
-  const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string } | undefined>();
-
-  const refresh = () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: getGetAnimalQueryKey(animal.id) }),
-      queryClient.invalidateQueries({ queryKey: getGetAnimalTimelineQueryKey(animal.id) }),
-      queryClient.invalidateQueries({
-        queryKey: getListMovementsQueryKey({ animalId: animal.id }),
-      }),
-      queryClient.invalidateQueries({ queryKey: getListAnimalsQueryKey() }),
-    ]);
+  const [conflict, setConflict] = useState<string | undefined>();
 
   const latest = movements.data ? latestInEffect(movements.data) : undefined;
 
   return (
-    <section aria-labelledby="movements-title" className="flex max-w-2xl flex-col gap-3">
-      <h2 id="movements-title" className="text-lg font-semibold">
-        {t('title')}
-      </h2>
-      {message && <FormAlert tone={message.tone}>{message.text}</FormAlert>}
-      {canWrite && (
-        <div className="flex flex-wrap gap-2">
-          {inCare ? (
-            <>
-              <Button variant="outline" onClick={() => setKind('relocation')}>
-                {t('actions.relocation')}
-              </Button>
-              <Button variant="outline" onClick={() => setKind('outcome')}>
-                {t('actions.outcome')}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setKind('intake')}>{t('actions.intake')}</Button>
-          )}
-        </div>
-      )}
-      {movements.isPending ? (
-        <p role="status">{t('shell:list.loading')}</p>
-      ) : movements.isError ? (
-        <p role="alert" className="text-destructive">
-          {t('loadFailed')}
-        </p>
-      ) : movements.data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('none')}</p>
-      ) : (
-        <ol className="flex flex-col gap-3">
-          {movements.data.map((movement) => (
-            <MovementEntry
-              key={movement.id}
-              movement={movement}
-              canVoid={canAmend && movement.id === latest?.id}
-              onVoid={() => setVoiding(movement)}
-            />
-          ))}
-        </ol>
-      )}
-      <MovementDialog
-        animal={animal}
-        kind={kind}
-        onClose={() => setKind(undefined)}
-        onRecorded={async (recorded) => {
-          setKind(undefined);
-          setMessage({ tone: 'info', text: t(`recorded.${recorded}`) });
-          await refresh();
-        }}
-        onConflict={refresh}
-      />
+    <Card aria-labelledby="movements-title">
+      <CardHeader>
+        <CardTitle id="movements-title">{t('title')}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {conflict && <FormAlert tone="error">{conflict}</FormAlert>}
+        {movements.isPending ? (
+          <div role="status" className="flex flex-col gap-3">
+            <span className="sr-only">{t('shell:list.loading')}</span>
+            <Skeleton className="h-16" />
+            <Skeleton className="h-16" />
+          </div>
+        ) : movements.isError ? (
+          <FormAlert tone="error">{t('loadFailed')}</FormAlert>
+        ) : movements.data.length === 0 ? (
+          <EmptyState inCard icon={<ArrowRightLeft />} title={t('none')} />
+        ) : (
+          <ol className="flex flex-col divide-y">
+            {movements.data.map((movement) => (
+              <MovementEntry
+                key={movement.id}
+                movement={movement}
+                canVoid={canAmend && movement.id === latest?.id}
+                onVoid={() => setVoiding(movement)}
+              />
+            ))}
+          </ol>
+        )}
+      </CardContent>
       <VoidDialog
         movement={voiding}
         onClose={() => setVoiding(undefined)}
         onVoided={async () => {
           setVoiding(undefined);
-          setMessage({ tone: 'info', text: t('voided') });
+          setConflict(undefined);
+          toast.success(t('voided'));
           await refresh();
         }}
         onConflict={async (text) => {
           setVoiding(undefined);
-          setMessage({ tone: 'error', text });
+          setConflict(text);
           await refresh();
         }}
       />
-    </section>
+    </Card>
   );
 }
 
@@ -159,6 +114,7 @@ function MovementEntry({
   const reasons = useIntakeReasons();
   const outcomes = useOutcomeTypes();
   const voided = movement.voidedByMovementId !== null;
+  const Icon = typeIcons[movement.type] ?? ArrowRightLeft;
   const code = movement.reasonCode
     ? movement.type === 'intake'
       ? reasons.labelOf(movement.reasonCode)
@@ -173,33 +129,46 @@ function MovementEntry({
   ];
 
   return (
-    <li className="flex flex-col gap-1 rounded-md border p-3">
-      <div className="flex flex-wrap items-center gap-x-3">
-        <p className={voided ? 'font-medium line-through' : 'font-medium'}>
-          {t(`types.${movement.type}`, { defaultValue: movement.type })}
-        </p>
-        {voided && <span className="text-sm text-muted-foreground">{t('voidedTag')}</span>}
+    <li className="flex gap-4 py-4 first:pt-0 last:pb-0">
+      <span
+        aria-hidden="true"
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground [&_svg]:size-4',
+          voided && 'bg-muted text-muted-foreground',
+        )}
+      >
+        <Icon />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className={cn('font-medium', voided && 'text-muted-foreground line-through')}>
+            {t(`types.${movement.type}`, { defaultValue: movement.type })}
+          </p>
+          {voided && <Badge>{t('voidedTag')}</Badge>}
+          <time
+            dateTime={movement.occurredAt}
+            className="tabular ml-auto text-[0.8125rem] text-muted-foreground"
+          >
+            {formatDateTime(movement.occurredAt, i18n.language)}
+          </time>
+        </div>
+        <dl className="grid gap-x-4 gap-y-0.5 text-sm sm:grid-cols-[max-content_1fr]">
+          {rows
+            .filter(([, value]) => value)
+            .map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="whitespace-pre-line">{value}</dd>
+              </div>
+            ))}
+        </dl>
         {canVoid && (
-          <Button variant="outline" size="sm" className="ml-auto" onClick={onVoid}>
+          <Button variant="ghost" size="sm" className="-ml-2.5 self-start" onClick={onVoid}>
+            <Undo2 aria-hidden="true" />
             {t('actions.void')}
           </Button>
         )}
       </div>
-      <p className="text-sm text-muted-foreground">
-        <time dateTime={movement.occurredAt}>
-          {formatDateTime(movement.occurredAt, i18n.language)}
-        </time>
-      </p>
-      <dl className="grid gap-x-4 text-sm sm:grid-cols-[auto_1fr]">
-        {rows
-          .filter(([, value]) => value)
-          .map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="whitespace-pre-line">{value}</dd>
-            </div>
-          ))}
-      </dl>
     </li>
   );
 }
@@ -258,8 +227,6 @@ function VoidForm({
   const form = useZodForm(voidSchema, { defaultValues: { reason: '' } });
   const { errors, isSubmitting } = form.formState;
   const [failed, setFailed] = useState(false);
-  const reasonId = useId();
-  const message = errors.reason?.message ? t(errors.reason.message) : undefined;
 
   const submit = form.handleSubmit(async ({ reason }) => {
     setFailed(false);
@@ -277,24 +244,23 @@ function VoidForm({
   return (
     <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
       {failed && <FormAlert tone="error">{t('form.unexpectedError')}</FormAlert>}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={reasonId}>{t('void.reason')}</Label>
-        <textarea
-          id={reasonId}
-          rows={3}
-          className="rounded-md border bg-transparent px-3 py-2 text-sm"
-          aria-describedby={`${reasonId}-hint`}
-          aria-invalid={message ? true : undefined}
-          {...form.register('reason')}
-        />
-        <p id={`${reasonId}-hint`} className="text-xs text-muted-foreground">
-          {t('void.reasonHint')}
-        </p>
-        {message && <p className="text-sm text-destructive">{message}</p>}
-      </div>
-      <Button type="submit" className="self-start" disabled={isSubmitting}>
-        {t('void.submit')}
-      </Button>
+      <TextareaField
+        label={t('void.reason')}
+        hint={t('void.reasonHint')}
+        rows={3}
+        error={errors.reason}
+        {...form.register('reason')}
+      />
+      <DialogFooter className="mt-1">
+        <DialogClose asChild>
+          <Button type="button" variant="ghost">
+            {t('shell:forms.cancel')}
+          </Button>
+        </DialogClose>
+        <Button type="submit" variant="destructive" disabled={isSubmitting}>
+          {t('void.submit')}
+        </Button>
+      </DialogFooter>
     </form>
   );
 }

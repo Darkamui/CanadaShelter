@@ -1,11 +1,13 @@
 import type { PersonRequest } from '@shelter/api-client/model';
 import { Button } from '@shelter/ui/components/button';
-import { Label } from '@shelter/ui/components/label';
-import { useId, useState } from 'react';
+import { Checkbox } from '@shelter/ui/components/checkbox';
+import { FormActions, FormSection } from '@shelter/ui/components/form-layout';
+import { useState } from 'react';
 import { Controller, type FieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { FormAlert } from '../../../lib/forms/FormAlert';
-import { FormField } from '../../../lib/forms/FormField';
+import { FieldMessage, FormField, SelectField, TextareaField } from '../../../lib/forms/FormField';
 import { formMessages } from '../../../lib/forms/schemas';
 import { applyValidationErrors } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
@@ -37,25 +39,22 @@ const serverFields = {
   notes: ['notes', 'people:form.tooLong'],
 } as const;
 
-const selectClass = 'h-9 rounded-md border bg-transparent px-3 text-sm';
-
 /** Create and edit form for a person. `onSubmit` rejects with the API error to show it on the fields. */
 export function PersonForm({
   defaultValues,
   submitLabel,
+  cancelTo,
   onSubmit,
 }: {
   defaultValues: PersonFormValues;
   submitLabel: string;
+  cancelTo: string;
   onSubmit: (request: PersonRequest) => Promise<void>;
 }) {
   const { t } = useTranslation('people');
   const form = useZodForm(personSchema, { defaultValues });
   const { errors, isSubmitting } = form.formState;
   const [failed, setFailed] = useState(false);
-  const provinceId = useId();
-  const languageId = useId();
-  const notesId = useId();
 
   const submit = form.handleSubmit(async (values) => {
     setFailed(false);
@@ -67,9 +66,17 @@ export function PersonForm({
   });
 
   return (
-    <form className="flex max-w-2xl flex-col gap-4" onSubmit={submit} noValidate>
-      {failed && <FormAlert tone="error">{t('form.unexpectedError')}</FormAlert>}
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form
+      className="rounded-xl border bg-card px-5 pt-7 shadow-card sm:px-6"
+      onSubmit={submit}
+      noValidate
+    >
+      {failed && (
+        <div className="mb-7">
+          <FormAlert tone="error">{t('form.unexpectedError')}</FormAlert>
+        </div>
+      )}
+      <FormSection title={t('sections.identity')} description={t('sections.identityHint')}>
         <FormField
           label={t('fields.firstName')}
           autoComplete="off"
@@ -82,19 +89,21 @@ export function PersonForm({
           error={errors.lastName}
           {...form.register('lastName')}
         />
-      </div>
-      <FormField
-        label={t('fields.displayName')}
-        hint={t('fields.displayNameHint')}
-        autoComplete="off"
-        error={errors.displayName}
-        {...form.register('displayName')}
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField
+          label={t('fields.displayName')}
+          hint={t('fields.displayNameHint')}
+          autoComplete="off"
+          wide
+          error={errors.displayName}
+          {...form.register('displayName')}
+        />
+      </FormSection>
+      <FormSection title={t('sections.contact')} description={t('sections.contactHint')}>
         <FormField
           label={t('fields.email')}
           type="email"
           autoComplete="off"
+          wide
           error={errors.email}
           {...form.register('email')}
         />
@@ -112,83 +121,75 @@ export function PersonForm({
           error={errors.secondaryPhone}
           {...form.register('secondaryPhone')}
         />
-      </div>
-      <FormField
-        label={t('fields.addressLine')}
-        autoComplete="off"
-        error={errors.addressLine}
-        {...form.register('addressLine')}
-      />
-      <div className="grid gap-4 sm:grid-cols-3">
+        <FormField
+          label={t('fields.addressLine')}
+          autoComplete="off"
+          wide
+          error={errors.addressLine}
+          {...form.register('addressLine')}
+        />
         <FormField
           label={t('fields.city')}
           autoComplete="off"
           error={errors.city}
           {...form.register('city')}
         />
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={provinceId}>{t('fields.province')}</Label>
-          <select id={provinceId} className={selectClass} {...form.register('province')}>
-            <option value="">{t('form.noProvince')}</option>
-            {PROVINCES.map((code) => (
-              <option key={code} value={code}>
-                {t(`provinces.${code}`)}
-              </option>
-            ))}
-          </select>
-          <FieldMessage error={errors.province} />
-        </div>
+        <SelectField
+          label={t('fields.province')}
+          error={errors.province}
+          {...form.register('province')}
+        >
+          <option value="">{t('form.noProvince')}</option>
+          {PROVINCES.map((code) => (
+            <option key={code} value={code}>
+              {t(`provinces.${code}`)}
+            </option>
+          ))}
+        </SelectField>
         <FormField
           label={t('fields.postalCode')}
           autoComplete="off"
           error={errors.postalCode}
           {...form.register('postalCode')}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={languageId}>{t('fields.preferredLanguage')}</Label>
-        <select id={languageId} className={selectClass} {...form.register('preferredLanguage')}>
+        <SelectField label={t('fields.preferredLanguage')} {...form.register('preferredLanguage')}>
           <option value="fr">{t('languages.fr')}</option>
           <option value="en">{t('languages.en')}</option>
-        </select>
-      </div>
-      <Controller
-        control={form.control}
-        name="roleTags"
-        render={({ field, fieldState }) => (
-          <RoleTagCheckboxes
-            legend={t('fields.roleTags')}
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error}
-          />
-        )}
-      />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={notesId}>{t('fields.notes')}</Label>
-        <textarea
-          id={notesId}
+        </SelectField>
+      </FormSection>
+      <FormSection title={t('sections.rolesNotes')}>
+        <Controller
+          control={form.control}
+          name="roleTags"
+          render={({ field, fieldState }) => (
+            <RoleTagCheckboxes
+              legend={t('fields.roleTags')}
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error}
+            />
+          )}
+        />
+        <TextareaField
+          label={t('fields.notes')}
+          hint={t('fields.notesHint')}
           rows={4}
-          className="rounded-md border bg-transparent px-3 py-2 text-sm"
-          aria-describedby={`${notesId}-hint`}
-          aria-invalid={errors.notes ? true : undefined}
+          error={errors.notes}
           {...form.register('notes')}
         />
-        <p id={`${notesId}-hint`} className="text-xs text-muted-foreground">
-          {t('fields.notesHint')}
-        </p>
-        <FieldMessage error={errors.notes} />
-      </div>
-      <Button type="submit" className="self-start" disabled={isSubmitting}>
-        {submitLabel}
-      </Button>
+      </FormSection>
+      <FormActions sticky className="rounded-b-xl">
+        <Button asChild variant="ghost">
+          <Link to={cancelTo} relative="path">
+            {t('shell:forms.cancel')}
+          </Link>
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {submitLabel}
+        </Button>
+      </FormActions>
     </form>
   );
-}
-
-function FieldMessage({ error }: { error?: Pick<FieldError, 'message'> }) {
-  const { t } = useTranslation();
-  return error?.message ? <p className="text-sm text-destructive">{t(error.message)}</p> : null;
 }
 
 function RoleTagCheckboxes({
@@ -205,14 +206,12 @@ function RoleTagCheckboxes({
   const { t } = useTranslation('people');
 
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium">{legend}</legend>
-      <div className="flex flex-wrap gap-x-6 gap-y-2">
+    <fieldset data-wide className="flex min-w-0 flex-col gap-2">
+      <legend className="mb-2 text-sm leading-none font-medium">{legend}</legend>
+      <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
         {PERSON_ROLES.map((role) => (
-          <label key={role} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="size-4"
+          <label key={role} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-sm">
+            <Checkbox
               checked={value.includes(role)}
               onChange={(event) =>
                 onChange(
@@ -226,7 +225,7 @@ function RoleTagCheckboxes({
           </label>
         ))}
       </div>
-      <FieldMessage error={error} />
+      {error?.message && <FieldMessage>{t(error.message)}</FieldMessage>}
     </fieldset>
   );
 }

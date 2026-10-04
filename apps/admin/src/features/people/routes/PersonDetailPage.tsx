@@ -4,156 +4,206 @@ import {
   useArchivePerson,
   useGetPerson,
   useUnarchivePerson,
-  useUpdatePerson,
 } from '@shelter/api-client/hooks/people';
-import type { PersonMatch, PersonResponse } from '@shelter/api-client/model';
+import type { PersonResponse } from '@shelter/api-client/model';
+import { Alert } from '@shelter/ui/components/alert';
+import { Avatar, initialsOf } from '@shelter/ui/components/avatar';
+import { Badge } from '@shelter/ui/components/badge';
 import { Button } from '@shelter/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@shelter/ui/components/card';
+import { DescriptionList } from '@shelter/ui/components/description-list';
+import { RecordHeader } from '@shelter/ui/components/record-header';
+import { toast } from '@shelter/ui/components/toaster';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Archive, ArchiveRestore, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useParams } from 'react-router';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, statusOf, useSession } from '../../../lib/auth/session';
-import { FormAlert } from '../../../lib/forms/FormAlert';
-import { PersonForm } from '../components/PersonForm';
-import { RoleTags } from '../components/RoleTags';
-import { fromPerson } from '../model';
+import { BackLink } from '../../../lib/page/BackLink';
+import { PageError, RecordSkeleton } from '../../../lib/page/PageStates';
+import { RoleBadges } from '../components/RoleTags';
+import { isPersonRole, PROVINCES, type PersonPageState } from '../model';
 
-/** Navigation state from the create page. */
-export type PersonPageState = { created?: boolean; duplicates?: PersonMatch[] };
-
-/** One person: an edit form with `person.write`, read-only details otherwise; archive and unarchive. */
+/** One person: who they are and how to reach them, with edit and archive for `person.write`. */
 export function PersonDetailPage() {
   const { t } = useTranslation('people');
   const { personId = '' } = useParams();
   const person = useGetPerson(personId);
-  const state = (useLocation().state ?? {}) as PersonPageState;
+  const back = <BackLink to="/people">{t('detail.backToList')}</BackLink>;
+
+  if (person.isPending) return <RecordSkeleton />;
+  if (person.isError) {
+    return (
+      <PageError above={back}>
+        {statusOf(person.error) === 404 ? t('detail.notFound') : t('detail.loadFailed')}
+      </PageError>
+    );
+  }
 
   return (
-    <section className="flex flex-col gap-4">
-      <Link to=".." relative="path" className="text-sm underline-offset-4 hover:underline">
-        {t('detail.backToList')}
-      </Link>
-      {person.isPending ? (
-        <p role="status">{t('shell:list.loading')}</p>
-      ) : person.isError ? (
-        <FormAlert tone="error">
-          {statusOf(person.error) === 404 ? t('detail.notFound') : t('detail.loadFailed')}
-        </FormAlert>
-      ) : (
-        <PersonDetails person={person.data} state={state} />
-      )}
-    </section>
+    <div className="flex flex-col gap-6">
+      {back}
+      <PersonHeader person={person.data} />
+      <PersonBody person={person.data} />
+    </div>
   );
 }
 
-function PersonDetails({ person, state }: { person: PersonResponse; state: PersonPageState }) {
+function PersonHeader({ person }: { person: PersonResponse }) {
   const { t } = useTranslation('people');
   const { data: session } = useSession();
   const canWrite = hasPermission(session, Permissions.personWrite);
   const queryClient = useQueryClient();
-  const update = useUpdatePerson();
   const archive = useArchivePerson();
   const unarchive = useUnarchivePerson();
-  const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string } | undefined>(
-    state.created ? { tone: 'info', text: t('detail.created') } : undefined,
-  );
+  const known = person.roleTags.filter(isPersonRole);
 
-  const refresh = () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: getGetPersonQueryKey(person.id) }),
-      queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() }),
-    ]);
   const toggleArchive = () =>
     (person.isArchived ? unarchive : archive).mutate(
       { personId: person.id },
       {
         onSuccess: async () => {
-          setMessage(undefined);
-          await refresh();
+          toast.success(
+            person.isArchived ? t('detail.unarchivedToast') : t('detail.archivedToast'),
+          );
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: getGetPersonQueryKey(person.id) }),
+            queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() }),
+          ]);
         },
-        onError: () => setMessage({ tone: 'error', text: t('form.unexpectedError') }),
+        onError: () => toast.error(t('form.unexpectedError')),
       },
     );
-  const duplicates = state.duplicates ?? [];
+
+  const none = <span className="font-normal text-muted-foreground">—</span>;
 
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{person.displayName}</h1>
-        {canWrite && (
-          <Button
-            variant="outline"
-            disabled={archive.isPending || unarchive.isPending}
-            onClick={toggleArchive}
-          >
-            {person.isArchived ? t('detail.unarchive') : t('detail.archive')}
-          </Button>
-        )}
-      </div>
-      {person.isArchived && <FormAlert tone="info">{t('detail.archivedNotice')}</FormAlert>}
-      {message && <FormAlert tone={message.tone}>{message.text}</FormAlert>}
-      {duplicates.length > 0 && (
-        <FormAlert tone="info">
-          <p className="font-medium">{t('detail.duplicatesTitle')}</p>
-          <p>{t('detail.duplicatesBody')}</p>
-          <ul className="mt-1 list-disc pl-5">
-            {duplicates.map((d) => (
-              <li key={d.id}>
-                <Link to={`../${d.id}`} relative="path" className="underline">
-                  {d.displayName}
-                </Link>
-                {d.isArchived && ` (${t('list.archived')})`}
-              </li>
-            ))}
-          </ul>
-        </FormAlert>
-      )}
-      {canWrite ? (
-        <PersonForm
-          key={person.updatedAt}
-          defaultValues={fromPerson(person)}
-          submitLabel={t('detail.save')}
-          onSubmit={async (data) => {
-            const saved = await update.mutateAsync({ personId: person.id, data });
-            queryClient.setQueryData(getGetPersonQueryKey(person.id), saved);
-            await queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
-            setMessage({ tone: 'info', text: t('detail.saved') });
-          }}
-        />
-      ) : (
-        <ReadOnlyPerson person={person} />
-      )}
-    </>
+    <RecordHeader
+      tone={person.isArchived ? 'neutral' : 'primary'}
+      avatar={<Avatar size="lg">{initialsOf(person.displayName)}</Avatar>}
+      title={person.displayName}
+      status={person.isArchived && <Badge>{t('detail.archivedBadge')}</Badge>}
+      chips={known.length > 0 && <RoleBadges roles={known} />}
+      actions={
+        canWrite && (
+          <>
+            <Button asChild variant="outline">
+              <Link to="edit">
+                <Pencil aria-hidden="true" />
+                {t('detail.edit')}
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              disabled={archive.isPending || unarchive.isPending}
+              onClick={toggleArchive}
+            >
+              {person.isArchived ? (
+                <ArchiveRestore aria-hidden="true" />
+              ) : (
+                <Archive aria-hidden="true" />
+              )}
+              {person.isArchived ? t('detail.unarchive') : t('detail.archive')}
+            </Button>
+          </>
+        )
+      }
+      facts={[
+        {
+          label: t('fields.email'),
+          value: person.email ? (
+            <a href={`mailto:${person.email}`} className="underline-offset-4 hover:underline">
+              {person.email}
+            </a>
+          ) : (
+            none
+          ),
+        },
+        {
+          label: t('fields.phone'),
+          value: person.phone ? (
+            <a href={`tel:${person.phone}`} className="underline-offset-4 hover:underline">
+              {person.phone}
+            </a>
+          ) : (
+            none
+          ),
+        },
+        {
+          label: t('fields.preferredLanguage'),
+          value: t(`languages.${person.preferredLanguage === 'en' ? 'en' : 'fr'}`),
+        },
+      ]}
+    />
   );
 }
 
-function ReadOnlyPerson({ person }: { person: PersonResponse }) {
+function PersonBody({ person }: { person: PersonResponse }) {
   const { t } = useTranslation('people');
-  const address = [person.addressLine, person.city, person.province, person.postalCode]
+  const duplicates = ((useLocation().state ?? {}) as PersonPageState).duplicates ?? [];
+  const province = PROVINCES.find((p) => p === person.province);
+  const address = [
+    person.addressLine,
+    [person.city, province ? t(`provinces.${province}`) : person.province]
+      .filter(Boolean)
+      .join(', '),
+    person.postalCode,
+  ]
     .filter(Boolean)
-    .join(', ');
-  const rows: [string, React.ReactNode][] = [
-    [t('fields.email'), person.email],
-    [t('fields.phone'), person.phone],
-    [t('fields.secondaryPhone'), person.secondaryPhone],
-    [t('fields.address'), address],
-    [
-      t('fields.preferredLanguage'),
-      t(`languages.${person.preferredLanguage === 'en' ? 'en' : 'fr'}`),
-    ],
-    [t('fields.roleTags'), <RoleTags key="roles" roles={person.roleTags} />],
-    [t('fields.notes'), person.notes],
-  ];
+    .join('\n');
 
   return (
-    <dl className="grid max-w-2xl gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr]">
-      {rows.map(([label, value]) => (
-        <div key={label} className="contents">
-          <dt className="text-sm text-muted-foreground">{label}</dt>
-          <dd className="whitespace-pre-line">{value || '—'}</dd>
-        </div>
-      ))}
-    </dl>
+    <>
+      {duplicates.length > 0 && (
+        <Alert tone="warning" title={t('detail.duplicatesTitle')}>
+          <p>{t('detail.duplicatesBody')}</p>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {duplicates.map((d) => (
+              <li key={d.id}>
+                <Link
+                  to={`/people/${d.id}`}
+                  className="font-medium text-foreground underline underline-offset-4"
+                >
+                  {d.displayName}
+                </Link>
+                {d.isArchived && (
+                  <Badge className="ml-2 align-middle">{t('detail.archivedBadge')}</Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Alert>
+      )}
+      {person.isArchived && <Alert tone="info">{t('detail.archivedNotice')}</Alert>}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Card aria-labelledby="contact-title">
+          <CardHeader>
+            <CardTitle id="contact-title">{t('detail.contact')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DescriptionList
+              columns={1}
+              items={[
+                { label: t('fields.secondaryPhone'), value: person.secondaryPhone },
+                { label: t('fields.address'), value: address },
+              ]}
+            />
+          </CardContent>
+        </Card>
+        <Card aria-labelledby="notes-title">
+          <CardHeader>
+            <CardTitle id="notes-title">{t('detail.notes')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {person.notes ? (
+              <p className="text-sm break-words whitespace-pre-line">{person.notes}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('detail.noNotes')}</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

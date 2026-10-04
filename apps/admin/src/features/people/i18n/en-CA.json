@@ -7,7 +7,10 @@
     "roleFilter": "Role",
     "allRoles": "All roles",
     "showArchived": "Show archived people",
-    "archived": "archived"
+    "archived": "archived",
+    "description": "Owners, fosters, volunteers and anyone linked to an animal.",
+    "empty": "No people yet",
+    "emptyBody": "Add a person to link them to intakes, outcomes and fostering."
   },
   "fields": {
     "name": "Name",
@@ -78,6 +81,23 @@
     "unarchive": "Unarchive",
     "archivedNotice": "This person is archived. They no longer appear in lists or searches.",
     "duplicatesTitle": "Possible duplicates",
-    "duplicatesBody": "These people have the same email or phone number. Check that they aren't the same person."
+    "duplicatesBody": "These people have the same email or phone number. Check that they aren't the same person.",
+    "edit": "Edit",
+    "archivedBadge": "Archived",
+    "archivedToast": "The person was archived.",
+    "unarchivedToast": "The person was unarchived.",
+    "contact": "Contact",
+    "notes": "Notes",
+    "noNotes": "No notes."
+  },
+  "sections": {
+    "identity": "Identity",
+    "identityHint": "The name the person appears under everywhere.",
+    "contact": "Contact",
+    "contactHint": "To reach the person and write to them in their language.",
+    "rolesNotes": "Roles and notes"
+  },
+  "edit": {
+    "title": "Edit {{name}}"
   }
 }

@@ -14,6 +14,7 @@ import { LocationsPage } from '../features/locations/routes/LocationsPage';
 import { PeopleListPage } from '../features/people/routes/PeopleListPage';
 import { PersonCreatePage } from '../features/people/routes/PersonCreatePage';
 import { PersonDetailPage } from '../features/people/routes/PersonDetailPage';
+import { PersonEditPage } from '../features/people/routes/PersonEditPage';
 import { AcceptInvitationPage } from '../features/platform/routes/AcceptInvitationPage';
 import { ForgotPasswordPage } from '../features/platform/routes/ForgotPasswordPage';
 import { LoginPage } from '../features/platform/routes/LoginPage';
@@ -130,6 +131,14 @@ export const routes: RouteObject[] = [
                 element: (
                   <RequirePermission permission={Permissions.personRead}>
                     <PersonDetailPage />
+                  </RequirePermission>
+                ),
+              },
+              {
+                path: 'people/:personId/edit',
+                element: (
+                  <RequirePermission permission={Permissions.personWrite}>
+                    <PersonEditPage />
                   </RequirePermission>
                 ),
               },

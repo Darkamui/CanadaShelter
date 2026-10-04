@@ -8,7 +8,10 @@
     "roleFilter": "Rôle",
     "allRoles": "Tous les rôles",
     "showArchived": "Afficher les personnes archivées",
-    "archived": "archivée"
+    "archived": "archivée",
+    "description": "Propriétaires, familles d'accueil, bénévoles et toute personne liée à un animal.",
+    "empty": "Aucune personne pour l'instant",
+    "emptyBody": "Ajoutez une personne pour la lier aux admissions, aux sorties et aux familles d'accueil."
   },
   "fields": {
     "name": "Nom",
@@ -79,6 +82,23 @@
     "unarchive": "Désarchiver",
     "archivedNotice": "Cette personne est archivée. Elle n'apparaît plus dans les listes ni dans les recherches.",
     "duplicatesTitle": "Doublons possibles",
-    "duplicatesBody": "Ces personnes ont le même courriel ou le même numéro de téléphone. Vérifiez qu'il ne s'agit pas de la même personne."
+    "duplicatesBody": "Ces personnes ont le même courriel ou le même numéro de téléphone. Vérifiez qu'il ne s'agit pas de la même personne.",
+    "edit": "Modifier",
+    "archivedBadge": "Archivée",
+    "archivedToast": "La personne a été archivée.",
+    "unarchivedToast": "La personne a été désarchivée.",
+    "contact": "Coordonnées",
+    "notes": "Notes",
+    "noNotes": "Aucune note."
+  },
+  "sections": {
+    "identity": "Identité",
+    "identityHint": "Le nom sous lequel la personne apparaît partout.",
+    "contact": "Coordonnées",
+    "contactHint": "Pour joindre la personne et lui écrire dans sa langue.",
+    "rolesNotes": "Rôles et notes"
+  },
+  "edit": {
+    "title": "Modifier {{name}}"
   }
 }

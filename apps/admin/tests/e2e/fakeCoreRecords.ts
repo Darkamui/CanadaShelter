@@ -28,7 +28,12 @@ export async function mockCoreRecordsApi(page: Page) {
     capacity: number | null;
     isArchived: boolean;
   };
-  type Person = Record<string, unknown> & { id: string; displayName: string; email: string | null };
+  type Person = Record<string, unknown> & {
+    id: string;
+    displayName: string;
+    email: string | null;
+    roleTags: string[];
+  };
   type Animal = Record<string, unknown> & {
     id: string;
     number: number;
@@ -158,9 +163,9 @@ export async function mockCoreRecordsApi(page: Page) {
               id: p.id,
               displayName: p.displayName,
               email: p.email,
-              phone: null,
-              city: null,
-              roleTags: [],
+              phone: p.phone ?? null,
+              city: p.city ?? null,
+              roleTags: p.roleTags,
               isArchived: false,
             })),
         ),

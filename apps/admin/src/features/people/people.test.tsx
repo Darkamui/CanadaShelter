@@ -153,7 +153,7 @@ describe('people', () => {
 
     expect(await screen.findByText('Doublons possibles')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'É. Gagnon' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Éloïse Gagnon' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Éloïse Gagnon' })).toBeInTheDocument();
     expect(sent).toMatchObject({
       firstName: 'Éloïse',
       lastName: 'Gagnon',
@@ -175,7 +175,7 @@ describe('people', () => {
           { status: 400, headers: { 'Content-Type': 'application/problem+json' } },
         ),
     });
-    renderAt(`/people/${PERSON}`);
+    renderAt(`/people/${PERSON}/edit`);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Enregistrer' }));
     expect(await screen.findByText("Cette valeur n'est pas valide.")).toBeInTheDocument();
@@ -189,7 +189,46 @@ describe('people', () => {
     renderAt(`/people/${PERSON}`);
 
     expect(await screen.findByText('eloise@example.test')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Enregistrer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Modifier' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Archiver' })).not.toBeInTheDocument();
+  });
+  it('shows roles and contact on the record, and links to the edit page', async () => {
+    mockApi({
+      'GET /api/platform/session': () =>
+        Response.json(sessionWith(['person.read', 'person.write'])),
+      [`GET /api/people/${PERSON}`]: () => Response.json(person),
+    });
+    renderAt(`/people/${PERSON}`);
+
+    expect(await screen.findByRole('heading', { name: 'Éloïse Gagnon' })).toBeInTheDocument();
+    expect(screen.getByText("Famille d'accueil")).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'eloise@example.test' })).toHaveAttribute(
+      'href',
+      'mailto:eloise@example.test',
+    );
+    expect(screen.getByRole('link', { name: 'Modifier' })).toHaveAttribute(
+      'href',
+      `/people/${PERSON}/edit`,
+    );
+  });
+
+  it('saves the edit form and returns to the record', async () => {
+    let sent: unknown;
+    mockApi({
+      'GET /api/platform/session': () =>
+        Response.json(sessionWith(['person.read', 'person.write'])),
+      [`GET /api/people/${PERSON}`]: () => Response.json(person),
+      [`PUT /api/people/${PERSON}`]: (init) => {
+        sent = JSON.parse(String(init?.body));
+        return Response.json({ ...person, city: 'Laval' });
+      },
+    });
+    renderAt(`/people/${PERSON}/edit`);
+
+    fireEvent.change(await screen.findByLabelText('Ville'), { target: { value: 'Laval' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByRole('link', { name: 'Modifier' })).toBeInTheDocument();
+    expect(sent).toMatchObject({ city: 'Laval', roleTags: ['adopter', 'foster'] });
   });
 });

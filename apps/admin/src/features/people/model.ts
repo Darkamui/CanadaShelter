@@ -1,4 +1,4 @@
-import type { PersonRequest, PersonResponse } from '@shelter/api-client/model';
+import type { PersonMatch, PersonRequest, PersonResponse } from '@shelter/api-client/model';
 import { z } from 'zod';
 import { formMessages } from '../../lib/forms/schemas';
 
@@ -125,3 +125,6 @@ export function fromPerson(person: PersonResponse): PersonFormValues {
     notes: person.notes ?? '',
   };
 }
+
+/** Navigation state from the create page: the possible duplicates the server found. */
+export type PersonPageState = { duplicates?: PersonMatch[] };

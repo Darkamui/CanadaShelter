@@ -4,13 +4,13 @@ import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import i18n, { LOCALE_STORAGE_KEY } from '../../lib/i18n';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { Sidebar } from './Sidebar';
+import { SidebarNav } from './Sidebar';
 
 function renderShellParts() {
   return render(
     <I18nextProvider i18n={i18n}>
       <MemoryRouter>
-        <Sidebar permissions={['animal.read']} />
+        <SidebarNav permissions={['animal.read']} />
         <LanguageSwitcher />
       </MemoryRouter>
     </I18nextProvider>,

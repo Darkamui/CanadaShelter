@@ -1,12 +1,22 @@
 {
   "appName": "Shelter management",
   "skipToContent": "Skip to content",
+  "close": "Close",
+  "notifications": "Notifications",
   "language": {
     "fr-CA": "Français",
     "en-CA": "English"
   },
   "nav": {
     "label": "Main navigation",
+    "open": "Open menu",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu",
+    "groups": {
+      "shelter": "Shelter",
+      "community": "Community",
+      "management": "Management"
+    },
     "animals": "Animals",
     "people": "People",
     "movements": "Movements",
@@ -17,15 +27,37 @@
     "reporting": "Reporting",
     "platform": "Platform"
   },
+  "modules": {
+    "animals": "Animal records, identifiers and history.",
+    "people": "Owners, foster families, volunteers and other contacts.",
+    "movements": "Intakes, transfers and outcomes.",
+    "medical": "Care, vaccines and treatments.",
+    "operations": "Buildings, enclosures and capacity.",
+    "engagement": "Volunteers, donations and communications.",
+    "municipal": "Licences, tags and municipal contracts.",
+    "reporting": "Statistics and annual reports.",
+    "platform": "Team, roles and organization security."
+  },
   "home": {
     "title": "Home",
-    "intro": "Choose a module from the menu."
+    "greeting": "Hello {{name}}.",
+    "shortcuts": "Shortcuts",
+    "modules": "Modules",
+    "shortcut": {
+      "newAnimal": "Register an animal",
+      "findAnimal": "Find an animal",
+      "newPerson": "Add a person",
+      "locations": "View locations"
+    }
   },
   "module": {
-    "comingSoon": "This module is coming soon."
+    "soon": "Coming soon",
+    "comingSoon": "This module is coming soon.",
+    "comingSoonBody": "It will appear here as soon as it is ready. There is nothing for you to do."
   },
   "notFound": {
     "title": "Page not found",
+    "body": "The link may be wrong, or the page has moved.",
     "backHome": "Back to home"
   },
   "session": {
@@ -39,12 +71,15 @@
   },
   "account": {
     "label": "Account",
+    "organization": "Organization",
     "switchOrganization": "Change organization",
+    "switchFailed": "This organization could not be opened. Try again.",
     "security": "Security"
   },
   "forms": {
     "required": "This field is required.",
-    "email": "Enter a valid email address."
+    "email": "Enter a valid email address.",
+    "cancel": "Cancel"
   },
   "list": {
     "loading": "Loading…",
@@ -55,5 +90,9 @@
     "range": "{{from}}–{{to}} of {{total}}",
     "sortBy": "Sort by {{column}}",
     "search": "Search"
+  },
+  "record": {
+    "back": "Back",
+    "tabs": "Record sections"
   }
 }

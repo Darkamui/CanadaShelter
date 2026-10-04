@@ -3,10 +3,8 @@
   "new": "New location",
   "showArchived": "Show archived locations",
   "loadFailed": "Could not load locations.",
-  "empty": "No locations yet.",
   "treeLabel": "Location tree",
   "capacity": "Capacity: {{count}}",
-  "archivedTag": "archived",
   "add": "Add",
   "addInside": "Add a location inside {{name}}",
   "edit": "Edit",
@@ -49,6 +47,13 @@
     "subtree": "Animals here and in the locations inside",
     "children": "Locations inside",
     "animals": "Animals here",
-    "animalsCaption": "Animals at this location and the ones inside it"
-  }
+    "animalsCaption": "Animals at this location and the ones inside it",
+    "capacity": "Capacity",
+    "occupancy": "Occupancy of {{name}}",
+    "occupancyValue": "{{count}} of {{capacity}}"
+  },
+  "description": "The buildings, rooms and kennels where animals stay.",
+  "emptyTitle": "No locations yet",
+  "emptyBody": "Create a building, then add its rooms and kennels inside.",
+  "archivedBadge": "Archived"
 }

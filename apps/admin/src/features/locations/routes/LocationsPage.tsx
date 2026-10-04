@@ -7,6 +7,7 @@ import {
   useUpdateLocation,
 } from '@shelter/api-client/hooks/operations';
 import type { LocationKindItem, LocationRequest } from '@shelter/api-client/model';
+import { Badge } from '@shelter/ui/components/badge';
 import { Button } from '@shelter/ui/components/button';
 import {
   Dialog,
@@ -15,16 +16,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@shelter/ui/components/dialog';
+import { EmptyState } from '@shelter/ui/components/empty-state';
+import { PageHeader } from '@shelter/ui/components/page-header';
+import { Skeleton } from '@shelter/ui/components/skeleton';
+import { toast } from '@shelter/ui/components/toaster';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@shelter/ui/components/tooltip';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { Archive, MapPin, Pencil, Plus } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Permissions } from '../../../lib/auth/permissions';
 import { hasPermission, statusOf, useSession } from '../../../lib/auth/session';
 import { FormAlert } from '../../../lib/forms/FormAlert';
+import { CheckboxField } from '../../../lib/forms/FormField';
 import { problemCodeOf } from '../../../lib/forms/serverErrors';
 import { useLocalize } from '../../../lib/i18n/localized';
 import { LocationForm } from '../components/LocationForm';
+import { LocationKindIcon } from '../components/LocationKindIcon';
 import {
   buildTree,
   flatten,
@@ -51,56 +60,57 @@ export function LocationsPage() {
   const kinds = useListLocationKinds();
   const tree = useMemo(() => buildTree(locations.data ?? []), [locations.data]);
   const [editing, setEditing] = useState<Editing>();
-  const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string }>();
+  const [error, setError] = useState<string>();
   const queryClient = useQueryClient();
   const archive = useArchiveLocation();
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: getListLocationsQueryKey() });
-  const archiveLocation = (node: LocationNode) =>
+  const archiveLocation = (node: LocationNode) => {
+    setError(undefined);
     archive.mutate(
       { locationId: node.location.id },
       {
         onSuccess: async () => {
-          setMessage({ tone: 'info', text: t('archived', { name: node.location.name }) });
+          toast.success(t('archived', { name: node.location.name }));
           await refresh();
         },
-        onError: (error) =>
-          setMessage({
-            tone: 'error',
-            text:
-              problemCodeOf(error) === 'location.hasAnimals'
-                ? t('archiveHasAnimals')
-                : statusOf(error) === 409
-                  ? t('archiveBlocked')
-                  : t('form.unexpectedError'),
-          }),
+        onError: (failure) =>
+          setError(
+            problemCodeOf(failure) === 'location.hasAnimals'
+              ? t('archiveHasAnimals')
+              : statusOf(failure) === 409
+                ? t('archiveBlocked')
+                : t('form.unexpectedError'),
+          ),
       },
     );
+  };
+  const newLocation = canWrite && (
+    <Button onClick={() => setEditing({ mode: 'create', parentId: null })}>
+      <Plus aria-hidden="true" />
+      {t('new')}
+    </Button>
+  );
 
-  return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        {canWrite && (
-          <Button onClick={() => setEditing({ mode: 'create', parentId: null })}>{t('new')}</Button>
-        )}
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={includeArchived}
-          onChange={(e) => setIncludeArchived(e.target.checked)}
-        />
-        {t('showArchived')}
-      </label>
-      {message && <FormAlert tone={message.tone}>{message.text}</FormAlert>}
-      {locations.isPending || kinds.isPending ? (
-        <p role="status">{t('shell:list.loading')}</p>
-      ) : locations.isError || kinds.isError ? (
-        <FormAlert tone="error">{t('loadFailed')}</FormAlert>
-      ) : tree.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('empty')}</p>
-      ) : (
+  let body: ReactNode;
+  let empty = false;
+  if (locations.isPending || kinds.isPending) {
+    body = <TreeSkeleton />;
+  } else if (locations.isError || kinds.isError) {
+    body = <FormAlert tone="error">{t('loadFailed')}</FormAlert>;
+  } else if (tree.length === 0) {
+    empty = true;
+    body = (
+      <EmptyState
+        icon={<MapPin />}
+        title={t('emptyTitle')}
+        description={t('emptyBody')}
+        action={newLocation}
+      />
+    );
+  } else {
+    body = (
+      <div className="overflow-hidden rounded-xl border bg-card shadow-card">
         <LocationTree
           label={t('treeLabel')}
           nodes={tree}
@@ -111,7 +121,27 @@ export function LocationsPage() {
           onEdit={(node) => setEditing({ mode: 'edit', node })}
           onArchive={archiveLocation}
         />
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={t('title')}
+        description={t('description')}
+        actions={!empty && newLocation}
+      />
+      <div className="flex flex-col gap-3">
+        <CheckboxField
+          label={t('showArchived')}
+          className="self-start"
+          checked={includeArchived}
+          onChange={(e) => setIncludeArchived(e.target.checked)}
+        />
+        {error && <FormAlert tone="error">{error}</FormAlert>}
+        {body}
+      </div>
       {canWrite && kinds.data && (
         <LocationDialog
           editing={editing}
@@ -120,12 +150,32 @@ export function LocationsPage() {
           onClose={() => setEditing(undefined)}
           onSaved={async (name) => {
             setEditing(undefined);
-            setMessage({ tone: 'info', text: t('saved', { name }) });
+            setError(undefined);
+            toast.success(t('saved', { name }));
             await refresh();
           }}
         />
       )}
-    </section>
+    </div>
+  );
+}
+
+function TreeSkeleton() {
+  const { t } = useTranslation('shell');
+  return (
+    <div role="status" className="flex flex-col rounded-xl border bg-card shadow-card">
+      <span className="sr-only">{t('list.loading')}</span>
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 border-t px-4 py-3 first-of-type:border-t-0"
+        >
+          {i > 0 && <span className="w-7" />}
+          <Skeleton className="size-8 rounded-lg" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -158,79 +208,129 @@ function LocationTree({
   };
 
   return (
-    <ul className="flex flex-col gap-1" aria-label={label}>
+    <ul aria-label={label} className={label && '[&>li:first-child>div]:border-t-0'}>
       {nodes.map((node) => {
-        const { location } = node;
+        const { location, depth } = node;
         return (
-          <li key={location.id} className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2">
-              <Link
-                to={locationPath(location.id)}
-                className="font-medium underline-offset-4 hover:underline"
-              >
-                {location.name}
-              </Link>
-              <span className="text-sm text-muted-foreground">{kindLabel(location.kindCode)}</span>
-              {location.capacity !== null && (
-                <span className="text-sm text-muted-foreground">
-                  {t('capacity', { count: location.capacity })}
+          <li key={location.id}>
+            <div className="flex min-h-14 items-stretch border-t pr-3 pl-4 transition-colors hover:bg-subtle">
+              {/* One guide per level above: the structure shows without nesting boxes. */}
+              {Array.from({ length: depth }, (_, i) => (
+                <span
+                  key={i}
+                  aria-hidden="true"
+                  className="relative w-7 shrink-0 before:absolute before:inset-y-0 before:left-4 before:w-px before:bg-border"
+                />
+              ))}
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+                <span
+                  aria-hidden="true"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground [&_svg]:size-4"
+                >
+                  <LocationKindIcon code={location.kindCode} />
                 </span>
-              )}
-              {population.ready && !location.isArchived && (
-                <span className="text-sm text-muted-foreground">
-                  {t('animalCount', { count: population.of(location.id).subtreeCount })}
-                </span>
-              )}
-              {location.isArchived && (
-                <span className="text-xs text-muted-foreground">({t('archivedTag')})</span>
-              )}
-              {canWrite && !location.isArchived && (
-                <span className="ml-auto flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={t('addInside', { name: location.name })}
-                    onClick={() => onAdd(node)}
-                  >
-                    {t('add')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={t('editNamed', { name: location.name })}
-                    onClick={() => onEdit(node)}
-                  >
-                    {t('edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={busy}
-                    aria-label={t('archiveNamed', { name: location.name })}
-                    onClick={() => onArchive(node)}
-                  >
-                    {t('archive')}
-                  </Button>
-                </span>
-              )}
+                <div className="flex min-w-0 flex-1 basis-40 flex-col">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <Link
+                      to={locationPath(location.id)}
+                      className="font-medium underline-offset-4 hover:underline"
+                    >
+                      {location.name}
+                    </Link>
+                    {location.isArchived && <Badge>{t('archivedBadge')}</Badge>}
+                  </span>
+                  <span className="text-[0.8125rem] text-muted-foreground">
+                    {kindLabel(location.kindCode)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-x-5 text-sm">
+                  {location.capacity !== null && (
+                    <span className="text-muted-foreground">
+                      {t('capacity', { count: location.capacity })}
+                    </span>
+                  )}
+                  {population.ready && !location.isArchived && (
+                    <span className="tabular min-w-20 text-right font-medium">
+                      {t('animalCount', { count: population.of(location.id).subtreeCount })}
+                    </span>
+                  )}
+                </div>
+                {canWrite && !location.isArchived && (
+                  <span className="flex gap-0.5">
+                    <IconAction
+                      label={t('addInside', { name: location.name })}
+                      hint={t('add')}
+                      onClick={() => onAdd(node)}
+                    >
+                      <Plus />
+                    </IconAction>
+                    <IconAction
+                      label={t('editNamed', { name: location.name })}
+                      hint={t('edit')}
+                      onClick={() => onEdit(node)}
+                    >
+                      <Pencil />
+                    </IconAction>
+                    <IconAction
+                      label={t('archiveNamed', { name: location.name })}
+                      hint={t('archive')}
+                      disabled={busy}
+                      onClick={() => onArchive(node)}
+                    >
+                      <Archive />
+                    </IconAction>
+                  </span>
+                )}
+              </div>
             </div>
             {node.children.length > 0 && (
-              <div className="pl-6">
-                <LocationTree
-                  nodes={node.children}
-                  kinds={kinds}
-                  canWrite={canWrite}
-                  busy={busy}
-                  onAdd={onAdd}
-                  onEdit={onEdit}
-                  onArchive={onArchive}
-                />
-              </div>
+              <LocationTree
+                nodes={node.children}
+                kinds={kinds}
+                canWrite={canWrite}
+                busy={busy}
+                onAdd={onAdd}
+                onEdit={onEdit}
+                onArchive={onArchive}
+              />
             )}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+/** A row action: an icon button named for its location, with the short verb as a tooltip. */
+function IconAction({
+  label,
+  hint,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  hint: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
+    </Tooltip>
   );
 }
 

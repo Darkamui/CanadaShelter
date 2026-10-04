@@ -1,11 +1,10 @@
 import type { LocationKindItem, LocationRequest } from '@shelter/api-client/model';
 import { Button } from '@shelter/ui/components/button';
-import { Label } from '@shelter/ui/components/label';
-import { useId, useState } from 'react';
-import type { FieldError } from 'react-hook-form';
+import { DialogClose, DialogFooter } from '@shelter/ui/components/dialog';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '../../../lib/forms/FormAlert';
-import { FormField } from '../../../lib/forms/FormField';
+import { FormField, SelectField } from '../../../lib/forms/FormField';
 import { applyValidationErrors } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
 import { useLocalize } from '../../../lib/i18n/localized';
@@ -20,11 +19,9 @@ const serverFields = {
   capacity: ['capacity', 'locations:form.capacityRange'],
 } as const;
 
-const selectClass = 'h-9 rounded-md border bg-transparent px-3 text-sm';
-
 /**
  * Create and edit form for a location. `parents` are the locations it may be placed in (depth-first, itself and its
- * descendants already removed). `onSubmit` rejects with the API error to show it on the fields.
+ * descendants already removed). Rendered inside a dialog, with its footer. `onSubmit` rejects with the API error to show it on the fields.
  */
 export function LocationForm({
   defaultValues,
@@ -44,8 +41,6 @@ export function LocationForm({
   const form = useZodForm(locationSchema, { defaultValues });
   const { errors, isSubmitting } = form.formState;
   const [failed, setFailed] = useState(false);
-  const kindId = useId();
-  const parentId = useId();
   // A kind the organization has since hidden stays selectable on the location that already has it.
   const currentKindHidden =
     defaultValues.kindCode !== '' && !kinds.some((k) => k.code === defaultValues.kindCode);
@@ -68,43 +63,29 @@ export function LocationForm({
         error={errors.name}
         {...form.register('name')}
       />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={kindId}>{t('fields.kind')}</Label>
-        <select
-          id={kindId}
-          className={selectClass}
-          aria-invalid={errors.kindCode ? true : undefined}
-          {...form.register('kindCode')}
-        >
-          <option value="">{t('form.chooseKind')}</option>
-          {currentKindHidden && (
-            <option value={defaultValues.kindCode}>{defaultValues.kindCode}</option>
-          )}
-          {kinds.map((kind) => (
-            <option key={kind.code} value={kind.code}>
-              {localize(kind.label)}
-            </option>
-          ))}
-        </select>
-        <FieldMessage error={errors.kindCode} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={parentId}>{t('fields.parent')}</Label>
-        <select
-          id={parentId}
-          className={selectClass}
-          aria-invalid={errors.parentId ? true : undefined}
-          {...form.register('parentId')}
-        >
-          <option value="">{t('form.topLevel')}</option>
-          {parents.map(({ location, depth }) => (
-            <option key={location.id} value={location.id}>
-              {`${'  '.repeat(depth)}${location.name}`}
-            </option>
-          ))}
-        </select>
-        <FieldMessage error={errors.parentId} />
-      </div>
+      <SelectField label={t('fields.kind')} error={errors.kindCode} {...form.register('kindCode')}>
+        <option value="">{t('form.chooseKind')}</option>
+        {currentKindHidden && (
+          <option value={defaultValues.kindCode}>{defaultValues.kindCode}</option>
+        )}
+        {kinds.map((kind) => (
+          <option key={kind.code} value={kind.code}>
+            {localize(kind.label)}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        label={t('fields.parent')}
+        error={errors.parentId}
+        {...form.register('parentId')}
+      >
+        <option value="">{t('form.topLevel')}</option>
+        {parents.map(({ location, depth }) => (
+          <option key={location.id} value={location.id}>
+            {`${'   '.repeat(depth)}${location.name}`}
+          </option>
+        ))}
+      </SelectField>
       <FormField
         label={t('fields.capacity')}
         hint={t('fields.capacityHint')}
@@ -113,14 +94,16 @@ export function LocationForm({
         error={errors.capacity}
         {...form.register('capacity')}
       />
-      <Button type="submit" className="self-start" disabled={isSubmitting}>
-        {submitLabel}
-      </Button>
+      <DialogFooter className="mt-1">
+        <DialogClose asChild>
+          <Button type="button" variant="ghost">
+            {t('shell:forms.cancel')}
+          </Button>
+        </DialogClose>
+        <Button type="submit" disabled={isSubmitting}>
+          {submitLabel}
+        </Button>
+      </DialogFooter>
     </form>
   );
-}
-
-function FieldMessage({ error }: { error?: Pick<FieldError, 'message'> }) {
-  const { t } = useTranslation();
-  return error?.message ? <p className="text-sm text-destructive">{t(error.message)}</p> : null;
 }

@@ -4,10 +4,8 @@
   "new": "Nouvel emplacement",
   "showArchived": "Afficher les emplacements archivés",
   "loadFailed": "Impossible de charger les emplacements.",
-  "empty": "Aucun emplacement pour l'instant.",
   "treeLabel": "Arborescence des emplacements",
   "capacity": "Capacité : {{count}}",
-  "archivedTag": "archivé",
   "add": "Ajouter",
   "addInside": "Ajouter un emplacement dans {{name}}",
   "edit": "Modifier",
@@ -50,6 +48,13 @@
     "subtree": "Animaux ici et dans les emplacements inclus",
     "children": "Emplacements inclus",
     "animals": "Animaux présents",
-    "animalsCaption": "Animaux présents à cet emplacement et dans ceux qu'il contient"
-  }
+    "animalsCaption": "Animaux présents à cet emplacement et dans ceux qu'il contient",
+    "capacity": "Capacité",
+    "occupancy": "Occupation de {{name}}",
+    "occupancyValue": "{{count}} sur {{capacity}}"
+  },
+  "description": "Les bâtiments, salles et enclos où séjournent les animaux.",
+  "emptyTitle": "Aucun emplacement pour l'instant",
+  "emptyBody": "Créez un bâtiment, puis ajoutez-y ses salles et ses enclos.",
+  "archivedBadge": "Archivé"
 }

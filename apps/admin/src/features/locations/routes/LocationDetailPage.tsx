@@ -1,17 +1,25 @@
 import { useListAnimals } from '@shelter/api-client/hooks/animals';
 import { useListLocationKinds, useListLocations } from '@shelter/api-client/hooks/operations';
 import type { AnimalListItem, LocationItem } from '@shelter/api-client/model';
-import { DataTable, type DataTableFeatures } from '@shelter/ui/components/data-table';
+import { Avatar } from '@shelter/ui/components/avatar';
+import { Badge } from '@shelter/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@shelter/ui/components/card';
+import { DataTable, hideBelow, type DataTableFeatures } from '@shelter/ui/components/data-table';
+import { Meter } from '@shelter/ui/components/meter';
+import { RecordHeader, type RecordFact } from '@shelter/ui/components/record-header';
 import { keepPreviousData } from '@tanstack/react-query';
 import { createColumnHelper } from '@tanstack/react-table';
+import { ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
-import { FormAlert } from '../../../lib/forms/FormAlert';
 import { useLocalize } from '../../../lib/i18n/localized';
 import { useDataTableLabels } from '../../../lib/list/useDataTableLabels';
 import { useListParams } from '../../../lib/list/useListParams';
+import { PageError, RecordSkeleton } from '../../../lib/page/PageStates';
+import { SpeciesIcon } from '../../animals/components/AnimalBadges';
 import { useSpecies } from '../../animals/useSpecies';
+import { LocationKindIcon } from '../components/LocationKindIcon';
 import { locationPath } from '../paths';
 import { usePopulation } from '../usePopulation';
 
@@ -37,87 +45,133 @@ function ancestorsOf(locations: readonly LocationItem[], locationId: string): Lo
  */
 export function LocationDetailPage() {
   const { t } = useTranslation('locations');
-  const localize = useLocalize();
   const { locationId = '' } = useParams();
   const locations = useListLocations({ includeArchived: true });
+
+  if (locations.isPending) return <RecordSkeleton />;
+  if (locations.isError) return <PageError>{t('loadFailed')}</PageError>;
+  const location = locations.data.find((l) => l.id === locationId);
+  if (!location) return <PageError>{t('detail.notFound')}</PageError>;
+
+  return <LocationRecord location={location} locations={locations.data} />;
+}
+
+function LocationRecord({
+  location,
+  locations,
+}: {
+  location: LocationItem;
+  locations: readonly LocationItem[];
+}) {
+  const { t } = useTranslation('locations');
+  const localize = useLocalize();
   const kinds = useListLocationKinds();
   const population = usePopulation();
-
-  if (locations.isPending) return <p role="status">{t('shell:list.loading')}</p>;
-  if (locations.isError) return <FormAlert tone="error">{t('loadFailed')}</FormAlert>;
-  const location = locations.data.find((l) => l.id === locationId);
-  if (!location) return <FormAlert tone="error">{t('detail.notFound')}</FormAlert>;
-
-  const ancestors = ancestorsOf(locations.data, location.id);
-  const children = locations.data.filter((l) => l.parentId === location.id && !l.isArchived);
+  const ancestors = ancestorsOf(locations, location.id);
+  const children = locations.filter((l) => l.parentId === location.id && !l.isArchived);
   const kind = kinds.data?.find((k) => k.code === location.kindCode);
   const counts = population.of(location.id);
+  const none = <span className="font-normal text-muted-foreground">—</span>;
+
+  const facts: RecordFact[] = [
+    { label: t('fields.kind'), value: kind ? localize(kind.label) : location.kindCode },
+  ];
+  if (population.ready) {
+    facts.push(
+      { label: t('detail.here'), value: <span className="tabular">{counts.count}</span> },
+      { label: t('detail.subtree'), value: <span className="tabular">{counts.subtreeCount}</span> },
+    );
+  }
+  facts.push({
+    label: t('detail.capacity'),
+    value:
+      location.capacity === null ? (
+        none
+      ) : population.ready ? (
+        <span className="flex flex-col gap-1.5 pt-0.5">
+          <span className="tabular">
+            {t('detail.occupancyValue', {
+              count: counts.subtreeCount,
+              capacity: location.capacity,
+            })}
+          </span>
+          <Meter
+            value={counts.subtreeCount}
+            max={location.capacity}
+            aria-label={t('detail.occupancy', { name: location.name })}
+            className="max-w-40"
+          />
+        </span>
+      ) : (
+        <span className="tabular">{location.capacity}</span>
+      ),
+  });
 
   return (
-    <section className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <nav aria-label={t('detail.breadcrumb')} className="text-sm">
-        <ol className="flex flex-wrap gap-1 text-muted-foreground">
-          <li>
-            <Link to="/operations" className="underline-offset-4 hover:underline">
-              {t('title')}
-            </Link>
-          </li>
-          {ancestors.map((a) => (
-            <li key={a.id}>
-              <span aria-hidden="true">› </span>
-              <Link to={locationPath(a.id)} className="underline-offset-4 hover:underline">
+        <ol className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
+          {[{ id: '', name: t('title') }, ...ancestors].map((a) => (
+            <li key={a.id} className="flex items-center gap-1.5">
+              <Link
+                to={a.id ? locationPath(a.id) : '/operations'}
+                className="rounded-sm underline-offset-4 hover:text-foreground hover:underline"
+              >
                 {a.name}
               </Link>
+              <ChevronRight aria-hidden="true" className="size-3.5" />
             </li>
           ))}
+          <li aria-current="page" className="font-medium text-foreground">
+            {location.name}
+          </li>
         </ol>
       </nav>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">{location.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {[
-            kind ? localize(kind.label) : location.kindCode,
-            location.capacity !== null && t('capacity', { count: location.capacity }),
-            location.isArchived && t('archivedTag'),
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      </div>
-      {population.ready && (
-        <dl className="grid max-w-md grid-cols-[auto_1fr] gap-x-4 text-sm">
-          <dt className="text-muted-foreground">{t('detail.here')}</dt>
-          <dd>{counts.count}</dd>
-          <dt className="text-muted-foreground">{t('detail.subtree')}</dt>
-          <dd>{counts.subtreeCount}</dd>
-        </dl>
-      )}
+      <RecordHeader
+        tone={location.isArchived ? 'neutral' : 'primary'}
+        avatar={
+          <Avatar size="lg">
+            <LocationKindIcon code={location.kindCode} />
+          </Avatar>
+        }
+        title={location.name}
+        status={location.isArchived && <Badge>{t('archivedBadge')}</Badge>}
+        facts={facts}
+      />
       {children.length > 0 && (
-        <section aria-labelledby="children-title" className="flex flex-col gap-2">
-          <h2 id="children-title" className="text-lg font-semibold">
-            {t('detail.children')}
-          </h2>
-          <ul className="flex flex-col gap-1">
-            {children.map((child) => (
-              <li key={child.id} className="flex gap-2 text-sm">
-                <Link
-                  to={locationPath(child.id)}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
-                  {child.name}
-                </Link>
-                {population.ready && (
-                  <span className="text-muted-foreground">
-                    {t('animalCount', { count: population.of(child.id).subtreeCount })}
+        <Card aria-labelledby="children-title">
+          <CardHeader>
+            <CardTitle id="children-title">{t('detail.children')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="-my-2 divide-y">
+              {children.map((child) => (
+                <li key={child.id} className="flex items-center gap-3 py-2.5 text-sm">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground [&_svg]:size-3.5"
+                  >
+                    <LocationKindIcon code={child.kindCode} />
                   </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+                  <Link
+                    to={locationPath(child.id)}
+                    className="min-w-0 flex-1 font-medium underline-offset-4 hover:underline"
+                  >
+                    {child.name}
+                  </Link>
+                  {population.ready && (
+                    <span className="tabular text-muted-foreground">
+                      {t('animalCount', { count: population.of(child.id).subtreeCount })}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
       {population.enabled && <AnimalsHere locationId={location.id} />}
-    </section>
+    </div>
   );
 }
 
@@ -144,17 +198,22 @@ function AnimalsHere({ locationId }: { locationId: string }) {
       helper.columns([
         helper.accessor('number', {
           header: ta('fields.number'),
-          cell: (info) => `#${info.getValue()}`,
+          cell: (info) => <span className="text-muted-foreground">#{info.getValue()}</span>,
         }),
         helper.accessor('name', {
           header: ta('fields.name'),
           cell: (info) => (
-            <Link
-              to={`/animals/${info.row.original.id}`}
-              className="font-medium underline-offset-4 hover:underline"
-            >
-              {info.getValue() ?? t('animals:list.unnamed')}
-            </Link>
+            <span className="flex items-center gap-3">
+              <Avatar size="sm">
+                <SpeciesIcon code={info.row.original.speciesCode} />
+              </Avatar>
+              <Link
+                to={`/animals/${info.row.original.id}`}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {info.getValue() ?? t('animals:list.unnamed')}
+              </Link>
+            </span>
           ),
         }),
         helper.accessor('speciesCode', {
@@ -171,8 +230,8 @@ function AnimalsHere({ locationId }: { locationId: string }) {
   );
 
   return (
-    <section aria-labelledby="animals-here-title" className="flex flex-col gap-2">
-      <h2 id="animals-here-title" className="text-lg font-semibold">
+    <section aria-labelledby="animals-here-title" className="flex flex-col gap-3">
+      <h2 id="animals-here-title" className="font-display text-lg font-semibold">
         {t('detail.animals')}
       </h2>
       <DataTable
@@ -187,6 +246,7 @@ function AnimalsHere({ locationId }: { locationId: string }) {
         sorting={list.sorting}
         onSortingChange={list.setSorting}
         labels={labels}
+        columnClassNames={{ number: 'w-20 tabular', currentLocationName: hideBelow.md }}
       />
     </section>
   );

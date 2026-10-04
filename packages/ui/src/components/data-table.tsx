@@ -53,11 +53,11 @@ export type DataTableProps<TData extends RowData> = {
   data: readonly TData[];
   getRowId: (row: TData) => string;
   status: 'pending' | 'error' | 'success';
-  /** 1-based, as the API pages. */
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  onPageChange: (page: number) => void;
+  /** 1-based, as the API pages. Omit the paging props for a short, unpaged list: the pager is not shown. */
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  onPageChange?: (page: number) => void;
   /** Omit `onSortingChange` for a table that cannot be sorted. */
   sorting?: SortingState;
   onSortingChange?: (sorting: SortingState) => void;
@@ -82,9 +82,9 @@ export function DataTable<TData extends RowData>({
   data,
   getRowId,
   status,
-  page,
-  pageSize,
-  totalCount,
+  page = 1,
+  pageSize = Math.max(1, data.length),
+  totalCount = data.length,
   onPageChange,
   sorting = NO_SORTING,
   onSortingChange,
@@ -227,31 +227,33 @@ export function DataTable<TData extends RowData>({
           </table>
         </div>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-        <span aria-live="polite" className="tabular">
-          {status === 'success' && totalCount > 0 ? labels.range(from, to, totalCount) : null}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1 || status !== 'success'}
-            onClick={() => onPageChange(page - 1)}
-          >
-            <ChevronLeft aria-hidden="true" />
-            {labels.previousPage}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= lastPage || status !== 'success'}
-            onClick={() => onPageChange(page + 1)}
-          >
-            {labels.nextPage}
-            <ChevronRight aria-hidden="true" />
-          </Button>
+      {onPageChange && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+          <span aria-live="polite" className="tabular">
+            {status === 'success' && totalCount > 0 ? labels.range(from, to, totalCount) : null}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || status !== 'success'}
+              onClick={() => onPageChange(page - 1)}
+            >
+              <ChevronLeft aria-hidden="true" />
+              {labels.previousPage}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= lastPage || status !== 'success'}
+              onClick={() => onPageChange(page + 1)}
+            >
+              {labels.nextPage}
+              <ChevronRight aria-hidden="true" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -5,10 +5,27 @@ import {
   useResendPlatformInvitation,
   useRevokePlatformInvitation,
 } from '@shelter/api-client/hooks/platform';
+import type { InvitationResponse } from '@shelter/api-client/model';
+import { Badge } from '@shelter/ui/components/badge';
 import { Button } from '@shelter/ui/components/button';
-import { Label } from '@shelter/ui/components/label';
+import { IconAction } from '@shelter/ui/components/icon-action';
+import { DataTable, hideBelow, type DataTableFeatures } from '@shelter/ui/components/data-table';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@shelter/ui/components/dialog';
+import { EmptyState } from '@shelter/ui/components/empty-state';
+import { toast } from '@shelter/ui/components/toaster';
 import { useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { Ban, MailPlus, Send, UserPlus } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -16,130 +33,163 @@ import { ROLE_KEYS } from '../../../lib/auth/permissions';
 import { statusOf } from '../../../lib/auth/session';
 import { formatDate } from '../../../lib/format';
 import { FormAlert } from '../../../lib/forms/FormAlert';
-import { FormField } from '../../../lib/forms/FormField';
+import { FormField, SelectField } from '../../../lib/forms/FormField';
 import { emailAddress } from '../../../lib/forms/schemas';
 import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { useDataTableLabels } from '../../../lib/list/useDataTableLabels';
 import { RoleCheckboxes } from './RoleCheckboxes';
-import { RoleList } from './StaffMembersTable';
+import { RoleBadges } from './StaffMembersTable';
 
-/** Open invitations and, with `platform.staff.manage`, the invite form. */
+const helper = createColumnHelper<DataTableFeatures, InvitationResponse>();
+
+const refreshInvitations = (queryClient: ReturnType<typeof useQueryClient>) =>
+  queryClient.invalidateQueries({ queryKey: getListPlatformInvitationsQueryKey() });
+
+/** Open invitations, with resend and revoke for `platform.staff.manage`. */
 export function InvitationsPanel({ canManage }: { canManage: boolean }) {
   const { t, i18n } = useTranslation('platform');
   const invitations = useListPlatformInvitations();
   const queryClient = useQueryClient();
   const resend = useResendPlatformInvitation();
   const revoke = useRevokePlatformInvitation();
-  const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string }>();
-
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: getListPlatformInvitationsQueryKey() });
-  const onError = (e: unknown) =>
-    setMessage({
-      tone: 'error',
-      text: statusOf(e) === 409 ? t('invitations.closed') : t('common.unexpectedError'),
-    });
+  const labels = useDataTableLabels(t('invitations.caption'));
   const busy = resend.isPending || revoke.isPending;
 
+  const columns = useMemo(() => {
+    const onError = (e: unknown) =>
+      toast.error(statusOf(e) === 409 ? t('invitations.closed') : t('common.unexpectedError'));
+
+    return helper.columns([
+      helper.accessor('email', {
+        header: t('fields.email'),
+        cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      }),
+      helper.accessor('roles', {
+        header: t('staff.roles'),
+        cell: (info) => <RoleBadges roles={info.getValue()} />,
+      }),
+      helper.accessor('status', {
+        header: t('staff.status'),
+        cell: (info) =>
+          info.getValue() === 'expired' ? (
+            <Badge dot tone="warning">
+              {t('invitations.statuses.expired')}
+            </Badge>
+          ) : (
+            <Badge dot tone="info">
+              {t('invitations.statuses.pending')}
+            </Badge>
+          ),
+      }),
+      helper.accessor('expiresAt', {
+        header: t('invitations.expires'),
+        cell: (info) => formatDate(info.getValue(), i18n.language),
+      }),
+      ...(canManage
+        ? [
+            helper.display({
+              id: 'actions',
+              header: () => <span className="sr-only">{t('staff.actions')}</span>,
+              cell: ({ row: { original: invitation } }) => (
+                <span className="flex justify-end gap-0.5">
+                  <IconAction
+                    label={t('invitations.resendTo', { email: invitation.email })}
+                    hint={t('invitations.resend')}
+                    disabled={busy}
+                    onClick={() =>
+                      resend.mutate(
+                        { invitationId: invitation.id },
+                        {
+                          onSuccess: async () => {
+                            toast.success(t('invitations.sent', { email: invitation.email }));
+                            await refreshInvitations(queryClient);
+                          },
+                          onError,
+                        },
+                      )
+                    }
+                  >
+                    <Send />
+                  </IconAction>
+                  <IconAction
+                    label={t('invitations.revokeFor', { email: invitation.email })}
+                    hint={t('invitations.revoke')}
+                    disabled={busy}
+                    onClick={() =>
+                      revoke.mutate(
+                        { invitationId: invitation.id },
+                        {
+                          onSuccess: async () => {
+                            toast.success(t('invitations.revoked'));
+                            await refreshInvitations(queryClient);
+                          },
+                          onError,
+                        },
+                      )
+                    }
+                  >
+                    <Ban />
+                  </IconAction>
+                </span>
+              ),
+            }),
+          ]
+        : []),
+    ]);
+  }, [t, i18n.language, canManage, busy, resend, revoke, queryClient]);
+
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">{t('invitations.title')}</h2>
-      {canManage && (
+    <DataTable
+      columns={columns}
+      data={invitations.data ?? []}
+      getRowId={(invitation) => invitation.id}
+      status={invitations.status}
+      labels={{ ...labels, error: t('invitations.loadFailed') }}
+      columnClassNames={{
+        roles: hideBelow.lg,
+        expiresAt: hideBelow.md,
+        actions: 'w-px whitespace-nowrap',
+      }}
+      emptyState={
+        <EmptyState
+          icon={<MailPlus />}
+          title={t('invitations.none')}
+          description={t('invitations.noneBody')}
+        />
+      }
+    />
+  );
+}
+
+/** The header action: opens the invite form in a dialog, and closes it with a toast once sent. */
+export function InviteDialog() {
+  const { t } = useTranslation('platform');
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus aria-hidden="true" />
+          {t('invitations.inviteMember')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent closeLabel={t('common.close')}>
+        <DialogHeader>
+          <DialogTitle>{t('invitations.inviteMember')}</DialogTitle>
+          <DialogDescription>{t('invitations.dialogDescription')}</DialogDescription>
+        </DialogHeader>
         <InviteForm
           onInvited={async (email) => {
-            setMessage({ tone: 'info', text: t('invitations.sent', { email }) });
-            await refresh();
+            setOpen(false);
+            toast.success(t('invitations.sent', { email }));
+            await refreshInvitations(queryClient);
           }}
         />
-      )}
-      {message && <FormAlert tone={message.tone}>{message.text}</FormAlert>}
-      {invitations.isPending ? (
-        <p role="status">{t('common.loading')}</p>
-      ) : invitations.isError ? (
-        <FormAlert tone="error">{t('invitations.loadFailed')}</FormAlert>
-      ) : invitations.data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('invitations.none')}</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b text-muted-foreground">
-              <tr>
-                <th className="py-2 pr-4 font-medium">{t('fields.email')}</th>
-                <th className="py-2 pr-4 font-medium">{t('staff.roles')}</th>
-                <th className="py-2 pr-4 font-medium">{t('staff.status')}</th>
-                <th className="py-2 pr-4 font-medium">{t('invitations.expires')}</th>
-                {canManage && <th className="py-2 font-medium">{t('staff.actions')}</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {invitations.data.map((invitation) => (
-                <tr key={invitation.id} className="border-b">
-                  <td className="py-2 pr-4">{invitation.email}</td>
-                  <td className="py-2 pr-4">
-                    <RoleList roles={invitation.roles} />
-                  </td>
-                  <td className="py-2 pr-4">
-                    {invitation.status === 'expired'
-                      ? t('invitations.statuses.expired')
-                      : t('invitations.statuses.pending')}
-                  </td>
-                  <td className="py-2 pr-4">{formatDate(invitation.expiresAt, i18n.language)}</td>
-                  {canManage && (
-                    <td className="py-2">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy}
-                          aria-label={t('invitations.resendTo', { email: invitation.email })}
-                          onClick={() =>
-                            resend.mutate(
-                              { invitationId: invitation.id },
-                              {
-                                onSuccess: async () => {
-                                  setMessage({
-                                    tone: 'info',
-                                    text: t('invitations.sent', { email: invitation.email }),
-                                  });
-                                  await refresh();
-                                },
-                                onError,
-                              },
-                            )
-                          }
-                        >
-                          {t('invitations.resend')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy}
-                          aria-label={t('invitations.revokeFor', { email: invitation.email })}
-                          onClick={() =>
-                            revoke.mutate(
-                              { invitationId: invitation.id },
-                              {
-                                onSuccess: async () => {
-                                  setMessage({ tone: 'info', text: t('invitations.revoked') });
-                                  await refresh();
-                                },
-                                onError,
-                              },
-                            )
-                          }
-                        >
-                          {t('invitations.revoke')}
-                        </Button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -152,7 +202,6 @@ const inviteSchema = z.object({
 function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void> }) {
   const { t, i18n } = useTranslation('platform');
   const create = useCreatePlatformInvitation();
-  const languageId = useId();
   const form = useZodForm(inviteSchema, {
     defaultValues: {
       email: '',
@@ -167,7 +216,6 @@ function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void>
       { data },
       {
         onSuccess: async (invitation) => {
-          form.reset({ ...data, email: '', roles: ['staff'] });
           await onInvited(invitation.email);
         },
         onError: (error) =>
@@ -181,7 +229,7 @@ function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void>
 
   return (
     <form
-      className="flex max-w-md flex-col gap-4 rounded-md border p-4"
+      className="flex flex-col gap-4"
       onSubmit={submit}
       noValidate
       aria-label={t('invitations.invite')}
@@ -215,20 +263,20 @@ function InviteForm({ onInvited }: { onInvited: (email: string) => Promise<void>
           />
         )}
       />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={languageId}>{t('invitations.language')}</Label>
-        <select
-          id={languageId}
-          className="h-9 rounded-md border bg-transparent px-3 text-sm"
-          {...form.register('language')}
-        >
-          <option value="fr">{t('invitations.languages.fr')}</option>
-          <option value="en">{t('invitations.languages.en')}</option>
-        </select>
-      </div>
-      <Button type="submit" className="self-start" disabled={create.isPending}>
-        {t('invitations.invite')}
-      </Button>
+      <SelectField label={t('invitations.language')} {...form.register('language')}>
+        <option value="fr">{t('invitations.languages.fr')}</option>
+        <option value="en">{t('invitations.languages.en')}</option>
+      </SelectField>
+      <DialogFooter className="mt-1">
+        <DialogClose asChild>
+          <Button type="button" variant="ghost">
+            {t('common.cancel')}
+          </Button>
+        </DialogClose>
+        <Button type="submit" disabled={create.isPending}>
+          {t('invitations.invite')}
+        </Button>
+      </DialogFooter>
     </form>
   );
 }

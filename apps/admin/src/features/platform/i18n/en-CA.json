@@ -11,7 +11,8 @@
     "loading": "Loading…",
     "backToLogin": "Back to sign in",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "fields": {
     "email": "Email",
@@ -61,7 +62,10 @@
     "recoveryCodes": {
       "title": "Recovery codes",
       "body": "Keep these codes somewhere safe. They let you sign in if you lose access to your app. They will not be shown again.",
-      "saved": "I have saved my codes"
+      "saved": "I have saved my codes",
+      "copy": "Copy codes",
+      "copied": "Codes copied.",
+      "copyFailed": "Could not copy. Write the codes down instead."
     },
     "required": {
       "title": "Secure your account",
@@ -110,7 +114,10 @@
   "security": {
     "title": "Account security",
     "mfaOn": "Two-factor authentication is on for your account.",
-    "mfaOff": "Two-factor authentication is off."
+    "mfaOff": "Two-factor authentication is off.",
+    "description": "Protect access to your account.",
+    "on": "On",
+    "off": "Off"
   },
   "roles": {
     "administrator": "Administrator",
@@ -135,7 +142,13 @@
     "suspendName": "Suspend {{name}}",
     "reactivate": "Reactivate",
     "reactivateName": "Reactivate {{name}}",
-    "lastAdministrator": "The organization must keep at least one active administrator."
+    "lastAdministrator": "The organization must keep at least one active administrator.",
+    "description": "The people who can access the organization, and what they can do there.",
+    "membersCaption": "Team members",
+    "rolesSaved": "Roles of {{name}} saved.",
+    "suspendedToast": "Access for {{name}} suspended.",
+    "reactivatedToast": "Access for {{name}} reactivated.",
+    "editRolesDescription": "Roles decide what the person can see and change."
   },
   "invitations": {
     "title": "Invitations",
@@ -161,6 +174,10 @@
     "resendTo": "Resend the invitation to {{email}}",
     "revoke": "Revoke",
     "revokeFor": "Revoke the invitation for {{email}}",
-    "rolesRequired": "Choose at least one role."
+    "rolesRequired": "Choose at least one role.",
+    "inviteMember": "Invite a member",
+    "dialogDescription": "They will get an email to create their account and join the organization.",
+    "caption": "Pending invitations",
+    "noneBody": "Sent invitations show here until they are accepted."
   }
 }

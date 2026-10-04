@@ -3,9 +3,12 @@ import {
   useSetupPlatformSessionMfa,
 } from '@shelter/api-client/hooks/platform';
 import type { MfaSetupResponse } from '@shelter/api-client/model';
+import { Alert } from '@shelter/ui/components/alert';
 import { Button } from '@shelter/ui/components/button';
+import { toast } from '@shelter/ui/components/toaster';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Copy, ExternalLink, ShieldCheck } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { formatSharedKey } from '../../../lib/auth/mfa';
@@ -32,27 +35,43 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>();
 
   if (recoveryCodes) {
+    const copy = async () => {
+      try {
+        await navigator.clipboard.writeText(recoveryCodes.join('\n'));
+        toast.success(t('mfa.recoveryCodes.copied'));
+      } catch {
+        toast.error(t('mfa.recoveryCodes.copyFailed'));
+      }
+    };
     return (
       <div className="flex flex-col gap-4">
-        <FormAlert tone="info">{t('mfa.enabled')}</FormAlert>
-        <h2 className="font-semibold">{t('mfa.recoveryCodes.title')}</h2>
-        <p className="text-sm text-muted-foreground">{t('mfa.recoveryCodes.body')}</p>
+        <Alert tone="success">{t('mfa.enabled')}</Alert>
+        <div className="flex flex-col gap-1">
+          <h2 className="font-semibold">{t('mfa.recoveryCodes.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('mfa.recoveryCodes.body')}</p>
+        </div>
         <ul
           aria-label={t('mfa.recoveryCodes.title')}
-          className="grid grid-cols-2 gap-2 rounded-md bg-muted p-3 font-mono text-sm"
+          className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border bg-subtle px-4 py-3 font-mono text-sm tracking-wide"
         >
           {recoveryCodes.map((recoveryCode) => (
             <li key={recoveryCode}>{recoveryCode}</li>
           ))}
         </ul>
-        <Button onClick={onDone}>{t('mfa.recoveryCodes.saved')}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onDone}>{t('mfa.recoveryCodes.saved')}</Button>
+          <Button variant="outline" onClick={() => void copy()}>
+            <Copy aria-hidden="true" />
+            {t('mfa.recoveryCodes.copy')}
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (!key) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-start gap-4">
         <p className="text-sm text-muted-foreground">{t('mfa.intro')}</p>
         {setup.isError && <FormAlert tone="error">{t('mfa.setupFailed')}</FormAlert>}
         <Button
@@ -66,6 +85,7 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
             })
           }
         >
+          <ShieldCheck aria-hidden="true" />
           {t('mfa.start')}
         </Button>
       </div>
@@ -86,24 +106,29 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
   );
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
-      <ol className="flex list-decimal flex-col gap-3 pl-5 text-sm">
-        <li>
-          {t('mfa.step.scan')}{' '}
-          <a href={key.authenticatorUri} className="underline underline-offset-4">
-            {t('mfa.openApp')}
-          </a>
-        </li>
-        <li className="flex flex-col gap-1">
+    <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
+      <ol className="flex flex-col gap-4 text-sm">
+        <Step n={1}>
+          <span>{t('mfa.step.scan')}</span>
+          <Button asChild variant="outline" size="sm" className="self-start">
+            <a href={key.authenticatorUri}>
+              <ExternalLink aria-hidden="true" />
+              {t('mfa.openApp')}
+            </a>
+          </Button>
+        </Step>
+        <Step n={2}>
           <span>{t('mfa.step.key')}</span>
           <code
             aria-label={t('mfa.setupKey')}
-            className="rounded-md bg-muted px-2 py-1 font-mono break-all"
+            className="self-start rounded-lg border bg-subtle px-3 py-2 font-mono text-[0.9375rem] tracking-wider break-all"
           >
             {formatSharedKey(key.sharedKey)}
           </code>
-        </li>
-        <li>{t('mfa.step.code')}</li>
+        </Step>
+        <Step n={3}>
+          <span>{t('mfa.step.code')}</span>
+        </Step>
       </ol>
       {enable.isError && <FormAlert tone="error">{t('mfa.invalidCode')}</FormAlert>}
       <FormField
@@ -111,12 +136,28 @@ export function MfaEnrollment({ onStart, onDone }: { onStart?: () => void; onDon
         inputMode="numeric"
         autoComplete="one-time-code"
         required
+        className="max-w-56"
         error={form.formState.errors.code}
         {...form.register('code')}
       />
-      <Button type="submit" disabled={enable.isPending}>
+      <Button type="submit" className="self-start" disabled={enable.isPending}>
         {t('mfa.confirm')}
       </Button>
     </form>
+  );
+}
+
+/** One numbered setup step: the steps are a real sequence. */
+function Step({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span
+        aria-hidden="true"
+        className="tabular flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+      >
+        {n}
+      </span>
+      <div className="flex min-w-0 flex-col gap-2 pt-0.5">{children}</div>
+    </li>
   );
 }

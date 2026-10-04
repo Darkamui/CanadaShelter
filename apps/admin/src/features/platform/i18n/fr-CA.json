@@ -21,7 +21,8 @@
     "loading": "Chargement…",
     "backToLogin": "Retour à la connexion",
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "close": "Fermer"
   },
   "fields": {
     "email": "Courriel",
@@ -71,7 +72,10 @@
     "recoveryCodes": {
       "title": "Codes de récupération",
       "body": "Conservez ces codes en lieu sûr. Ils vous permettent de vous connecter si vous perdez l’accès à votre application. Ils ne seront plus affichés.",
-      "saved": "J’ai conservé mes codes"
+      "saved": "J’ai conservé mes codes",
+      "copy": "Copier les codes",
+      "copied": "Codes copiés.",
+      "copyFailed": "Impossible de copier. Notez les codes à la main."
     },
     "required": {
       "title": "Sécurisez votre compte",
@@ -120,7 +124,10 @@
   "security": {
     "title": "Sécurité du compte",
     "mfaOn": "L’authentification à deux facteurs est activée pour votre compte.",
-    "mfaOff": "L’authentification à deux facteurs n’est pas activée."
+    "mfaOff": "L’authentification à deux facteurs n’est pas activée.",
+    "description": "Protégez l'accès à votre compte.",
+    "on": "Activée",
+    "off": "Désactivée"
   },
   "roles": {
     "administrator": "Administrateur",
@@ -145,7 +152,13 @@
     "suspendName": "Suspendre {{name}}",
     "reactivate": "Réactiver",
     "reactivateName": "Réactiver {{name}}",
-    "lastAdministrator": "L’organisme doit conserver au moins un administrateur actif."
+    "lastAdministrator": "L’organisme doit conserver au moins un administrateur actif.",
+    "description": "Les personnes qui ont accès à l'organisme et ce qu'elles peuvent y faire.",
+    "membersCaption": "Membres de l'équipe",
+    "rolesSaved": "Rôles de {{name}} enregistrés.",
+    "suspendedToast": "Accès de {{name}} suspendu.",
+    "reactivatedToast": "Accès de {{name}} réactivé.",
+    "editRolesDescription": "Les rôles déterminent ce que la personne peut consulter et modifier."
   },
   "invitations": {
     "title": "Invitations",
@@ -171,6 +184,10 @@
     "resendTo": "Renvoyer l’invitation à {{email}}",
     "revoke": "Révoquer",
     "revokeFor": "Révoquer l’invitation de {{email}}",
-    "rolesRequired": "Choisissez au moins un rôle."
+    "rolesRequired": "Choisissez au moins un rôle.",
+    "inviteMember": "Inviter un membre",
+    "dialogDescription": "La personne recevra un courriel pour créer son compte et rejoindre l'organisme.",
+    "caption": "Invitations en attente",
+    "noneBody": "Les invitations envoyées apparaissent ici jusqu'à ce qu'elles soient acceptées."
   }
 }

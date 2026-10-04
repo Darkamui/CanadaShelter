@@ -17,10 +17,10 @@ import {
   DialogTitle,
 } from '@shelter/ui/components/dialog';
 import { EmptyState } from '@shelter/ui/components/empty-state';
+import { IconAction } from '@shelter/ui/components/icon-action';
 import { PageHeader } from '@shelter/ui/components/page-header';
 import { Skeleton } from '@shelter/ui/components/skeleton';
 import { toast } from '@shelter/ui/components/toaster';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@shelter/ui/components/tooltip';
 import { useQueryClient } from '@tanstack/react-query';
 import { Archive, MapPin, Pencil, Plus } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -298,39 +298,6 @@ function LocationTree({
         );
       })}
     </ul>
-  );
-}
-
-/** A row action: an icon button named for its location, with the short verb as a tooltip. */
-function IconAction({
-  label,
-  hint,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string;
-  hint: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          aria-label={label}
-          disabled={disabled}
-          onClick={onClick}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{hint}</TooltipContent>
-    </Tooltip>
   );
 }
 

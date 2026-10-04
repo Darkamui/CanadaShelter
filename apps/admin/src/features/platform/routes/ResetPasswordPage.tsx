@@ -17,6 +17,7 @@ import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { AuthBackLink, AuthFooter, AuthHeader } from '../../../lib/page/AuthParts';
 
 const resetSchema = z.object(newPasswordFields).refine(passwordsMatch.check, passwordsMatch.params);
 
@@ -38,11 +39,14 @@ export function ResetPasswordPage() {
   if (!userId || !token || linkRejected) {
     return (
       <>
-        <h1 className="text-2xl font-semibold">{t('reset.title')}</h1>
+        <AuthHeader title={t('reset.title')} />
         <FormAlert tone="error">{t('reset.invalidLink')}</FormAlert>
-        <Link to={paths.forgotPassword} className="text-sm underline underline-offset-4">
-          {t('reset.requestNew')}
-        </Link>
+        <Button asChild size="lg">
+          <Link to={paths.forgotPassword}>{t('reset.requestNew')}</Link>
+        </Button>
+        <AuthFooter>
+          <AuthBackLink to={paths.login}>{t('common.backToLogin')}</AuthBackLink>
+        </AuthFooter>
       </>
     );
   }
@@ -65,7 +69,7 @@ export function ResetPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('reset.title')}</h1>
+      <AuthHeader title={t('reset.title')} description={t('reset.intro')} />
       {rateLimited && <FormAlert tone="error">{t('common.tooManyAttempts')}</FormAlert>}
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
         <FormField
@@ -86,7 +90,7 @@ export function ResetPasswordPage() {
           error={errors.confirmation}
           {...form.register('confirmation')}
         />
-        <Button type="submit" disabled={reset.isPending}>
+        <Button type="submit" size="lg" className="mt-1" disabled={reset.isPending}>
           {t('reset.submit')}
         </Button>
       </form>

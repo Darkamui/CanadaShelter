@@ -1,7 +1,6 @@
 import { useForgotPlatformSessionPassword } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { z } from 'zod';
 import { paths } from '../../../lib/auth/paths';
 import { isRateLimited } from '../../../lib/auth/session';
@@ -9,6 +8,7 @@ import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { emailAddress } from '../../../lib/forms/schemas';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { AuthBackLink, AuthFooter, AuthHeader } from '../../../lib/page/AuthParts';
 
 const forgotSchema = z.object({ email: emailAddress() });
 
@@ -22,12 +22,16 @@ export function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('forgot.title')}</h1>
+      <AuthHeader
+        title={t('forgot.title')}
+        description={forgot.isSuccess ? undefined : t('forgot.intro')}
+      />
       {forgot.isSuccess ? (
-        <FormAlert tone="info">{t('forgot.sent')}</FormAlert>
+        <FormAlert tone="info" title={t('forgot.sentTitle')}>
+          {t('forgot.sent')}
+        </FormAlert>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">{t('forgot.intro')}</p>
           {forgot.isError && (
             <FormAlert tone="error">
               {isRateLimited(forgot.error)
@@ -44,15 +48,15 @@ export function ForgotPasswordPage() {
               error={form.formState.errors.email}
               {...form.register('email')}
             />
-            <Button type="submit" disabled={forgot.isPending}>
+            <Button type="submit" size="lg" className="mt-1" disabled={forgot.isPending}>
               {t('forgot.submit')}
             </Button>
           </form>
         </>
       )}
-      <Link to={paths.login} className="text-sm underline underline-offset-4">
-        {t('common.backToLogin')}
-      </Link>
+      <AuthFooter>
+        <AuthBackLink to={paths.login}>{t('common.backToLogin')}</AuthBackLink>
+      </AuthFooter>
     </>
   );
 }

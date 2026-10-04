@@ -30,7 +30,8 @@
       "passwordReset": "Your password was changed. Sign in with your new password.",
       "accountCreated": "Your account was created. Sign in to continue.",
       "signedOut": "You are now signed out."
-    }
+    },
+    "intro": "Sign in to reach your shelter’s records."
   },
   "mfaChallenge": {
     "title": "Two-step verification",
@@ -76,13 +77,15 @@
     "title": "Forgot password",
     "intro": "Enter your email. If an account uses it, you will receive a link to choose a new password.",
     "sent": "If an account uses this email, a link is on its way. Check your inbox.",
-    "submit": "Send the link"
+    "submit": "Send the link",
+    "sentTitle": "Check your email"
   },
   "reset": {
     "title": "New password",
     "invalidLink": "This link is invalid or has expired.",
     "requestNew": "Request a new link",
-    "submit": "Change password"
+    "submit": "Change password",
+    "intro": "Choose a new password for your account."
   },
   "password": {
     "hint": "At least {{count}} characters.",
@@ -109,7 +112,8 @@
     "title": "Choose an organization",
     "selectFailed": "Could not open this organization. Please try again.",
     "none": "Your account is not linked to any organization. Contact an administrator.",
-    "current": "Current organization"
+    "current": "Current organization",
+    "intro": "Your account has access to several organizations. Choose the one you want to work in."
   },
   "security": {
     "title": "Account security",

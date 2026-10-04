@@ -3,7 +3,7 @@ import { Button } from '@shelter/ui/components/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
@@ -12,6 +12,7 @@ import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { requiredText } from '../../../lib/forms/schemas';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { AuthBackLink, AuthFooter, AuthHeader } from '../../../lib/page/AuthParts';
 
 const codeSchema = z.object({ code: requiredText() });
 
@@ -40,16 +41,13 @@ export function MfaChallengePage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('mfaChallenge.title')}</h1>
-      <p className="text-sm text-muted-foreground">
-        {useRecovery ? t('mfaChallenge.recoveryIntro') : t('mfaChallenge.intro')}
-      </p>
+      <AuthHeader
+        title={t('mfaChallenge.title')}
+        description={useRecovery ? t('mfaChallenge.recoveryIntro') : t('mfaChallenge.intro')}
+      />
       {verify.isError && (
         <FormAlert tone="error">
-          {isRateLimited(verify.error) ? t('common.tooManyAttempts') : t('mfaChallenge.invalid')}{' '}
-          <Link to={paths.login} className="underline underline-offset-4">
-            {t('mfaChallenge.backToLogin')}
-          </Link>
+          {isRateLimited(verify.error) ? t('common.tooManyAttempts') : t('mfaChallenge.invalid')}
         </FormAlert>
       )}
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
@@ -63,13 +61,13 @@ export function MfaChallengePage() {
           error={form.formState.errors.code}
           {...form.register('code')}
         />
-        <Button type="submit" disabled={verify.isPending}>
+        <Button type="submit" size="lg" className="mt-1" disabled={verify.isPending}>
           {t('mfaChallenge.submit')}
         </Button>
       </form>
       <Button
         variant="link"
-        className="self-start px-0"
+        className="-mt-3 self-start px-0"
         onClick={() => {
           setUseRecovery(!useRecovery);
           form.reset();
@@ -78,6 +76,9 @@ export function MfaChallengePage() {
       >
         {useRecovery ? t('mfaChallenge.useCode') : t('mfaChallenge.useRecovery')}
       </Button>
+      <AuthFooter>
+        <AuthBackLink to={paths.login}>{t('mfaChallenge.backToLogin')}</AuthBackLink>
+      </AuthFooter>
     </>
   );
 }

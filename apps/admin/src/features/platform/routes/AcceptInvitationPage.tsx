@@ -3,6 +3,7 @@ import {
   useAcceptPlatformInvitation,
 } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
+import { Skeleton } from '@shelter/ui/components/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +23,7 @@ import { FormField } from '../../../lib/forms/FormField';
 import { requiredText } from '../../../lib/forms/schemas';
 import { applyValidationErrors, validationErrors } from '../../../lib/forms/serverErrors';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { AuthBackLink, AuthFooter, AuthHeader } from '../../../lib/page/AuthParts';
 
 /**
  * From the emailed link `/accept-invitation#token={token}`. A new email creates its account here; an email
@@ -46,7 +48,7 @@ export function AcceptInvitationPage() {
   if (!token || lookup.isError) {
     return (
       <>
-        <h1 className="text-2xl font-semibold">{t('accept.title')}</h1>
+        <AuthHeader title={t('accept.title')} />
         <FormAlert tone="error">
           {!token || statusOf(lookup.error) === 404
             ? t('accept.invalidLink')
@@ -54,23 +56,24 @@ export function AcceptInvitationPage() {
               ? t('common.tooManyAttempts')
               : t('common.unexpectedError')}
         </FormAlert>
+        <AuthFooter>
+          <AuthBackLink to={paths.login}>{t('common.backToLogin')}</AuthBackLink>
+        </AuthFooter>
       </>
     );
   }
 
   if (!lookup.data) {
-    return <p role="status">{t('common.loading')}</p>;
+    return <AuthSkeleton label={t('common.loading')} />;
   }
 
   const invitation = lookup.data;
   return (
     <>
-      <h1 className="text-2xl font-semibold">
-        {t('accept.heading', { organization: invitation.organizationName })}
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        {t('accept.for', { email: invitation.email })}
-      </p>
+      <AuthHeader
+        title={t('accept.heading', { organization: invitation.organizationName })}
+        description={t('accept.for', { email: invitation.email })}
+      />
       {invitation.accountExists ? (
         <ExistingAccount token={token} email={invitation.email} />
       ) : (
@@ -143,7 +146,7 @@ function NewAccount({ token, email }: { token: string; email: string }) {
         error={errors.confirmation}
         {...form.register('confirmation')}
       />
-      <Button type="submit" disabled={accept.isPending}>
+      <Button type="submit" size="lg" className="mt-1" disabled={accept.isPending}>
         {t('accept.createAndJoin')}
       </Button>
     </form>
@@ -158,7 +161,7 @@ function ExistingAccount({ token, email }: { token: string; email: string }) {
   const accept = useAcceptPlatformInvitation();
 
   if (session.isPending) {
-    return <p role="status">{t('common.loading')}</p>;
+    return <AuthSkeleton label={t('common.loading')} />;
   }
 
   if (!session.data) {
@@ -167,7 +170,7 @@ function ExistingAccount({ token, email }: { token: string; email: string }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm">{t('accept.signInFirst')}</p>
-        <Button asChild>
+        <Button asChild size="lg">
           <Link to={paths.login} state={state}>
             {t('accept.signIn')}
           </Link>
@@ -181,6 +184,7 @@ function ExistingAccount({ token, email }: { token: string; email: string }) {
       <p className="text-sm">{t('accept.signedInAs', { name: session.data.user.displayName })}</p>
       {accept.isError && <FormAlert tone="error">{acceptError(accept.error, t)}</FormAlert>}
       <Button
+        size="lg"
         disabled={accept.isPending}
         onClick={() =>
           accept.mutate(
@@ -196,6 +200,17 @@ function ExistingAccount({ token, email }: { token: string; email: string }) {
       >
         {t('accept.join')}
       </Button>
+    </div>
+  );
+}
+
+/** Stands in for the card's content while the invitation or the session loads. */
+function AuthSkeleton({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="flex flex-col gap-4">
+      <Skeleton className="h-8 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="mt-2 h-11 w-full" />
     </div>
   );
 }

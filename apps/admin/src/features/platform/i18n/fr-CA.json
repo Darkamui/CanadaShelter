@@ -40,7 +40,8 @@
       "passwordReset": "Votre mot de passe a été modifié. Connectez-vous avec le nouveau mot de passe.",
       "accountCreated": "Votre compte a été créé. Connectez-vous pour continuer.",
       "signedOut": "Vous êtes maintenant déconnecté."
-    }
+    },
+    "intro": "Connectez-vous pour accéder aux dossiers de votre refuge."
   },
   "mfaChallenge": {
     "title": "Vérification en deux étapes",
@@ -86,13 +87,15 @@
     "title": "Mot de passe oublié",
     "intro": "Entrez votre courriel. Si un compte y est associé, vous recevrez un lien pour choisir un nouveau mot de passe.",
     "sent": "Si un compte est associé à ce courriel, un lien vient d’être envoyé. Vérifiez votre boîte de réception.",
-    "submit": "Envoyer le lien"
+    "submit": "Envoyer le lien",
+    "sentTitle": "Vérifiez vos courriels"
   },
   "reset": {
     "title": "Nouveau mot de passe",
     "invalidLink": "Ce lien est invalide ou expiré.",
     "requestNew": "Demander un nouveau lien",
-    "submit": "Changer le mot de passe"
+    "submit": "Changer le mot de passe",
+    "intro": "Choisissez un nouveau mot de passe pour votre compte."
   },
   "password": {
     "hint": "Au moins {{count}} caractères.",
@@ -119,13 +122,14 @@
     "title": "Choisir un organisme",
     "selectFailed": "Impossible d’ouvrir cet organisme. Réessayez.",
     "none": "Votre compte n’est lié à aucun organisme. Communiquez avec un administrateur.",
-    "current": "Organisme actuel"
+    "current": "Organisme actuel",
+    "intro": "Votre compte donne accès à plusieurs organismes. Choisissez celui où vous voulez travailler."
   },
   "security": {
     "title": "Sécurité du compte",
     "mfaOn": "L’authentification à deux facteurs est activée pour votre compte.",
     "mfaOff": "L’authentification à deux facteurs n’est pas activée.",
-    "description": "Protégez l'accès à votre compte.",
+    "description": "Protégez l’accès à votre compte.",
     "on": "Activée",
     "off": "Désactivée"
   },
@@ -153,8 +157,8 @@
     "reactivate": "Réactiver",
     "reactivateName": "Réactiver {{name}}",
     "lastAdministrator": "L’organisme doit conserver au moins un administrateur actif.",
-    "description": "Les personnes qui ont accès à l'organisme et ce qu'elles peuvent y faire.",
-    "membersCaption": "Membres de l'équipe",
+    "description": "Les personnes qui ont accès à l’organisme et ce qu’elles peuvent y faire.",
+    "membersCaption": "Membres de l’équipe",
     "rolesSaved": "Rôles de {{name}} enregistrés.",
     "suspendedToast": "Accès de {{name}} suspendu.",
     "reactivatedToast": "Accès de {{name}} réactivé.",
@@ -186,8 +190,8 @@
     "revokeFor": "Révoquer l’invitation de {{email}}",
     "rolesRequired": "Choisissez au moins un rôle.",
     "inviteMember": "Inviter un membre",
-    "dialogDescription": "La personne recevra un courriel pour créer son compte et rejoindre l'organisme.",
+    "dialogDescription": "La personne recevra un courriel pour créer son compte et rejoindre l’organisme.",
     "caption": "Invitations en attente",
-    "noneBody": "Les invitations envoyées apparaissent ici jusqu'à ce qu'elles soient acceptées."
+    "noneBody": "Les invitations envoyées apparaissent ici jusqu’à ce qu’elles soient acceptées."
   }
 }

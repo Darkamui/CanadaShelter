@@ -24,7 +24,7 @@ export function AuthLayout() {
         id="main"
         className="relative flex flex-1 items-start justify-center px-4 pt-8 pb-12 sm:pt-14"
       >
-        <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl border bg-card p-6 shadow-raised sm:p-8 [&>h1]:font-display [&>h1]:text-[1.75rem] [&>h1]:leading-tight [&>h1]:font-semibold [&>h1]:tracking-[-0.015em]">
+        <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl border bg-card p-6 shadow-raised sm:p-8">
           <Outlet />
         </div>
       </main>

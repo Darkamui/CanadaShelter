@@ -6,9 +6,11 @@ import {
   type RowData,
   type SortingState,
 } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../lib/utils';
 import { Button } from './button';
+import { Skeleton } from './skeleton';
 
 /** Features every DataTable registers. Sorting is server-side, so there is no sorted row model. */
 export const dataTableFeatures = tableFeatures({ rowSortingFeature });
@@ -33,6 +35,19 @@ export type DataTableLabels = {
   sortBy: (column: string) => string;
 };
 
+/**
+ * Classes for a column's header and cells, by column id. Use {@link hideBelow} to drop secondary columns on tablets
+ * and `text-right tabular` for numbers.
+ */
+export type DataTableColumnClasses = Partial<Record<string, string>>;
+
+/** Hides a secondary column under a breakpoint (tablet portrait is below `lg`). */
+export const hideBelow = {
+  md: 'hidden md:table-cell',
+  lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
+} as const;
+
 export type DataTableProps<TData extends RowData> = {
   columns: DataTableColumn<TData>[];
   data: readonly TData[];
@@ -49,13 +64,14 @@ export type DataTableProps<TData extends RowData> = {
   labels: DataTableLabels;
   /** Rendered above the table (search box, filters). */
   toolbar?: ReactNode;
+  /** Replaces the plain "no results" line, e.g. an `EmptyState` with the create action. */
+  emptyState?: ReactNode;
+  columnClassNames?: DataTableColumnClasses;
   className?: string;
 };
 
 const NO_SORTING: SortingState = [];
-
-// Decorative only (aria-hidden); the header's aria-sort carries the state.
-const SORT_GLYPH = { asc: '▲', desc: '▼' } as const;
+const SKELETON_ROWS = 5;
 
 /**
  * A server-paged, server-sorted table. It renders what the API returned and reports page and sort changes; the
@@ -74,6 +90,8 @@ export function DataTable<TData extends RowData>({
   onSortingChange,
   labels,
   toolbar,
+  emptyState,
+  columnClassNames = {},
   className,
 }: DataTableProps<TData>) {
   const table = useTable({
@@ -92,90 +110,126 @@ export function DataTable<TData extends RowData>({
   const lastPage = Math.max(1, Math.ceil(totalCount / pageSize));
   const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalCount);
-  const columnCount = table.getAllLeafColumns().length;
-
-  let message: string | null = null;
-  if (status === 'pending') message = labels.loading;
-  else if (status === 'error') message = labels.error;
-  else if (data.length === 0) message = labels.empty;
+  const leafColumns = table.getAllLeafColumns();
+  const isEmpty = status === 'success' && data.length === 0;
 
   return (
     <div data-slot="data-table" className={cn('flex flex-col gap-3', className)}>
       {toolbar}
-      <div className="overflow-x-auto rounded-md border">
-        <table className="w-full text-sm" aria-busy={status === 'pending'}>
-          <caption className="sr-only">{labels.caption}</caption>
-          <thead className="bg-muted/50">
-            {table.getHeaderGroups().map((group) => (
-              <tr key={group.id} className="border-b">
-                {group.headers.map((header) => {
-                  const sorted = header.column.getIsSorted();
-                  const heading = header.column.columnDef.header;
-                  return (
-                    <th
-                      key={header.id}
-                      scope="col"
-                      className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap"
-                      aria-sort={
-                        sorted === 'asc'
-                          ? 'ascending'
-                          : sorted === 'desc'
-                            ? 'descending'
-                            : undefined
-                      }
-                    >
-                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 hover:underline"
-                          onClick={header.column.getToggleSortingHandler()}
-                          aria-label={labels.sortBy(
-                            typeof heading === 'string' ? heading : header.id,
-                          )}
-                        >
+      {isEmpty && emptyState ? (
+        emptyState
+      ) : (
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-card">
+          <table className="w-full text-sm" aria-busy={status === 'pending'}>
+            <caption className="sr-only">{labels.caption}</caption>
+            <thead>
+              {table.getHeaderGroups().map((group) => (
+                <tr key={group.id} className="border-b bg-subtle">
+                  {group.headers.map((header) => {
+                    const sorted = header.column.getIsSorted();
+                    const heading = header.column.columnDef.header;
+                    const SortIcon =
+                      sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ChevronsUpDown;
+                    return (
+                      <th
+                        key={header.id}
+                        scope="col"
+                        className={cn(
+                          'h-11 px-4 text-left align-middle text-[0.8125rem] font-medium whitespace-nowrap text-muted-foreground',
+                          columnClassNames[header.column.id],
+                        )}
+                        aria-sort={
+                          sorted === 'asc'
+                            ? 'ascending'
+                            : sorted === 'desc'
+                              ? 'descending'
+                              : undefined
+                        }
+                      >
+                        {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                          <button
+                            type="button"
+                            className={cn(
+                              'group -mx-1.5 inline-flex h-8 items-center gap-1 rounded-md px-1.5 transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/45',
+                              sorted && 'text-foreground',
+                            )}
+                            onClick={header.column.getToggleSortingHandler()}
+                            aria-label={labels.sortBy(
+                              typeof heading === 'string' ? heading : header.id,
+                            )}
+                          >
+                            <table.FlexRender header={header} />
+                            <SortIcon
+                              aria-hidden="true"
+                              className={cn(
+                                'size-3.5',
+                                !sorted && 'opacity-40 group-hover:opacity-80',
+                              )}
+                            />
+                          </button>
+                        ) : (
                           <table.FlexRender header={header} />
-                          <span aria-hidden="true">{sorted ? SORT_GLYPH[sorted] : null}</span>
-                        </button>
-                      ) : (
-                        <table.FlexRender header={header} />
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {message !== null ? (
-              <tr>
-                <td
-                  colSpan={columnCount}
-                  className={cn(
-                    'h-24 px-3 text-center text-muted-foreground',
-                    status === 'error' && 'text-destructive',
-                  )}
-                  role={status === 'error' ? 'alert' : undefined}
-                >
-                  {message}
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
-                  {row.getAllCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-2 align-middle">
-                      <table.FlexRender cell={cell} />
-                    </td>
-                  ))}
+                        )}
+                      </th>
+                    );
+                  })}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </thead>
+            <tbody>
+              {status === 'pending' ? (
+                Array.from({ length: SKELETON_ROWS }, (_, row) => (
+                  <tr key={row} className="border-b last:border-0">
+                    {leafColumns.map((column, index) => (
+                      <td key={column.id} className={cn('h-13 px-4', columnClassNames[column.id])}>
+                        {row === 0 && index === 0 && (
+                          <span className="sr-only">{labels.loading}</span>
+                        )}
+                        <Skeleton className={cn('h-3.5', index === 0 ? 'w-3/4' : 'w-1/2')} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : status === 'error' || isEmpty ? (
+                <tr>
+                  <td
+                    colSpan={leafColumns.length}
+                    className={cn(
+                      'h-28 px-4 text-center text-muted-foreground',
+                      status === 'error' && 'text-danger',
+                    )}
+                    role={status === 'error' ? 'alert' : undefined}
+                  >
+                    {status === 'error' ? labels.error : labels.empty}
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b transition-colors last:border-0 hover:bg-accent/50"
+                  >
+                    {row.getAllCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={cn(
+                          'h-13 px-4 py-2 align-middle',
+                          columnClassNames[cell.column.id],
+                        )}
+                      >
+                        <table.FlexRender cell={cell} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-        <span aria-live="polite">
-          {status === 'success' ? labels.range(from, to, totalCount) : null}
+        <span aria-live="polite" className="tabular">
+          {status === 'success' && totalCount > 0 ? labels.range(from, to, totalCount) : null}
         </span>
         <div className="flex gap-2">
           <Button
@@ -184,6 +238,7 @@ export function DataTable<TData extends RowData>({
             disabled={page <= 1 || status !== 'success'}
             onClick={() => onPageChange(page - 1)}
           >
+            <ChevronLeft aria-hidden="true" />
             {labels.previousPage}
           </Button>
           <Button
@@ -193,6 +248,7 @@ export function DataTable<TData extends RowData>({
             onClick={() => onPageChange(page + 1)}
           >
             {labels.nextPage}
+            <ChevronRight aria-hidden="true" />
           </Button>
         </div>
       </div>

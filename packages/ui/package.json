@@ -14,7 +14,7 @@
   "dependencies": {
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "radix-ui": "1.6.7",
+    "radix-ui": "1.7.0",
     "tailwind-merge": "3.7.0"
   },
   "peerDependencies": {
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@shelter/config": "workspace:*",
     "@types/react": "19.3.0",
-    "eslint": "10.11.0",
+    "eslint": "10.12.0",
     "react": "19.3.0",
     "typescript": "6.0.3"
   }

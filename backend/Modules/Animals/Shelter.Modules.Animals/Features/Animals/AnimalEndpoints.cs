@@ -401,7 +401,7 @@ internal static class AnimalEndpoints
     /// The organization's next animal number. The counter row stays locked until the transaction ends, so concurrent
     /// creations take numbers one after the other, and a rolled-back creation gives its number back.
     /// </summary>
-    private static async Task<int> NextNumberAsync(ShelterDbContext db, Guid tenantId, CancellationToken cancellationToken)
+    internal static async Task<int> NextNumberAsync(ShelterDbContext db, Guid tenantId, CancellationToken cancellationToken)
     {
         // Not composed (no SingleAsync): EF would wrap the INSERT in a sub-select.
         var numbers = await db.Database.SqlQuery<int>($"""

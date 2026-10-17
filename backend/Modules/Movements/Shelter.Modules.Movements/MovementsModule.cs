@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.DevSeed;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Movements.Authorization;
+using Shelter.Modules.Movements.Features.DevSeed;
 using Shelter.Modules.Movements.Features.Movements;
 using Shelter.Modules.Movements.Features.ReferenceData;
 using Shelter.Modules.Movements.Persistence;
@@ -23,6 +25,7 @@ public sealed class MovementsModule : IModule
         services.AddSingleton<IModelContributor, MovementsModelContributor>();
         services.AddPermissions(MovementPermissions.All);
         services.AddScoped<MovementRecorder>();
+        services.AddDevSeedContributor<MovementsDevSeed>();
     }
 
     /// <inheritdoc />

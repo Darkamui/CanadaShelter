@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.DevSeed;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.Operations.Authorization;
 using Shelter.Modules.Operations.Contracts;
+using Shelter.Modules.Operations.Features.DevSeed;
 using Shelter.Modules.Operations.Features.Locations;
 using Shelter.Modules.Operations.Persistence;
 
@@ -23,6 +25,7 @@ public sealed class OperationsModule : IModule
         services.AddSingleton<IModelContributor, OperationsModelContributor>();
         services.AddPermissions(OperationsPermissions.All);
         services.AddScoped<ILocationDirectory, LocationDirectory>();
+        services.AddDevSeedContributor<OperationsDevSeed>();
     }
 
     /// <inheritdoc />

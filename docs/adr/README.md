@@ -28,6 +28,7 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0020](0020-anonymous-endpoint-rate-limiting.md) | Rate limiting the anonymous auth endpoints (built-in, in-memory, per IP) | Accepted |
 | [0021](0021-in-process-module-contracts.md) | In-process module contracts: shared DbContext and transaction, stage and never save, no event bus yet | Accepted |
 | [0022](0022-admin-design-system.md) | Admin design system: tokens, self-hosted fonts, `packages/ui` primitives, list/record/edit/auth page templates, toasts | Accepted |
+| [0023](0023-development-seed-route.md) | Development seed route: per-module seed contributors, Development-only `POST /api/platform/dev/seed`, local reset script | Accepted |
 
 ## Backlog
 

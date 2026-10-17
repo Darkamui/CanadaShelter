@@ -59,6 +59,7 @@
 
 ## Key files
 
+- `Features/DevSeed/AnimalsDevSeed.cs`: development seed (ADR 0023). 25 animals per factor unit, through `AnimalRequestValidator` and the number counter, with backdated registrations, identifiers and timeline entries. The animals are not in care until Movements runs.
 - `Domain/Animal.cs`, `AnimalIdentifier.cs`, `TimelineEvent.cs` (plus the counter), `Species.cs`.
 - `Persistence/AnimalsModelContributor.cs`: tables, the trigram index on `search_text`, and the partial microchip index.
 - `Features/Animals/AnimalEndpoints.cs`: `/api/animals` (`ListAnimals`, `GetAnimal`, `CreateAnimal`, `UpdateAnimal`, `AddAnimalIdentifier`, `DeactivateAnimalIdentifier`, `GetAnimalTimeline`, `GetAnimalPopulation`).

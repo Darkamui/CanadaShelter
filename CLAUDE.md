@@ -25,6 +25,8 @@ Québec-first, bilingual shelter & rescue management SaaS. Multi-tenant. ASP.NET
 - pnpm comes from corepack (`packageManager` in root `package.json`). If `corepack enable` fails with EPERM on Windows, use `corepack enable --install-directory "$APPDATA/npm" pnpm`.
 - `pnpm api:generate` — regenerate Orval client after any API contract change
 - `./scripts/db-migrate-local.sh` — apply migrations to the **local** database only (as `shelter_migrator`)
+- `./scripts/dev-seed.sh ['{"scale":"small|demo|load","newOrganization":true}']` — fill the local organization (or a new one) with sample data via `POST /api/platform/dev/seed` (API running in Development; ADR 0023)
+- `./scripts/dev-reset-data.sh` — wipe module data in the **local** database (as `shelter_migrator`), keeping organizations and accounts
 - Local DB created before M1? Reset once for the `shelter_platform_admin` role: `docker compose -f infrastructure/docker/compose.yml down -v` then `up -d`
 
 (Keep this list accurate. If a command changes, update it in the same PR.)

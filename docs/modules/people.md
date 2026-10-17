@@ -40,6 +40,7 @@
 
 ## Key files
 
+- `Features/DevSeed/PeopleDevSeed.cs`: development seed (ADR 0023). 20 fictional people per factor unit, through `PersonRequestValidator`. Includes organizations, archived people, and shared contacts for the duplicate hints.
 - `Domain/Person.cs` — entity, role tag codes, province codes, normalized columns.
 - `Persistence/PeopleModelContributor.cs` — mapping, classification, indexes (GIN trigram on `search_text` cannot lead with `tenant_id`; RLS still filters).
 - `Features/People/PeopleEndpoints.cs` — `/api/people` endpoints and DTOs.

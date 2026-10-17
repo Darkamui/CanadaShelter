@@ -44,6 +44,7 @@
 
 ## Key files
 
+- `Features/DevSeed/OperationsDevSeed.cs`: development seed (ADR 0023). Creates a sample location tree that scales with the factor. Existing locations with the same names are reused.
 - `Domain/Location.cs`, `Domain/LocationKind.cs` — entities.
 - `Persistence/OperationsModelContributor.cs` — mapping, tenant-scoped self foreign key, indexes.
 - `Features/Locations/LocationEndpoints.cs` — `/api/operations/locations`, `/api/operations/location-kinds`, validation, DTOs.

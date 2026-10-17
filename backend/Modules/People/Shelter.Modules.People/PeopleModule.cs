@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.DevSeed;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
 using Shelter.Modules.People.Authorization;
 using Shelter.Modules.People.Contracts;
+using Shelter.Modules.People.Features.DevSeed;
 using Shelter.Modules.People.Features.People;
 using Shelter.Modules.People.Persistence;
 
@@ -23,6 +25,7 @@ public sealed class PeopleModule : IModule
         services.AddSingleton<IModelContributor, PeopleModelContributor>();
         services.AddPermissions(PeoplePermissions.All);
         services.AddScoped<IPersonDirectory, PersonDirectory>();
+        services.AddDevSeedContributor<PeopleDevSeed>();
     }
 
     /// <inheritdoc />

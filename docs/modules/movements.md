@@ -51,6 +51,7 @@
 
 ## Key files
 
+- `Features/DevSeed/MovementsDevSeed.cs`: development seed (ADR 0023). Each seeded animal gets a custody history (intake, relocations, outcome, some returns and voids), recorded through `MovementRecorder`.
 - `Domain/Movement.cs`, `OutcomeType.cs`, `IntakeReason.cs`, `SacCategories.cs`.
 - `Features/Movements/MovementEndpoints.cs`: `/api/movements` (`ListMovements`, `RecordIntake`, `RecordRelocation`, `RecordOutcome`, `VoidMovement`).
 - `Features/Movements/MovementRecorder.cs`: the rules. `Ledger.cs`: in-effect order and the projected summary.

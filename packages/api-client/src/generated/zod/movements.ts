@@ -20,3 +20,144 @@ export const ListMovementsIntakeReasonsResponseItem = zod
   })
   .describe('One value of a reference list as the API returns it: a stable code and both labels.');
 export const ListMovementsIntakeReasonsResponse = zod.array(ListMovementsIntakeReasonsResponseItem);
+
+export const ListMovementsOutcomeTypesResponseItem = zod.object({
+  code: zod.string(),
+  label: zod
+    .object({
+      fr: zod.string().describe('fr-CA text.'),
+      en: zod.string().describe('en-CA text.'),
+    })
+    .describe(
+      'A value stored in both supported languages (ADR 0013). Both are required: reference data is always bilingual.\nClients pick the label by UI locale.',
+    ),
+  requiresPerson: zod.boolean(),
+});
+export const ListMovementsOutcomeTypesResponse = zod.array(ListMovementsOutcomeTypesResponseItem);
+
+export const ListMovementsQueryParams = zod.object({
+  animalId: zod.uuid(),
+});
+
+export const ListMovementsResponseItem = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  animalId: zod.uuid(),
+  reasonCode: zod.string().nullable(),
+  fromLocationId: zod.uuid().nullable(),
+  fromLocationName: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  toLocationName: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  personName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }),
+  recordedAt: zod.iso.datetime({ offset: true }),
+  voidsMovementId: zod.uuid().nullable(),
+  voidedByMovementId: zod.uuid().nullable(),
+});
+export const ListMovementsResponse = zod.array(ListMovementsResponseItem);
+
+export const RecordIntakeBody = zod.object({
+  animalId: zod.uuid().nullable(),
+  reasonCode: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  personId: zod.uuid().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }).nullable(),
+});
+
+export const RecordIntakeResponse = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  animalId: zod.uuid(),
+  reasonCode: zod.string().nullable(),
+  fromLocationId: zod.uuid().nullable(),
+  fromLocationName: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  toLocationName: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  personName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }),
+  recordedAt: zod.iso.datetime({ offset: true }),
+  voidsMovementId: zod.uuid().nullable(),
+  voidedByMovementId: zod.uuid().nullable(),
+});
+
+export const RecordRelocationBody = zod.object({
+  animalId: zod.uuid().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }).nullable(),
+});
+
+export const RecordRelocationResponse = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  animalId: zod.uuid(),
+  reasonCode: zod.string().nullable(),
+  fromLocationId: zod.uuid().nullable(),
+  fromLocationName: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  toLocationName: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  personName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }),
+  recordedAt: zod.iso.datetime({ offset: true }),
+  voidsMovementId: zod.uuid().nullable(),
+  voidedByMovementId: zod.uuid().nullable(),
+});
+
+export const RecordOutcomeBody = zod.object({
+  animalId: zod.uuid().nullable(),
+  outcomeCode: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }).nullable(),
+});
+
+export const RecordOutcomeResponse = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  animalId: zod.uuid(),
+  reasonCode: zod.string().nullable(),
+  fromLocationId: zod.uuid().nullable(),
+  fromLocationName: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  toLocationName: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  personName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }),
+  recordedAt: zod.iso.datetime({ offset: true }),
+  voidsMovementId: zod.uuid().nullable(),
+  voidedByMovementId: zod.uuid().nullable(),
+});
+
+export const VoidMovementParams = zod.object({
+  movementId: zod.uuid(),
+});
+
+export const VoidMovementBody = zod.object({
+  reason: zod.string().nullable(),
+});
+
+export const VoidMovementResponse = zod.object({
+  id: zod.uuid(),
+  type: zod.string(),
+  animalId: zod.uuid(),
+  reasonCode: zod.string().nullable(),
+  fromLocationId: zod.uuid().nullable(),
+  fromLocationName: zod.string().nullable(),
+  toLocationId: zod.uuid().nullable(),
+  toLocationName: zod.string().nullable(),
+  personId: zod.uuid().nullable(),
+  personName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  occurredAt: zod.iso.datetime({ offset: true }),
+  recordedAt: zod.iso.datetime({ offset: true }),
+  voidsMovementId: zod.uuid().nullable(),
+  voidedByMovementId: zod.uuid().nullable(),
+});

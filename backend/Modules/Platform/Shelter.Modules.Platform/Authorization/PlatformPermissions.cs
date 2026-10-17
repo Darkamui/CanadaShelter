@@ -12,6 +12,14 @@ internal static class PlatformPermissions
     /// <summary>Change staff roles, suspend and reactivate. Sensitive: it could grant itself anything.</summary>
     public const string StaffManage = "platform.staff.manage";
 
+    /// <summary>
+    /// Fill an organization with sample data (ADR 0023). Declared only where the route exists (Development with
+    /// <c>DevSeed:Enabled</c>). Sensitive: administrators only.
+    /// </summary>
+    public const string DevSeed = "platform.dev.seed";
+
+    public static PermissionDefinition DevSeedDefinition { get; } = new(DevSeed, PermissionKind.Write, Sensitive: true);
+
     public static IEnumerable<PermissionDefinition> All { get; } =
     [
         new(StaffRead, PermissionKind.Read, Sensitive: true),

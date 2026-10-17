@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shelter.BuildingBlocks.Authorization;
+using Shelter.BuildingBlocks.DevSeed;
 using Shelter.BuildingBlocks.Jobs;
 using Shelter.BuildingBlocks.Modules;
 using Shelter.BuildingBlocks.Persistence;
@@ -40,6 +41,13 @@ public sealed class PlatformModule : IModule
         services.AddRecurringGlobalJob<PurgeExpiredInvitationTokensJob, NoJobArgs>(
             PurgeExpiredInvitationTokensJob.RecurringId, "0 * * * *", NoJobArgs.Value);
         services.AddHostedService<DevelopmentSeed>();
+        if (configuration.GetValue<bool>("DevSeed:Enabled"))
+        {
+            // The route also needs Development (DevSeedEndpoints.IsEnabled); the environment is not known here.
+            services.AddPermissions(PlatformPermissions.DevSeedDefinition);
+            services.AddSingleton<DevSeedRunner>();
+            services.AddDevSeedContributor<PlatformDevSeed>();
+        }
     }
 
     /// <inheritdoc />
@@ -49,5 +57,6 @@ public sealed class PlatformModule : IModule
         SessionEndpoints.Map(endpoints);
         StaffEndpoints.Map(endpoints);
         InvitationEndpoints.Map(endpoints);
+        DevSeedEndpoints.Map(endpoints);
     }
 }

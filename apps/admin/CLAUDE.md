@@ -35,6 +35,10 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
   - The fetcher (`packages/api-client/src/http/fetcher.ts`) echoes the `XSRF-TOKEN` cookie as `X-XSRF-TOKEN` on unsafe requests, fetching it first if missing.
   - The return path and notices travel in router state only (`AuthState`). Emailed secrets arrive in the URL fragment and are stripped on read (`useLinkFragment`).
   - After sign-in, an organization switch or an MFA change, call `resetSession(queryClient)`: cached data belonged to the previous user or organization.
+- **UI (ADR 0022):** build every screen from the templates in `docs/design-system.md` (list, record + tabs, edit page or dialog, auth card). They use primitives from `packages/ui` and `src/lib/page`.
+  - Success is a `sonner` toast, a fixable error is a `FormAlert`, loading is a skeleton, and empty is an `EmptyState` with the next action.
+  - Use semantic tokens only, never raw colors. Repeated row actions are `IconAction`.
+  - Add a missing pattern as a primitive (and document it), never a one-off in a feature.
 - **Permissions:** hide actions the user lacks, but the backend is the enforcement point.
 - **Accessibility:** public routes target WCAG 2.2 AA. Use shadcn/Radix primitives, labelled inputs, visible focus, accessible errors.
 - **Tables:** TanStack Table; server-side pagination/filtering for anything that can exceed ~200 rows.
@@ -43,3 +47,5 @@ Shared primitives live in `packages/ui`. Generated API hooks come from `packages
 
 - Vitest for logic/components.
 - Playwright E2E for critical workflows, run in **both** `fr-CA` and `en-CA`. Specs live in `tests/e2e/`, run against `vite preview`, and mock `/api/**` with `page.route` (service workers are blocked so mocks apply).
+  - `tests/e2e/api.ts` (`mockBaseApi`) holds the session and catch-all mocks. A workflow that writes and reads back uses a small in-memory fake registered after it (e.g. `fakeCoreRecords.ts`), which calls `route.fallback()` for paths it does not handle. Playwright matches the most recently added route first.
+  - Run from the repo root (`pnpm test:e2e`).

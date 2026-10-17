@@ -18,6 +18,7 @@ const cases = [
     code: 'Code à six chiffres',
     confirm: 'Activer',
     savedCodes: 'J’ai conservé mes codes',
+    account: 'Compte',
     logout: 'Se déconnecter',
     signedOut: 'Vous êtes maintenant déconnecté.',
   },
@@ -37,6 +38,7 @@ const cases = [
     code: 'Six-digit code',
     confirm: 'Turn on',
     savedCodes: 'I have saved my codes',
+    account: 'Account',
     logout: 'Sign out',
     signedOut: 'You are now signed out.',
   },
@@ -102,12 +104,13 @@ for (const c of cases) {
 
       await expect(page).toHaveURL(/\/animals$/);
       await expect(page.getByRole('heading', { level: 1, name: c.animals })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: c.dog })).toBeVisible();
+      await expect(page.getByRole('cell', { name: c.dog })).toBeVisible();
       await expect(page.getByRole('banner')).toContainText('Refuge B');
       // Unsafe requests echo the antiforgery cookie.
       expect(antiforgeryHeaders).toEqual(['e2e-token', 'e2e-token']);
 
-      await page.getByRole('button', { name: c.logout }).click();
+      await page.getByRole('button', { name: new RegExp(`^${c.account}`) }).click();
+      await page.getByRole('menuitem', { name: c.logout }).click();
       await expect(page).toHaveURL(/\/login$/);
       await expect(page.getByRole('status')).toHaveText(c.signedOut);
     });

@@ -1,9 +1,16 @@
 import { onUnauthorized } from '@shelter/api-client/http';
+import { Toaster } from '@shelter/ui/components/toaster';
+import { TooltipProvider } from '@shelter/ui/components/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
-import { I18nextProvider } from 'react-i18next';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import { sessionQueryKey, sessionUrl } from '../lib/auth/session';
 import i18n from '../lib/i18n';
+
+function LocalizedToaster() {
+  const { t } = useTranslation();
+  return <Toaster label={t('notifications')} />;
+}
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -25,7 +32,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          {children}
+          <LocalizedToaster />
+        </TooltipProvider>
+      </QueryClientProvider>
     </I18nextProvider>
   );
 }

@@ -104,6 +104,11 @@
   - `platform.staff.read` (sensitive): list staff, with colleagues' emails.
   - `platform.staff.manage` (sensitive): change roles, suspend, reactivate. Sensitive so that no non-admin role can grant itself anything.
   - `audit.read` (sensitive): checked by `AuditReader` itself (`AuditReadDeniedException`).
+- Module permissions (M3; each module declares its own in `Authorization/*Permissions.cs`, mirrored in `apps/admin/src/lib/auth/permissions.ts`):
+  - People: `person.read`, `person.write`.
+  - Operations: `location.read`, `location.write`.
+  - Animals: `animal.read`, `animal.write`.
+  - Movements: `movement.read`, `movement.write`, `movement.amend` (sensitive: voids a movement, administrator only).
 
 ## MFA
 
@@ -152,6 +157,17 @@
 - `PlatformEmails` builds the invitation and reset emails in `fr` or `en`: the account's preferred language, otherwise the invitation's. `PublicLinks` builds links from `App:PublicBaseUrl`.
 - Tests swap in `CapturingEmailSender` (`ShelterApiFactory.Emails`).
 
+## Development seed (ADR 0023)
+
+- **Route.** `POST /api/platform/dev/seed` (`SeedPlatformDevData`) is Development-only: it is mapped only with `DevSeed:Enabled`, and it is not in OpenAPI.
+- **Permission.** `platform.dev.seed` is sensitive (administrators only) and is declared only when `DevSeed:Enabled` is set.
+- **Body.** All fields are optional: `{ scale: small|demo|load, factor: 1..200, seed, newOrganization, organizationName }`. The default is demo (factor 10).
+- **Runner.** `DevSeedRunner` runs every `IDevSeedContributor` (`BuildingBlocks/DevSeed`) in order. The run uses its own scope and one transaction, with administrator permissions and the caller as user and audit actor (source `dev-seed`).
+  - With `newOrganization`, the runner first provisions an organization and makes the caller its administrator.
+- **Platform contributor.** `PlatformDevSeed` adds `staff@refuge.local` (staff) and `lecture@refuge.local` (read-only), using the `DevSeed:AdminPassword` password, plus two pending invitations with no link.
+- **Data is additive.** Run `scripts/dev-reset-data.sh` (local only, as `shelter_migrator`) to wipe module data; it keeps the platform schema. `scripts/dev-seed.sh` calls the route.
+- **Adding a module.** Add a contributor in the module (`services.AddDevSeedContributor<T>()`) with a free `Order`. Each module writes only its own tables through its own domain code.
+
 ## Admin app (M2-6)
 
 - Screens in `apps/admin/src/features/platform/routes`. Routes are English and match the emailed links (`PublicLinks`): `/login`, `/login/mfa`, `/forgot-password`, `/reset-password`, `/accept-invitation` (public); `/organizations`, `/mfa/enroll` (signed in); `/platform/staff`, `/account/security` (inside the shell).
@@ -174,6 +190,7 @@
 - `Features/Session/PasswordEndpoints.cs`, `Features/Session/SendPasswordResetEmailJob.cs`, `Features/Invitations/PurgeExpiredInvitationTokensJob.cs`.
 - Rate limiting: `Shelter.Host/Composition/RateLimiting.cs`, `BuildingBlocks/Authorization/RateLimitPolicies.cs`.
 - `Features/Session/MfaEndpoints.cs`, `Identity/ShelterUserStore.cs`; the shared enforcement is in `BuildingBlocks/Authorization/Mfa.cs`.
+- `Features/DevSeed/DevSeedEndpoints.cs`, `DevSeedRunner.cs`, `PlatformDevSeed.cs`, `DevelopmentSeed.cs` (startup demo organization and admin); `BuildingBlocks/DevSeed/` (`IDevSeedContributor`, `DevSeedContext`, `SampleData`).
 - Migrations: `backend/Shelter.Migrations` (one assembly, ADR 0005).
 - Test harness: `backend/Tests/Shelter.Testing` (`PostgresDatabase`, `TenantHarness.AssertIsolatedAsync`).
 

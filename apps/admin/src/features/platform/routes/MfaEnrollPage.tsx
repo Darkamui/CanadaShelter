@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { afterSignIn, readAuthState } from '../../../lib/auth/navigation';
+import { AuthFooter, AuthHeader } from '../../../lib/page/AuthParts';
 import { LogoutButton } from '../components/LogoutButton';
 import { MfaEnrollment } from '../components/MfaEnrollment';
 
@@ -12,14 +13,13 @@ export function MfaEnrollPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('mfa.required.title')}</h1>
-      <p className="text-sm">{t('mfa.required.body')}</p>
+      <AuthHeader title={t('mfa.required.title')} description={t('mfa.required.body')} />
       <MfaEnrollment
         onDone={() => void navigate(afterSignIn(readAuthState(location.state)), { replace: true })}
       />
-      <div>
-        <LogoutButton />
-      </div>
+      <AuthFooter>
+        <LogoutButton className="-ml-3 text-muted-foreground" />
+      </AuthFooter>
     </>
   );
 }

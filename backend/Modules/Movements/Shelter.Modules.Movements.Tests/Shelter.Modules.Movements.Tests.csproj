@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shelter.Modules.Movements\Shelter.Modules.Movements.csproj" />
+    <ProjectReference Include="..\..\..\Tests\Shelter.Testing\Shelter.Testing.csproj" />
+  </ItemGroup>
+</Project>

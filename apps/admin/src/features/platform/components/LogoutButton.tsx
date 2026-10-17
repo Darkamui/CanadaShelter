@@ -1,32 +1,16 @@
-import { useLogoutPlatformSession } from '@shelter/api-client/hooks/platform';
 import { Button } from '@shelter/ui/components/button';
-import { useQueryClient } from '@tanstack/react-query';
+import { LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
-import type { AuthState } from '../../../lib/auth/navigation';
-import { paths } from '../../../lib/auth/paths';
+import { useLogout } from './useLogout';
 
-export function LogoutButton() {
+/** Sign-out outside the app shell (organization picker, forced MFA enrollment). The shell uses the user menu. */
+export function LogoutButton({ className }: { className?: string }) {
   const { t } = useTranslation('platform');
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const logout = useLogoutPlatformSession();
+  const { logout, isPending } = useLogout();
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={logout.isPending}
-      onClick={() =>
-        logout.mutate(undefined, {
-          onSettled: () => {
-            const state: AuthState = { notice: 'signedOut' };
-            void navigate(paths.login, { replace: true, state });
-            queryClient.clear();
-          },
-        })
-      }
-    >
+    <Button variant="ghost" size="sm" className={className} disabled={isPending} onClick={logout}>
+      <LogOut aria-hidden="true" />
       {t('logout')}
     </Button>
   );

@@ -1,7 +1,14 @@
 /** Permission names the UI checks (the server's catalog is the authority: `PermissionDefinition`). */
 export const Permissions = {
   animalRead: 'animal.read',
+  animalWrite: 'animal.write',
+  locationRead: 'location.read',
+  locationWrite: 'location.write',
   movementRead: 'movement.read',
+  movementWrite: 'movement.write',
+  movementAmend: 'movement.amend',
+  personRead: 'person.read',
+  personWrite: 'person.write',
   staffRead: 'platform.staff.read',
   staffManage: 'platform.staff.manage',
 } as const;

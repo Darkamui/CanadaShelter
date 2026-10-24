@@ -6,16 +6,28 @@
     "nav.engagement",
     "nav.municipal",
     "nav.platform",
-    "account.switchOrganization"
+    "account.switchOrganization",
+    "modules.engagement",
+    "modules.municipal"
   ],
   "appName": "Gestion de refuge",
   "skipToContent": "Aller au contenu",
+  "close": "Fermer",
+  "notifications": "Notifications",
   "language": {
     "fr-CA": "Français",
     "en-CA": "English"
   },
   "nav": {
     "label": "Navigation principale",
+    "open": "Ouvrir le menu",
+    "collapse": "Réduire le menu",
+    "expand": "Agrandir le menu",
+    "groups": {
+      "shelter": "Refuge",
+      "community": "Communauté",
+      "management": "Gestion"
+    },
     "animals": "Animaux",
     "people": "Personnes",
     "movements": "Mouvements",
@@ -26,15 +38,37 @@
     "reporting": "Rapports",
     "platform": "Plateforme"
   },
+  "modules": {
+    "animals": "Fiches des animaux, identifiants et historique.",
+    "people": "Propriétaires, familles d'accueil, bénévoles et autres contacts.",
+    "movements": "Admissions, déplacements et sorties.",
+    "medical": "Soins, vaccins et traitements.",
+    "operations": "Bâtiments, enclos et capacité.",
+    "engagement": "Bénévoles, dons et communications.",
+    "municipal": "Permis, médailles et contrats municipaux.",
+    "reporting": "Statistiques et rapports annuels.",
+    "platform": "Équipe, rôles et sécurité de l'organisme."
+  },
   "home": {
     "title": "Accueil",
-    "intro": "Choisissez un module dans le menu."
+    "greeting": "Bonjour {{name}}.",
+    "shortcuts": "Raccourcis",
+    "modules": "Modules",
+    "shortcut": {
+      "newAnimal": "Inscrire un animal",
+      "findAnimal": "Chercher un animal",
+      "newPerson": "Ajouter une personne",
+      "locations": "Voir les emplacements"
+    }
   },
   "module": {
-    "comingSoon": "Ce module arrive bientôt."
+    "soon": "Bientôt",
+    "comingSoon": "Ce module arrive bientôt.",
+    "comingSoonBody": "Il apparaîtra ici dès qu'il sera prêt. Rien à faire de votre côté."
   },
   "notFound": {
     "title": "Page introuvable",
+    "body": "Le lien est peut-être erroné, ou la page a été déplacée.",
     "backHome": "Retour à l'accueil"
   },
   "session": {
@@ -48,11 +82,28 @@
   },
   "account": {
     "label": "Compte",
+    "organization": "Organisme",
     "switchOrganization": "Changer d’organisme",
+    "switchFailed": "Impossible d’ouvrir cet organisme. Réessayez.",
     "security": "Sécurité"
   },
   "forms": {
     "required": "Ce champ est obligatoire.",
-    "email": "Entrez une adresse courriel valide."
+    "email": "Entrez une adresse courriel valide.",
+    "cancel": "Annuler"
+  },
+  "list": {
+    "loading": "Chargement…",
+    "empty": "Aucun résultat.",
+    "error": "Impossible de charger la liste.",
+    "previousPage": "Précédent",
+    "nextPage": "Suivant",
+    "range": "{{from}}–{{to}} sur {{total}}",
+    "sortBy": "Trier par {{column}}",
+    "search": "Rechercher"
+  },
+  "record": {
+    "back": "Retour",
+    "tabs": "Sections de la fiche"
   }
 }

@@ -9,7 +9,7 @@ namespace Shelter.Testing;
 
 /// <summary>
 /// Tenant-scoped access to the test database as the runtime role (<c>shelter_app</c>), composed from a module's
-/// model contributors. <see cref="AssertIsolatedAsync{TEntity}"/> gives every tenant-owned entity the standard
+/// model contributors. <see cref="AssertIsolatedAsync{TEntity}(Func{TEntity}, CancellationToken)"/> gives every tenant-owned entity the standard
 /// isolation checks in one line:
 /// <code>[Fact] public Task Widget_is_isolated() => fixture.Tenants.AssertIsolatedAsync(() => new Widget("x"));</code>
 /// </summary>
@@ -28,13 +28,16 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
         return await db.InUnitOfWorkAsync(() => work(db));
     }
 
-    /// <summary>Saves <paramref name="entity"/> for <paramref name="tenantId"/>; the tenant is stamped by the context.</summary>
+    /// <summary>
+    /// Saves <paramref name="entity"/> for <paramref name="tenantId"/> in a unit of work, as an endpoint does; the
+    /// tenant is stamped by the context. The unit of work lets an audited entity with a subject fetch its data key.
+    /// </summary>
     public async Task<TEntity> SeedAsync<TEntity>(Guid tenantId, TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : class, ITenantOwned
     {
         await using var db = CreateContext(tenantId);
         db.Add(entity);
-        await db.SaveChangesAsync(cancellationToken);
+        await db.InUnitOfWorkAsync(() => db.SaveChangesAsync(cancellationToken));
         return entity;
     }
 
@@ -43,17 +46,31 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
     /// invisible through EF, through <c>IgnoreQueryFilters()</c> (RLS backstop) and through raw SQL in a unit of
     /// work; with no tenant, EF and raw SQL return zero rows without error; a cross-tenant update is rejected by the
     /// context, and raw <c>UPDATE</c>/<c>DELETE</c> in another tenant's unit of work affect no row (RLS write backstop).
+    /// On a table the runtime role may not update or delete (append-only), the raw write is refused with
+    /// <c>42501</c>, which also counts as a pass: the grant denies it before RLS is consulted.
     /// Covers one table: child tables of an aggregate each need their own call.
     /// Throws <see cref="TenantIsolationAssertionException"/> on the first failed check.
     /// </summary>
-    public async Task AssertIsolatedAsync<TEntity>(Func<TEntity> create, CancellationToken cancellationToken = default)
+    public Task AssertIsolatedAsync<TEntity>(Func<TEntity> create, CancellationToken cancellationToken = default)
         where TEntity : class, ITenantOwned
     {
         ArgumentNullException.ThrowIfNull(create);
+        return AssertIsolatedAsync(_ => Task.FromResult(create()), cancellationToken);
+    }
+
+    /// <summary>
+    /// <see cref="AssertIsolatedAsync{TEntity}(Func{TEntity}, CancellationToken)"/> for a child row whose parent must
+    /// exist in the same tenant (a composite <c>(tenant_id, parent_id)</c> foreign key): <paramref name="createFor"/>
+    /// receives the owning tenant, seeds the parent with <see cref="SeedAsync{TEntity}"/>, and returns the unsaved child.
+    /// </summary>
+    public async Task AssertIsolatedAsync<TEntity>(Func<Guid, Task<TEntity>> createFor, CancellationToken cancellationToken = default)
+        where TEntity : class, ITenantOwned
+    {
+        ArgumentNullException.ThrowIfNull(createFor);
 
         var tenantA = NewTenantId();
         var tenantB = NewTenantId();
-        var seeded = await SeedAsync(tenantA, create(), cancellationToken);
+        var seeded = await SeedAsync(tenantA, await createFor(tenantA), cancellationToken);
         var table = TableOf<TEntity>();
 
         // Sanity: the owner sees its row, so the checks below cannot pass vacuously.
@@ -67,8 +84,8 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
         Check(await CountWithoutTenantAsync<TEntity>(tenantA, cancellationToken) == 0, "a context without a tenant sees the row");
         Check(await RawCountWithoutTenantAsync(table, tenantA, cancellationToken) == 0, "raw SQL without a tenant sees the row");
 
-        Check(await RawInUnitOfWorkAsync(tenantB, $"UPDATE {table} SET tenant_id = tenant_id WHERE tenant_id = @tenant", tenantA, cancellationToken) == 0, "raw UPDATE in another tenant's unit of work reached the row");
-        Check(await RawInUnitOfWorkAsync(tenantB, $"DELETE FROM {table} WHERE tenant_id = @tenant", tenantA, cancellationToken) == 0, "raw DELETE in another tenant's unit of work reached the row");
+        Check(await RawWriteAsync(tenantB, $"UPDATE {table} SET tenant_id = tenant_id WHERE tenant_id = @tenant", tenantA, cancellationToken) == 0, "raw UPDATE in another tenant's unit of work reached the row");
+        Check(await RawWriteAsync(tenantB, $"DELETE FROM {table} WHERE tenant_id = @tenant", tenantA, cancellationToken) == 0, "raw DELETE in another tenant's unit of work reached the row");
         Check(await CountAsync<TEntity>(tenantA, tenantA, ignoreFilters: false, cancellationToken) == 1, "the owning tenant's row changed after another tenant's writes");
 
         await using (var db = CreateContext(tenantB))
@@ -116,6 +133,20 @@ public sealed class TenantHarness(string appConnectionString, params IModelContr
             await using var command = InTransaction(db, RawCount((NpgsqlConnection)db.Database.GetDbConnection(), table, ownerTenant));
             return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), System.Globalization.CultureInfo.InvariantCulture);
         });
+
+    // The affected row count of a raw write in asTenant's unit of work; 0 when the runtime role lacks the privilege
+    // (the unit of work has rolled back by then, so nothing else runs in it).
+    private async Task<int> RawWriteAsync(Guid asTenant, string sql, Guid ownerTenant, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await RawInUnitOfWorkAsync(asTenant, sql, ownerTenant, cancellationToken);
+        }
+        catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.InsufficientPrivilege)
+        {
+            return 0;
+        }
+    }
 
     // Returns the affected row count of a raw write in asTenant's unit of work.
     private Task<int> RawInUnitOfWorkAsync(Guid asTenant, string sql, Guid ownerTenant, CancellationToken cancellationToken) =>

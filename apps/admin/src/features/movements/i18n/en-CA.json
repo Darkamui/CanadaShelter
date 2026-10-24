@@ -1,0 +1,84 @@
+{
+  "title": "Movements",
+  "loadFailed": "Could not load movements.",
+  "none": "No movements yet.",
+  "close": "Close",
+  "voided": "The movement was voided.",
+  "voidedTag": "voided",
+  "actions": {
+    "intake": "Record an intake",
+    "relocation": "Move",
+    "outcome": "Record an outcome",
+    "void": "Void"
+  },
+  "types": {
+    "intake": "Intake",
+    "relocation": "Move",
+    "outcome": "Outcome",
+    "void": "Void"
+  },
+  "recorded": {
+    "intake": "The intake was recorded.",
+    "relocation": "The move was recorded.",
+    "outcome": "The outcome was recorded."
+  },
+  "dialog": {
+    "intake": {
+      "title": "Record an intake",
+      "description": "The animal comes into the organization's care.",
+      "submit": "Record the intake"
+    },
+    "relocation": {
+      "title": "Move the animal",
+      "description": "The animal changes location within the organization.",
+      "submit": "Record the move"
+    },
+    "outcome": {
+      "title": "Record an outcome",
+      "description": "The animal leaves the organization's care.",
+      "submit": "Record the outcome"
+    }
+  },
+  "fields": {
+    "reason": "Intake reason",
+    "outcome": "Outcome",
+    "toLocation": "To",
+    "fromLocation": "From",
+    "leavesFrom": "Leaves {{location}}.",
+    "person": "Person (optional)",
+    "personRequired": "Person",
+    "occurredAt": "Date and time",
+    "occurredAtHint": "Leave empty for now. May be earlier, but not before the animal's latest movement.",
+    "notes": "Notes",
+    "notesHint": "Visible to the organization's staff only.",
+    "notesHintNoPerson": "Describe the move only. Do not enter personal information (a person's name, address or phone).",
+    "voidReason": "Void reason"
+  },
+  "form": {
+    "choose": "Choose",
+    "noLocations": "No other active location holds animals.",
+    "custodyConflict": "The animal's custody changed in the meantime. It has been reloaded; check before trying again.",
+    "unexpectedError": "Something went wrong. Try again.",
+    "tooLong": "This text is too long.",
+    "reasonUnavailable": "This intake reason is not available.",
+    "outcomeUnavailable": "This outcome is not available.",
+    "locationUnavailable": "Choose another active location that holds animals.",
+    "personInvalid": "Choose an active person.",
+    "occurredAtInvalid": "Enter a time between the animal's latest movement and now."
+  },
+  "person": {
+    "search": "Search by name, email or phone",
+    "choose": "Matching people",
+    "none": "None",
+    "noMatch": "No match"
+  },
+  "void": {
+    "title": "Void a movement",
+    "description": "This movement ({{type}}) is cancelled and the animal returns to its previous state. The movement stays in the history.",
+    "reason": "Reason",
+    "reasonHint": "Visible to the organization's staff only. Do not enter personal information (a person's name, address or phone).",
+    "submit": "Void the movement",
+    "notLatest": "Only the latest movement can be voided. The history has been reloaded.",
+    "custodyConflict": "This movement cannot be voided: the animal's previous location is archived or no longer holds animals."
+  }
+}

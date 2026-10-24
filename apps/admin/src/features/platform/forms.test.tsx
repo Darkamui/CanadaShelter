@@ -145,6 +145,7 @@ describe('forms', () => {
     );
     renderAt('/platform/staff');
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Inviter un membre' }));
     const form = await screen.findByRole('form', { name: 'Inviter' });
     fireEvent.change(within(form).getByLabelText('Courriel'), {
       target: { value: '  alex@example.org ' },
@@ -161,5 +162,44 @@ describe('forms', () => {
     await waitFor(() =>
       expect(body).toEqual({ email: 'alex@example.org', roles: ['read_only'], language: 'fr' }),
     );
+  });
+
+  it("changes a member's roles in a dialog and confirms with a toast", async () => {
+    let body: unknown;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>((input, init) => {
+        const path = new URL(String(input), 'http://localhost').pathname;
+        if (path === '/api/platform/session') return Promise.resolve(Response.json(session));
+        if (path === '/api/platform/staff')
+          return Promise.resolve(
+            Response.json([
+              {
+                membershipId: 'm2',
+                userId: 'u2',
+                displayName: 'Alex Roy',
+                email: 'alex@example.org',
+                status: 'active',
+                roles: ['staff'],
+              },
+            ]),
+          );
+        if (path === '/api/platform/staff/m2/roles') {
+          body = JSON.parse(String(init?.body));
+          return Promise.resolve(new Response(null, { status: 204 }));
+        }
+        return Promise.resolve(Response.json([]));
+      }),
+    );
+    renderAt('/platform/staff');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier les rôles de Alex Roy' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Modifier les rôles de Alex Roy' });
+    fireEvent.click(within(dialog).getByLabelText('Lecture seule'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(body).toEqual({ roles: ['staff', 'read_only'] }));
+    expect(await screen.findByText('Rôles de Alex Roy enregistrés.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -1,3 +1,5 @@
+import { EmptyState } from '@shelter/ui/components/empty-state';
+import { PageHeader } from '@shelter/ui/components/page-header';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 import { hasPermission, useSession } from '../../lib/auth/session';
@@ -19,10 +21,15 @@ export function ModulePlaceholderPage() {
     return <ForbiddenPage />;
   }
 
+  const Icon = module.icon;
   return (
-    <section className="flex flex-col gap-2">
-      <h1 className="text-2xl font-semibold">{t(`nav.${module.key}`)}</h1>
-      <p className="text-muted-foreground">{t('module.comingSoon')}</p>
-    </section>
+    <>
+      <PageHeader title={t(`nav.${module.key}`)} description={t(`modules.${module.key}`)} />
+      <EmptyState
+        icon={<Icon />}
+        title={t('module.comingSoon')}
+        description={t('module.comingSoonBody')}
+      />
+    </>
   );
 }

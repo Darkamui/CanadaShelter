@@ -1,7 +1,9 @@
+import { Checkbox } from '@shelter/ui/components/checkbox';
 import { useId } from 'react';
 import type { FieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ROLE_KEYS, type RoleKey } from '../../../lib/auth/permissions';
+import { FieldMessage } from '../../../lib/forms/FormField';
 
 /** One checkbox per system role. `error.message` is an i18n key with its namespace. */
 export function RoleCheckboxes({
@@ -23,17 +25,15 @@ export function RoleCheckboxes({
 
   return (
     <fieldset
-      className="flex flex-col gap-2"
+      className="flex min-w-0 flex-col gap-1"
       disabled={disabled}
       aria-invalid={message ? true : undefined}
       aria-describedby={message ? errorId : undefined}
     >
-      <legend className="mb-1 text-sm font-medium">{legend}</legend>
+      <legend className="mb-2 text-sm leading-none font-medium">{legend}</legend>
       {ROLE_KEYS.map((role) => (
-        <label key={role} className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="size-4"
+        <label key={role} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-sm">
+          <Checkbox
             checked={value.includes(role)}
             onChange={(event) =>
               onChange(
@@ -46,11 +46,7 @@ export function RoleCheckboxes({
           {t(`roles.${role}`)}
         </label>
       ))}
-      {message && (
-        <p id={errorId} className="text-sm text-destructive">
-          {message}
-        </p>
-      )}
+      {message && <FieldMessage id={errorId}>{message}</FieldMessage>}
     </fieldset>
   );
 }

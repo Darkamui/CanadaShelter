@@ -28,3 +28,10 @@ export function applyValidationErrors<T extends FieldValues>(
   }
   return applied;
 }
+
+/** The `code` extension of a problem (`movement.custodyConflict`), to tell one 409 from another. */
+export function problemCodeOf(error: unknown): string | undefined {
+  if (!(error instanceof ApiError)) return undefined;
+  const code = error.problem?.code;
+  return typeof code === 'string' ? code : undefined;
+}

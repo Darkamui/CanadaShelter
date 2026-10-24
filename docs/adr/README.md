@@ -22,10 +22,13 @@ One decision per file. Index below. Use `/adr` to add one.
 | [0014](0014-postgresql-search.md) | Search in PostgreSQL (`unaccent` + stemming + trigram) | Accepted |
 | [0015](0015-backend-project-and-test-layout.md) | Backend project and test layout | Accepted |
 | [0016](0016-audit-key-management.md) | Audit key management for crypto-shredding | Accepted |
-| [0017](0017-reference-data-overrides.md) | Reference data: global system tables plus per-tenant override tables | Accepted |
+| [0017](0017-reference-data-overrides.md) | Reference data: global system tables plus per-tenant override tables | Accepted (amended M3-3) |
 | [0018](0018-identity-authorization-model.md) | Identity and authorization model (global accounts, membership self-read, permissions, MFA) | Accepted |
 | [0019](0019-admin-form-stack.md) | Admin form stack: React Hook Form + Zod, catalog-key messages, server errors on fields | Accepted |
 | [0020](0020-anonymous-endpoint-rate-limiting.md) | Rate limiting the anonymous auth endpoints (built-in, in-memory, per IP) | Accepted |
+| [0021](0021-in-process-module-contracts.md) | In-process module contracts: shared DbContext and transaction, stage and never save, no event bus yet | Accepted |
+| [0022](0022-admin-design-system.md) | Admin design system: tokens, self-hosted fonts, `packages/ui` primitives, list/record/edit/auth page templates, toasts | Accepted |
+| [0023](0023-development-seed-route.md) | Development seed route: per-module seed contributors, Development-only `POST /api/platform/dev/seed`, local reset script | Accepted |
 
 ## Backlog
 

@@ -3,7 +3,7 @@ import { Button } from '@shelter/ui/components/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { afterSignIn, readAuthState, stateAfterSignIn } from '../../../lib/auth/navigation';
 import { paths } from '../../../lib/auth/paths';
 import { isRateLimited, isUnauthorized, resetSession } from '../../../lib/auth/session';
@@ -11,6 +11,7 @@ import { FormAlert } from '../../../lib/forms/FormAlert';
 import { FormField } from '../../../lib/forms/FormField';
 import { emailAddress, formMessages } from '../../../lib/forms/schemas';
 import { useZodForm } from '../../../lib/forms/useZodForm';
+import { AuthHeader, AuthTextLink } from '../../../lib/page/AuthParts';
 
 const loginSchema = z.object({
   email: emailAddress(),
@@ -51,7 +52,7 @@ export function LoginPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('login.title')}</h1>
+      <AuthHeader title={t('login.title')} description={t('login.intro')} />
       {state.notice && !login.isError && (
         <FormAlert tone="info">{t(`login.notice.${state.notice}`)}</FormAlert>
       )}
@@ -73,21 +74,23 @@ export function LoginPage() {
           error={errors.email}
           {...form.register('email')}
         />
-        <FormField
-          label={t('fields.password')}
-          type="password"
-          autoComplete="current-password"
-          required
-          error={errors.password}
-          {...form.register('password')}
-        />
-        <Button type="submit" disabled={login.isPending}>
+        <div className="flex flex-col gap-2">
+          <FormField
+            label={t('fields.password')}
+            type="password"
+            autoComplete="current-password"
+            required
+            error={errors.password}
+            {...form.register('password')}
+          />
+          <AuthTextLink to={paths.forgotPassword} className="self-end">
+            {t('login.forgot')}
+          </AuthTextLink>
+        </div>
+        <Button type="submit" size="lg" className="mt-1" disabled={login.isPending}>
           {t('login.submit')}
         </Button>
       </form>
-      <Link to={paths.forgotPassword} className="text-sm underline underline-offset-4">
-        {t('login.forgot')}
-      </Link>
     </>
   );
 }

@@ -11,7 +11,8 @@
     "loading": "Loading…",
     "backToLogin": "Back to sign in",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "fields": {
     "email": "Email",
@@ -29,7 +30,8 @@
       "passwordReset": "Your password was changed. Sign in with your new password.",
       "accountCreated": "Your account was created. Sign in to continue.",
       "signedOut": "You are now signed out."
-    }
+    },
+    "intro": "Sign in to reach your shelter’s records."
   },
   "mfaChallenge": {
     "title": "Two-step verification",
@@ -61,7 +63,10 @@
     "recoveryCodes": {
       "title": "Recovery codes",
       "body": "Keep these codes somewhere safe. They let you sign in if you lose access to your app. They will not be shown again.",
-      "saved": "I have saved my codes"
+      "saved": "I have saved my codes",
+      "copy": "Copy codes",
+      "copied": "Codes copied.",
+      "copyFailed": "Could not copy. Write the codes down instead."
     },
     "required": {
       "title": "Secure your account",
@@ -72,13 +77,15 @@
     "title": "Forgot password",
     "intro": "Enter your email. If an account uses it, you will receive a link to choose a new password.",
     "sent": "If an account uses this email, a link is on its way. Check your inbox.",
-    "submit": "Send the link"
+    "submit": "Send the link",
+    "sentTitle": "Check your email"
   },
   "reset": {
     "title": "New password",
     "invalidLink": "This link is invalid or has expired.",
     "requestNew": "Request a new link",
-    "submit": "Change password"
+    "submit": "Change password",
+    "intro": "Choose a new password for your account."
   },
   "password": {
     "hint": "At least {{count}} characters.",
@@ -105,12 +112,16 @@
     "title": "Choose an organization",
     "selectFailed": "Could not open this organization. Please try again.",
     "none": "Your account is not linked to any organization. Contact an administrator.",
-    "current": "Current organization"
+    "current": "Current organization",
+    "intro": "Your account has access to several organizations. Choose the one you want to work in."
   },
   "security": {
     "title": "Account security",
     "mfaOn": "Two-factor authentication is on for your account.",
-    "mfaOff": "Two-factor authentication is off."
+    "mfaOff": "Two-factor authentication is off.",
+    "description": "Protect access to your account.",
+    "on": "On",
+    "off": "Off"
   },
   "roles": {
     "administrator": "Administrator",
@@ -135,7 +146,13 @@
     "suspendName": "Suspend {{name}}",
     "reactivate": "Reactivate",
     "reactivateName": "Reactivate {{name}}",
-    "lastAdministrator": "The organization must keep at least one active administrator."
+    "lastAdministrator": "The organization must keep at least one active administrator.",
+    "description": "The people who can access the organization, and what they can do there.",
+    "membersCaption": "Team members",
+    "rolesSaved": "Roles of {{name}} saved.",
+    "suspendedToast": "Access for {{name}} suspended.",
+    "reactivatedToast": "Access for {{name}} reactivated.",
+    "editRolesDescription": "Roles decide what the person can see and change."
   },
   "invitations": {
     "title": "Invitations",
@@ -161,6 +178,10 @@
     "resendTo": "Resend the invitation to {{email}}",
     "revoke": "Revoke",
     "revokeFor": "Revoke the invitation for {{email}}",
-    "rolesRequired": "Choose at least one role."
+    "rolesRequired": "Choose at least one role.",
+    "inviteMember": "Invite a member",
+    "dialogDescription": "They will get an email to create their account and join the organization.",
+    "caption": "Pending invitations",
+    "noneBody": "Sent invitations show here until they are accepted."
   }
 }

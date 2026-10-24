@@ -19,13 +19,14 @@ export default defineConfig({
         lang: 'fr-CA',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#171717',
-        background_color: '#ffffff',
+        theme_color: '#1D4F48',
+        background_color: '#F6F5F1',
         icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
       },
       workbox: {
         // App shell only. API responses are never cached (tenant data, permissions).
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        // Fonts: the Latin subsets only (French and English); other scripts load on demand if ever used.
+        globPatterns: ['**/*.{js,css,html,svg}', '**/*latin*.woff2'],
         navigateFallbackDenylist: [/^\/api\//, /^\/health\//],
         runtimeCaching: [],
       },

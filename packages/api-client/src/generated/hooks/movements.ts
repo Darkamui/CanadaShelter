@@ -4,20 +4,33 @@
  * Shelter.Host | v1
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ReferenceItem } from '../model';
+import type {
+  HttpValidationProblemDetails,
+  ListMovementsParams,
+  MovementItem,
+  OutcomeTypeItem,
+  RecordIntakeRequest,
+  RecordOutcomeRequest,
+  RecordRelocationRequest,
+  ReferenceItem,
+  VoidMovementRequest,
+} from '../model';
 
 import { shelterFetch } from '../../http/fetcher.ts';
 import type { ErrorType } from '../../http/fetcher.ts';
@@ -158,3 +171,652 @@ export function useListMovementsIntakeReasons<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getListMovementsOutcomeTypesUrl = () => {
+  return `/api/movements/outcome-types`;
+};
+
+export const listMovementsOutcomeTypes = async (
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<OutcomeTypeItem[]> => {
+  return shelterFetch<OutcomeTypeItem[]>(getListMovementsOutcomeTypesUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getListMovementsOutcomeTypesQueryKey = () => {
+  return [`/api/movements/outcome-types`] as const;
+};
+
+export const getListMovementsOutcomeTypesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMovementsOutcomeTypesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>> = ({
+    signal,
+  }) => listMovementsOutcomeTypes({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMovementsOutcomeTypesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMovementsOutcomeTypes>>
+>;
+export type ListMovementsOutcomeTypesQueryError = ErrorType<unknown>;
+
+export function useListMovementsOutcomeTypes<
+  TData = Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listMovementsOutcomeTypes>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMovementsOutcomeTypes<
+  TData = Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listMovementsOutcomeTypes>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMovementsOutcomeTypes<
+  TData = Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useListMovementsOutcomeTypes<
+  TData = Awaited<ReturnType<typeof listMovementsOutcomeTypes>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMovementsOutcomeTypes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMovementsOutcomeTypesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getListMovementsUrl = (params: ListMovementsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/movements?${stringifiedParams}` : `/api/movements`;
+};
+
+export const listMovements = async (
+  params: ListMovementsParams,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MovementItem[]> => {
+  return shelterFetch<MovementItem[]>(getListMovementsUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getListMovementsQueryKey = (params?: ListMovementsParams) => {
+  return [`/api/movements`, ...(params ? [params] : [])] as const;
+};
+
+export const getListMovementsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMovements>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListMovementsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMovements>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMovementsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMovements>>> = ({ signal }) =>
+    listMovements(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMovements>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMovementsQueryResult = NonNullable<Awaited<ReturnType<typeof listMovements>>>;
+export type ListMovementsQueryError = ErrorType<unknown>;
+
+export function useListMovements<
+  TData = Awaited<ReturnType<typeof listMovements>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListMovementsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMovements>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMovements>>,
+          TError,
+          Awaited<ReturnType<typeof listMovements>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMovements<
+  TData = Awaited<ReturnType<typeof listMovements>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListMovementsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMovements>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMovements>>,
+          TError,
+          Awaited<ReturnType<typeof listMovements>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMovements<
+  TData = Awaited<ReturnType<typeof listMovements>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListMovementsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMovements>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useListMovements<
+  TData = Awaited<ReturnType<typeof listMovements>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListMovementsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMovements>>, TError, TData>>;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMovementsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getRecordIntakeUrl = () => {
+  return `/api/movements/intakes`;
+};
+
+export const recordIntake = async (
+  recordIntakeRequest: RecordIntakeRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MovementItem> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<MovementItem>(getRecordIntakeUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordIntakeRequest),
+  });
+};
+
+export const getRecordIntakeMutationKey = () => ['recordIntake'] as const;
+
+export const getRecordIntakeMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordIntake>>,
+    TError,
+    RecordIntakeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordIntake>>,
+  TError,
+  RecordIntakeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordIntakeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordIntake>>,
+    RecordIntakeMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordIntake(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof recordIntake>>>;
+export type RecordIntakeMutationBody = RecordIntakeRequest;
+export type RecordIntakeMutationError = ErrorType<HttpValidationProblemDetails>;
+export type RecordIntakeMutationVariables = { data: RecordIntakeRequest };
+
+export const useRecordIntake = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordIntake>>,
+      TError,
+      RecordIntakeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordIntake>>,
+  TError,
+  RecordIntakeMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordIntakeMutationOptions(options), queryClient);
+};
+export const getRecordRelocationUrl = () => {
+  return `/api/movements/relocations`;
+};
+
+export const recordRelocation = async (
+  recordRelocationRequest: RecordRelocationRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MovementItem> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<MovementItem>(getRecordRelocationUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordRelocationRequest),
+  });
+};
+
+export const getRecordRelocationMutationKey = () => ['recordRelocation'] as const;
+
+export const getRecordRelocationMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordRelocation>>,
+    TError,
+    RecordRelocationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordRelocation>>,
+  TError,
+  RecordRelocationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordRelocationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordRelocation>>,
+    RecordRelocationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordRelocation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordRelocationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordRelocation>>
+>;
+export type RecordRelocationMutationBody = RecordRelocationRequest;
+export type RecordRelocationMutationError = ErrorType<HttpValidationProblemDetails>;
+export type RecordRelocationMutationVariables = { data: RecordRelocationRequest };
+
+export const useRecordRelocation = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordRelocation>>,
+      TError,
+      RecordRelocationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordRelocation>>,
+  TError,
+  RecordRelocationMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordRelocationMutationOptions(options), queryClient);
+};
+export const getRecordOutcomeUrl = () => {
+  return `/api/movements/outcomes`;
+};
+
+export const recordOutcome = async (
+  recordOutcomeRequest: RecordOutcomeRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MovementItem> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<MovementItem>(getRecordOutcomeUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordOutcomeRequest),
+  });
+};
+
+export const getRecordOutcomeMutationKey = () => ['recordOutcome'] as const;
+
+export const getRecordOutcomeMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordOutcome>>,
+    TError,
+    RecordOutcomeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordOutcome>>,
+  TError,
+  RecordOutcomeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordOutcomeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordOutcome>>,
+    RecordOutcomeMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordOutcome(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordOutcomeMutationResult = NonNullable<Awaited<ReturnType<typeof recordOutcome>>>;
+export type RecordOutcomeMutationBody = RecordOutcomeRequest;
+export type RecordOutcomeMutationError = ErrorType<HttpValidationProblemDetails>;
+export type RecordOutcomeMutationVariables = { data: RecordOutcomeRequest };
+
+export const useRecordOutcome = <
+  TError = ErrorType<HttpValidationProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordOutcome>>,
+      TError,
+      RecordOutcomeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordOutcome>>,
+  TError,
+  RecordOutcomeMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordOutcomeMutationOptions(options), queryClient);
+};
+export const getVoidMovementUrl = (movementId: string) => {
+  return `/api/movements/${movementId}/void`;
+};
+
+export const voidMovement = async (
+  movementId: string,
+  voidMovementRequest: VoidMovementRequest,
+  options?: Parameters<typeof shelterFetch>[1],
+): Promise<MovementItem> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return shelterFetch<MovementItem>(getVoidMovementUrl(movementId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(voidMovementRequest),
+  });
+};
+
+export const getVoidMovementMutationKey = () => ['voidMovement'] as const;
+
+export const getVoidMovementMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof voidMovement>>,
+    TError,
+    VoidMovementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof shelterFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof voidMovement>>,
+  TError,
+  VoidMovementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getVoidMovementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof voidMovement>>,
+    VoidMovementMutationVariables
+  > = (props) => {
+    const { movementId, data } = props ?? {};
+
+    return voidMovement(movementId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VoidMovementMutationResult = NonNullable<Awaited<ReturnType<typeof voidMovement>>>;
+export type VoidMovementMutationBody = VoidMovementRequest;
+export type VoidMovementMutationError = ErrorType<HttpValidationProblemDetails | void>;
+export type VoidMovementMutationVariables = { movementId: string; data: VoidMovementRequest };
+
+export const useVoidMovement = <
+  TError = ErrorType<HttpValidationProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof voidMovement>>,
+      TError,
+      VoidMovementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof shelterFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof voidMovement>>,
+  TError,
+  VoidMovementMutationVariables,
+  TContext
+> => {
+  return useMutation(getVoidMovementMutationOptions(options), queryClient);
+};

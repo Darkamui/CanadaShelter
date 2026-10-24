@@ -9,6 +9,9 @@ public static class AuditSources
     /// <summary>The platform itself, with no request or job (the default).</summary>
     public const string System = "system";
 
+    /// <summary>The development seed route (ADR 0023).</summary>
+    public const string DevSeed = "dev-seed";
+
     /// <summary>A background job: <c>job:&lt;job type name&gt;</c>.</summary>
     public static string Job(string jobName) => "job:" + jobName;
 }

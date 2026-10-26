@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.104.0",
@@ -23,13 +23,13 @@
   },
   "devDependencies": {
     "@shelter/config": "workspace:*",
-    "@tanstack/react-query": "5.104.0",
+    "@tanstack/react-query": "5.104.5",
     "@types/react": "19.3.0",
-    "eslint": "10.11.0",
-    "orval": "8.38.0",
-    "prettier": "3.9.9",
-    "react": "19.3.0",
+    "eslint": "10.13.0",
+    "orval": "8.43.0",
+    "prettier": "3.9.10",
+    "react": "19.3.1",
     "typescript": "6.0.3",
-    "vitest": "5.0.2"
+    "vitest": "5.0.5"
   }
 }

@@ -13,8 +13,8 @@
   "dependencies": {
     "eslint-plugin-i18next": "6.1.5",
     "eslint-plugin-react-hooks": "7.1.1",
-    "eslint-plugin-react-refresh": "0.5.7",
-    "typescript-eslint": "8.70.1"
+    "eslint-plugin-react-refresh": "0.5.8",
+    "typescript-eslint": "8.73.0"
   },
   "peerDependencies": {
     "eslint": "^10.0.0",
@@ -25,6 +25,6 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "eslint": "10.11.0"
+    "eslint": "10.15.0"
   }
 }
